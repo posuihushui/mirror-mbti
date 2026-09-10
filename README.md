@@ -1,59 +1,99 @@
 # mirror / 观己
 
-一款以微信手机端为主、同时适配 PC 的人格探索网站交互原型。沿用参考图中的冷灰底色、黑色报告页、女性侧脸摄影、细线图表与胶囊按钮，新增中文内容、答题流程和小额付费报告体验。
+一款以微信手机端为主、同时适配 PC 的人格探索网站。冷灰底色、黑色报告页、侧脸摄影、细线雷达图与胶囊按钮。32 道原创情境题，免费查看 16 种人格倾向之一与四维偏好，完整报告按次解锁。
 
-## 体验内容
+技术栈：Next.js 16（App Router、Turbopack、Cache Components、React Compiler）、React 19、Tailwind CSS v4、shadcn/ui（Radix）、Drizzle ORM + Postgres、Zod。支付层为 provider 抽象：默认 `mock`（演示，不扣款），可切换到微信支付 APIv3（JSAPI / H5 / Native）。
 
-- 首页：测试说明、报告示例、价格提前说明、继续本次答题。
-- 测试：32 道原创情境题，5 档选择，上一题/下一题、完成进度、返回修改。
-- 免费结果：依据实际作答计算 16 种人格倾向之一，显示四维偏好和简短概览。
-- 解锁：暂定 ¥6.9 / 次，包含确认、取消、处理中、成功状态。
-- 完整报告：性格总览、优势与盲点、关系与沟通、工作与成长；章节和优势/盲点可切换。
+## 页面与接口
 
-所有支付操作均为演示，不会扣款。题目为独立原创的演示问卷，并非官方 MBTI 量表，也未经过心理测量学验证。结果用于自我探索。
+| 路径 | 说明 | 渲染 |
+| --- | --- | --- |
+| `/` | 首页 | 静态 |
+| `/quiz` | 32 道情境题；进度保存在浏览器本地 | 静态壳 + 客户端岛 |
+| `/result/[id]` | 性格画像；`/result/sample` 为示例 | 部分预渲染 |
+| `/report/[id]` | 完整报告，服务端校验付费授权；`/report/sample` 为示例 | 部分预渲染 |
+| `/pay/[orderId]` | 订单状态与恢复页（H5 支付回跳、PC 扫码） | 动态 |
+| `/my/report` | 按访客 cookie 找回最近一次结果并跳转 | 动态 |
+| `/about` `/types` `/types/[type]` `/privacy` `/terms` | 说明、16 种倾向、法律页 | 静态 |
+| `/robots.txt` `/sitemap.xml` `/manifest.webmanifest` `/opengraph-image` `/icon` | SEO 与分享资源 | 静态 / 按需 |
+
+| 接口 | 说明 |
+| --- | --- |
+| `POST /api/results` | 提交 32 个答案，服务端计分并保存，返回结果 id |
+| `GET /api/results/[id]` | 读取结果（owner 才返回 `unlocked`） |
+| `POST /api/orders` | 为结果创建订单，返回支付载荷（mock / jsapi / native / h5） |
+| `GET /api/orders/[id]` | 订单状态；未支付订单会向支付方主动查单 |
+| `POST /api/orders/[id]/mock-pay` | 仅 `PAYMENT_PROVIDER=mock` 时存在，模拟支付成功 |
+| `POST /api/payments/wechat/notify` | 微信支付回调：验签、解密、幂等、金额校验、解锁 |
+| `GET /api/wechat/oauth` `…/callback` | `snsapi_base` 授权，获取 JSAPI 支付所需 openid |
+| `GET /api/wechat/jsconfig` | JS-SDK 分享签名（需配置公众号） |
+| `GET /api/health` | 存活与数据库连通性 |
+
+所有接口统一返回 `{ ok: true, data }` 或 `{ ok: false, error: { code, message } }`。
 
 ## 本地开发
 
-需要可运行 Vite 8 的现代 Node.js 环境。
+需要 Node.js ≥ 20.9 与一个 Postgres 实例。
 
 ```bash
+cp .env.example .env          # 至少填写 DATABASE_URL 与 SESSION_SECRET
 npm ci
-npm run dev -- --host 0.0.0.0
+npm run db:migrate            # 应用 ./drizzle 中的迁移
+npm run dev                   # http://localhost:3000
 ```
 
-入口：
+常用命令：
 
-| 路径 | 用途 |
+| 命令 | 作用 |
 | --- | --- |
-| `/` | 带设备外框的手机交互预览，保留 iPhone / Pixel 设备选择 |
-| `/web.html` | 独立响应式网站；窄屏为 H5 布局，宽屏为 PC 布局 |
-| `/review-runtime.html` | 开发时用于原生 393 × 852 手机截图的检查页面 |
-| `/review.html` | 开发时用于窄屏 H5 检查的页面 |
+| `npm run typecheck` | `next typegen` + `tsc` |
+| `npm run lint` | ESLint（含 React Compiler 规则） |
+| `npm test` | Vitest 单测：计分、访客 cookie、订单号、微信签名/解密 |
+| `npm run test:e2e` | Playwright：手机 393×852 与桌面 1363×936 两套视口的完整流程 |
+| `npm run build` / `npm start` | 生产构建与启动 |
+| `npm run analyze` | Turbopack 包体分析 |
+| `npm run db:generate` | 修改 `src/db/schema.ts` 后生成新迁移 |
+| `node scripts/build-og-fonts.mjs` | 重建 OG 图字体（改动文案后运行） |
 
-生产构建：
+## 环境变量
+
+见 `.env.example`。要点：
+
+- `APP_URL`：站点公网地址。它会写进预渲染页面的 canonical / OG / sitemap，因此 **构建时也要提供**（Docker 通过 `--build-arg APP_URL=`）。
+- `SESSION_SECRET`：访客 cookie 与 OAuth state 的 HMAC 密钥，生产环境必填。
+- `PAYMENT_PROVIDER`：`mock` 或 `wechat`。`mock` 下界面明确标注"支付演示 · 本次不会扣款"。
+- `PRICE_FEN`：完整报告价格（分），默认 690。
+
+## 部署（自托管 Docker + Postgres）
 
 ```bash
-npm run build
+APP_URL=https://your-domain.com docker compose up -d --build
 ```
 
-构建前会校验 28 个受保护的设备运行时文件。构建保留 `dist/client/index.html`、`dist/client/web.html` 和原模板的托管输出。项目尚未发布；检查页面仅用于开发，不在生产入口中。
+`docker-compose.yml` 会启动 Postgres、执行一次迁移（`migrate` 服务），再以 Next.js standalone 模式启动应用；`/api/health` 用作健康检查。反向代理需转发 `X-Forwarded-For`（H5 支付需要真实客户端 IP）并启用 HTTPS。
 
-## 主要文件
+## 接入微信支付
 
-| 文件 | 内容 |
-| --- | --- |
-| `src/Prototype.tsx` | 手机与 PC 共用的页面、图表、测试和解锁交互 |
-| `src/prototype.css` | 冷灰/黑色视觉系统与响应式布局 |
-| `src/personality.ts` | 32 道题、反向计分、16 种倾向与报告内容 |
-| `src/web.tsx` | 独立网站入口 |
-| `public/assets/mirror/portrait.png` | 根据参考风格生成的肖像资产 |
-| `design-evidence/` | 手机、桌面与参考图比较截图 |
-| `design-qa.md` | 检查结果、修复记录与交付边界 |
+1. 在商户平台获取 `mchid`、API 证书序列号、商户私钥（PEM）、APIv3 密钥；开通微信支付公钥或使用平台证书（留空 `WECHAT_PAY_PUBLIC_KEY*` 时系统自动拉取并缓存平台证书）。
+2. 关联的公众号 / 服务号 appid 填入 `WECHAT_PAY_APPID`；配置公众号网页授权域名与 JS 接口安全域名为站点域名；`WECHAT_MP_APPID` / `WECHAT_MP_SECRET` 用于 `snsapi_base` 获取 openid 与分享卡片。
+3. 商户平台开通 JSAPI（微信内）、H5（手机浏览器）、Native（PC 扫码）三种支付方式。
+4. 设置 `PAYMENT_PROVIDER=wechat`，重启。回调地址为 `${APP_URL}/api/payments/wechat/notify`。
+5. 用小额真实订单验收：微信内 JSAPI、手机浏览器 H5 回跳 `/pay/[orderId]`、PC 扫码轮询。
 
-## 后续产品接入
+## 数据与限制
 
-价格集中在 `src/Prototype.tsx` 的 `price` 常量中，目前为设计占位值。答案、完成状态和解锁状态只存在于当前页面内存中，刷新会重置；当前没有账号、服务端订单或报告持久化。
+- 没有账号体系。访客由一年期的签名 httpOnly cookie 识别；结果、订单归属该访客。清除 cookie 或换浏览器后无法自动找回，这是有意的产品边界。
+- 作答进度保存在浏览器 localStorage；提交后由服务端计分并持久化。前端的 `unlocked` 仅用于展示，报告页在服务端按已支付订单校验。
+- 题目为独立原创的演示问卷，并非官方 MBTI 量表，也未经过心理测量学验证。
 
-上线前需要接入真实支付和订单服务，以服务端确认的支付结果控制报告权限，并补充订单恢复、报告保存和真实微信内浏览器验收。前端演示的 `unlocked` 状态不能作为生产环境的付费授权。
+## 目录
 
-视觉检查覆盖手机原生 393 × 852 和桌面 1363 × 936；已通过完整 32 题作答、取消/模拟支付、报告阅读与构建检查。详细证据见 `design-qa.md`。
+```
+src/app          路由、API、SEO 文件（robots/sitemap/manifest/OG）
+src/components   site（页头/底栏/弹层）、home、quiz、result、report、payment、ui（shadcn）
+src/lib          personality（题目/计分/文案）、site、env、session、results、orders、payments/*、og/*
+src/db           Drizzle schema、连接、迁移脚本
+drizzle          SQL 迁移
+docs             设计证据截图与原型验收记录
+tests            unit（Vitest）、e2e（Playwright）
+```

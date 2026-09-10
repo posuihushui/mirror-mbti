@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Dark mode is opt-in via a `.dark` class that this site never sets; this keeps
+   shadcn's `dark:` utilities inert under the OS dark preference. */
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Breakpoints mirror the prototype's three media queries: ≤720 phone, ≤1100 tablet, ≥1450 wide. */
+  --breakpoint-*: initial;
+  --breakpoint-md: 721px;
+  --breakpoint-xl: 1101px;
+  --breakpoint-2xl: 1450px;
+
+  --color-paper: #edf2f3;
+  --color-ink: #171b1c;
+  --color-mist: #758084;
+  --color-line: #d2dcdf;
+  --color-warm: #c49473;
+  --color-night: #121718;
+  --color-night-deep: #141919;
+  --color-night-line: #354147;
+
+  --font-sans:
+    var(--font-manrope), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
+    sans-serif;
+
+  --animate-appear: appear 0.25s ease;
+  @keyframes appear {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-heading: var(--font-sans);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: #edf2f3;
+  --foreground: #171b1c;
+  --card: #f2f6f7;
+  --card-foreground: #171b1c;
+  --popover: #f2f6f7;
+  --popover-foreground: #171b1c;
+  --primary: #171b1c;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f5f6;
+  --secondary-foreground: #171b1c;
+  --muted: #e3e9ea;
+  --muted-foreground: #758084;
+  --accent: #e3e9ea;
+  --accent-foreground: #171b1c;
+  --destructive: #a8503b;
+  --border: #d2dcdf;
+  --input: #cfd9dc;
+  --ring: #c49473;
+  --radius: 4px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-paper text-ink;
+    min-width: 320px;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1,
+  h2 {
+    @apply font-medium tracking-[-0.055em] whitespace-pre-line;
+  }
+  p {
+    line-height: 1.9;
+  }
+  button {
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+    opacity: 0.35;
+  }
+  :where(button, a, [role="tab"]):focus-visible {
+    outline: 2px solid var(--color-warm);
+    outline-offset: 5px;
+  }
+  img {
+    -webkit-user-drag: none;
+  }
+}
+
+/* Repeated prototype patterns. Exact values from `prototype.css`. */
+@utility eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+@utility text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  font-size: 13px;
+  min-height: 40px;
+  padding: 0;
+}
+
+@utility back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 44px;
+  font-size: 13px;
+  padding: 0;
+}
+
+@utility pill {
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 24px;
+  border: 1px solid #363b3d;
+  border-radius: 100px;
+  background: #171b1c;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+  & svg {
+    flex: none;
+  }
+  &:hover:not(:disabled) {
+    background: #313637;
+    transform: translateY(-1px);
+  }
+}
+
+@utility pill-light {
+  background: #f2f5f6;
+  color: #171b1c;
+  border-color: #f2f5f6;
+}
+
+/* Bottom safe-area helpers for fixed docks and sheets inside WeChat / iOS Safari. */
+@utility pb-safe-4 {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+@utility pb-safe-5 {
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

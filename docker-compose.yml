@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: mirror
+      POSTGRES_PASSWORD: mirror
+      POSTGRES_DB: mirror
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mirror -d mirror"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "5432:5432"
+
+  # Applies ./drizzle migrations once; uses the builder image because it still has dev dependencies.
+  migrate:
+    build:
+      context: .
+      target: builder
+      args:
+        APP_URL: ${APP_URL:-http://localhost:3000}
+    command: ["npm", "run", "db:migrate"]
+    environment:
+      DATABASE_URL: postgres://mirror:mirror@db:5432/mirror
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      args:
+        APP_URL: ${APP_URL:-http://localhost:3000}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgres://mirror:mirror@db:5432/mirror
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      SESSION_SECRET: ${SESSION_SECRET:-please-change-this-session-secret-32chars}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-mock}
+      PRICE_FEN: ${PRICE_FEN:-690}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  pgdata:

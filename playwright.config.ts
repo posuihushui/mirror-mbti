@@ -1,18 +1,31 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 
-const testPort = Number(process.env.MOBILE_RUNTIME_TEST_PORT ?? 4174);
+const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 
 export default defineConfig({
-  testDir: "./tests",
-  testMatch: "**/*.spec.ts",
-  timeout: 20_000,
-  use: {
-    baseURL: `http://127.0.0.1:${testPort}`,
-    viewport: { width: 1100, height: 1100 },
-  },
-  webServer: {
-    command: `npm run dev -- --port ${testPort}`,
-    url: `http://127.0.0.1:${testPort}/tests/runtime-fixture.html`,
-    reuseExistingServer: process.env.MOBILE_RUNTIME_TEST_PORT == null,
-  },
+  testDir: "tests/e2e",
+  timeout: 60_000,
+  expect: { timeout: 10_000, toHaveScreenshot: { maxDiffPixelRatio: 0.01 } },
+  fullyParallel: false,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
+  use: { baseURL, trace: "retain-on-failure", locale: "zh-CN", timezoneId: "Asia/Shanghai" },
+  projects: [
+    {
+      name: "mobile",
+      use: { ...devices["iPhone 14 Pro"], browserName: "chromium", viewport: { width: 393, height: 852 }, isMobile: true, hasTouch: true },
+    },
+    {
+      name: "desktop",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1363, height: 936 } },
+    },
+  ],
+  webServer: process.env.E2E_BASE_URL
+    ? undefined
+    : {
+        command: "npm run start",
+        url: baseURL,
+        reuseExistingServer: true,
+        timeout: 120_000,
+      },
 });
