@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/site/app-header";
 import { JsonLd } from "@/components/seo/json-ld";
-import { ReportFullReading } from "@/components/report/report-body";
 import { ResultActions } from "@/components/result/result-actions";
 import { ResultChart } from "@/components/result/result-chart";
 import { SampleCta } from "@/components/result/sample-cta";
@@ -13,7 +12,6 @@ import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { appUrl, paymentMode, priceFen } from "@/lib/env";
 import { typeMeta } from "@/lib/personality";
-import { buildReportData } from "@/lib/report-content";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
 import { getVisitorId } from "@/lib/session";
 import { formatPriceFen, site } from "@/lib/site";
@@ -30,9 +28,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     const { name, line } = typeMeta("INFJ");
     return {
       title: `报告示例 · INFJ ${name}`,
-      description: `${line.replace("\n", "")} 观己 mirror 的完整示例报告：四维偏好雷达图，以及性格总览、优势与盲点、关系与沟通、工作与成长四章全文。`,
+      description: `${line.replace("\n", "")} 观己 mirror 的示例性格画像：四维偏好雷达图与人格概览，并可免费阅读同版式的完整示例报告。`,
       alternates: { canonical: "/result/sample" },
-      openGraph: { title: `INFJ ${name} · 完整报告示例`, description: "免费阅读一份完整的示例人格报告：四个维度的偏好、优势与盲点、关系沟通与成长建议。" },
+      openGraph: { title: `INFJ ${name} · 报告示例`, description: "免费查看一份示例性格画像，并阅读同版式的完整示例报告。" },
     };
   }
   return { title: "你的性格画像", robots: { index: false, follow: false } };
@@ -86,19 +84,8 @@ export default async function ResultPage({ params }: Params) {
           <ResultChart profile={profile} />
         </section>
         {sample ? (
-          <>
-            <div className="px-[27px] pt-2 pb-[18px] md:px-0 md:pt-6">
-              <p className="eyebrow text-[8px] text-[#738087] md:text-[10px]">A FULL READING · 完整解读</p>
-              <p className="mt-3 max-w-[520px] text-[13px] leading-[1.9] text-[#6b777d]">
-                以下是这份示例报告的全部内容。完成测试后，你会读到属于自己的那一份。
-              </p>
-            </div>
-            <ReportFullReading data={buildReportData(profile, { sample: true, demo: mode === "mock" })} />
-            {/* Nothing is locked on the sample, so it closes by inviting the test, not by quoting a price. */}
-            <div className="mt-4 md:mt-10">
-              <SampleCta priceLabel={price} />
-            </div>
-          </>
+          /* Nothing is locked on the sample, so it closes by inviting the test, not by quoting a price. */
+          <SampleCta priceLabel={price} secondary={{ href: `/report/${SAMPLE_RESULT_ID}`, label: "阅读完整示例报告" }} />
         ) : (
           <UnlockPanel
             priceLabel={price}

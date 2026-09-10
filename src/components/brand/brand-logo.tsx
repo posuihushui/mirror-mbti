@@ -18,7 +18,7 @@ type BrandProps = {
 /** Two facing mirror contours leave a quiet space for the self at the centre. */
 function MirrorContours({ color, accent }: { color: string; accent: string }) {
   return (
-    <>
+    <g>
       <path
         d="M25 9C14.5 9 7 18.5 7 32s7.5 23 18 23V9ZM39 9c10.5 0 18 9.5 18 23s-7.5 23-18 23V9Z"
         fill="none"
@@ -27,7 +27,7 @@ function MirrorContours({ color, accent }: { color: string; accent: string }) {
         strokeLinejoin="round"
       />
       <circle cx="32" cy="32" r="3" fill={accent} />
-    </>
+    </g>
   );
 }
 
@@ -36,7 +36,7 @@ export function BrandMark({ className, style, tone = "ink", monochrome = false, 
   const color = BRAND_COLORS[tone];
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 64 64" fill="none" className={className} style={style} aria-hidden="true" focusable="false">
-      <MirrorContours color={color} accent={monochrome ? color : BRAND_COLORS.warm} />
+      {MirrorContours({ color, accent: monochrome ? color : BRAND_COLORS.warm })}
     </svg>
   );
 }
@@ -47,7 +47,7 @@ export function BrandLogo({ className, style, tone = "ink", monochrome = false, 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={width * 40 / 194} viewBox="0 0 194 40" fill="none" className={className} style={style} aria-hidden="true" focusable="false">
       <g transform="translate(0 4) scale(.5)">
-        <MirrorContours color={color} accent={monochrome ? color : BRAND_COLORS.warm} />
+        {MirrorContours({ color, accent: monochrome ? color : BRAND_COLORS.warm })}
       </g>
       <g transform="translate(42 0)" fill={color}>
         {MIRROR_WORDMARK_PATHS.map((glyph, index) => <path key={index} {...glyph} />)}
@@ -62,7 +62,7 @@ export function BrandLogo({ className, style, tone = "ink", monochrome = false, 
 export function BrandAppIcon({ size }: { size: number }) {
   return (
     <div style={{ width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center", background: BRAND_COLORS.paper }}>
-      <BrandMark size={size * 0.75} />
+      {BrandMark({ size: size * 0.75 })}
     </div>
   );
 }

@@ -61,6 +61,8 @@ test.describe("core flow", () => {
     await page.getByRole("button", { name: /开始阅读报告/ }).click();
     await page.waitForURL(/\/report\//);
     await expect(page.getByText("CHAPTER 01")).toBeVisible();
+    await expect(page.locator('[role="tabpanel"]')).toHaveCount(4);
+    await expect(page.getByText("SAMPLE REPORT · 示例报告")).toHaveCount(0);
 
     await page.getByRole("button", { name: /下一章/ }).click();
     await expect(page.getByText("CHAPTER 02")).toBeVisible();
@@ -85,8 +87,27 @@ test.describe("core flow", () => {
     for (const cta of await page.getByRole("link", { name: /开始认识自己/ }).all()) {
       await expect(cta).toHaveAttribute("href", "/quiz");
     }
+    await expect(page.getByRole("link", { name: "阅读完整示例报告" })).toHaveAttribute("href", "/report/sample");
     await page.getByRole("link", { name: /开始认识自己/ }).last().click();
     await expect(page).toHaveURL(/\/quiz$/);
+  });
+
+  test("the sample report is the real report layout, marked as a sample", async ({ page }) => {
+    await page.goto("/report/sample");
+    // marked as a sample
+    await expect(page.getByText("SAMPLE REPORT · 示例报告")).toBeVisible();
+    await expect(page.getByText("示例报告").first()).toBeVisible();
+    await expect(page).toHaveTitle(/示例报告/);
+    // same structure as a paid report: four chapter panels behind one chapter switcher
+    await expect(page.locator('[role="tabpanel"]')).toHaveCount(4);
+    await expect(page.locator('[role="tablist"][aria-label="报告章节"] [role="tab"]')).toHaveCount(4);
+    await expect(page.locator('nav[aria-label="报告章节"] button')).toHaveCount(4);
+    // and it guides to the test rather than to a payment
+    await expect(page.getByRole("heading", { name: /属于你的故事/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /解锁完整报告/ })).toHaveCount(0);
+    for (const cta of await page.getByRole("link", { name: /开始认识自己/ }).all()) {
+      await expect(cta).toHaveAttribute("href", "/quiz");
+    }
   });
 
   test("sample report ships every chapter in the server HTML", async ({ request }) => {

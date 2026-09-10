@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { OG_FONT_FAMILY, ogFonts, portraitDataUrl } from "@/lib/og/fonts";
 import { QUESTION_COUNT } from "@/lib/personality";
-import { site } from "@/lib/site";
 
 export const alt = "观己 mirror — 向内看见，真实的自己";
 export const size = { width: 1200, height: 630 };
@@ -13,10 +13,8 @@ export default async function OpenGraphImage() {
     (
       <div style={{ width: "100%", height: "100%", display: "flex", background: "#edf2f3", color: "#171b1c", fontFamily: OG_FONT_FAMILY }}>
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: "72px 0 72px 84px", width: 660 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 40, fontWeight: 700, letterSpacing: -2 }}>
-            {site.brand}
-            <span style={{ fontSize: 18, fontWeight: 400, letterSpacing: 4, borderLeft: "1px solid #919b9e", paddingLeft: 18 }}>{site.brandZh}</span>
-          </div>
+          {/* Satori requires native SVG elements. */}
+          {BrandLogo({ width: 280 })}
           <div style={{ marginTop: 56, fontSize: 14, letterSpacing: 3, color: "#627176" }}>A LITTLE CLOSER TO YOU</div>
           <div style={{ marginTop: 22, fontSize: 68, lineHeight: 1.25, letterSpacing: -3, fontWeight: 500, display: "flex", flexDirection: "column" }}>
             <span>向内看见，</span>

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { OG_FONT_FAMILY, ogFonts } from "@/lib/og/fonts";
 import { isPersonalityType, poles, TYPES, typeMeta } from "@/lib/personality";
-import { site } from "@/lib/site";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -19,10 +19,8 @@ export default async function TypeOgImage({ params }: { params: Promise<{ type: 
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#edf2f3", color: "#171b1c", fontFamily: OG_FONT_FAMILY, padding: "64px 84px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 34, fontWeight: 700, letterSpacing: -2 }}>
-            {site.brand}
-            <span style={{ fontSize: 16, fontWeight: 400, letterSpacing: 4, borderLeft: "1px solid #919b9e", paddingLeft: 18 }}>{site.brandZh}</span>
-          </div>
+          {/* Satori requires native SVG elements. */}
+          {BrandLogo({ width: 240 })}
           <div style={{ fontSize: 14, letterSpacing: 3, color: "#738087" }}>PERSONALITY TYPE · 人格倾向</div>
         </div>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 40 }}>

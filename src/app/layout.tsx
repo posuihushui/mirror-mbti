@@ -47,7 +47,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: site.name,
   url: APP_URL,
-  logo: `${APP_URL}/icon`,
+  logo: `${APP_URL}/assets/brand/icon-512.png`,
 };
 
 const websiteJsonLd = {

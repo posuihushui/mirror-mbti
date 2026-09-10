@@ -16,6 +16,7 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "optimize:images": "tsx scripts/optimize-images.ts",
+    "brand:build": "tsx scripts/build-brand-assets.tsx",
     "postbuild": "node scripts/prepare-standalone.mjs",
     "start:next": "next start"
   },

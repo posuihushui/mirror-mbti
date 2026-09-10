@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { MyReportLink } from "@/components/site/my-report-link";
 import { OverlayButton } from "@/components/site/overlay-button";
-import { site } from "@/lib/site";
 
 type Props =
   | { variant: "home" }
@@ -25,12 +25,10 @@ export function AppHeader(props: Props) {
       {home ? (
         <Link
           href="/"
-          className="flex items-center gap-[11px] text-[27px] font-[650] tracking-[-1.8px] md:gap-[15px] md:text-[31px]"
+          aria-label="观己 mirror 首页"
+          className="flex min-h-11 items-center"
         >
-          {site.brand}
-          <span className="border-l border-[#919b9e] pl-[11px] text-[11px] font-normal tracking-[0.16em] md:pl-[15px] md:text-[13px]">
-            {site.brandZh}
-          </span>
+          <BrandLogo className="h-auto w-[168px] md:w-[194px]" />
         </Link>
       ) : (
         <Link href={props.backHref} className="back-button">

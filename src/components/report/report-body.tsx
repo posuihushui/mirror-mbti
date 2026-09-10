@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Check } from "@phosphor-icons/react/dist/ssr";
+import { cn } from "cn";
 import { Radar } from "@/components/result/radar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -21,24 +22,36 @@ export type ReportData = {
 };
 
 /**
- * The paid report: sidebar plus one chapter at a time. All four chapters are rendered
- * on the server and shipped in the HTML; the client only decides which one is visible.
+ * The detailed report. The public sample renders this exact layout with sample data —
+ * there is no second reading view. All four chapters are rendered on the server and
+ * shipped in the HTML; the client only decides which one is visible.
  */
-export function ReportBody({ data }: { data: ReportData }) {
+export function ReportBody({ data, banner, footer }: { data: ReportData; banner?: ReactNode; footer?: ReactNode }) {
   const { profile, name, sample, demo } = data;
 
   return (
-    <main className="block md:mx-auto md:grid md:max-w-[1100px] md:grid-cols-[190px_minmax(0,720px)] md:items-start md:gap-[30px] md:px-[30px] md:pt-10 md:pb-[70px] xl:grid-cols-[220px_minmax(0,720px)] xl:gap-[68px]">
+    <main
+      className={cn(
+        "block md:mx-auto md:grid md:max-w-[1100px] md:grid-cols-[190px_minmax(0,720px)] md:items-start md:gap-x-[30px] md:px-[30px] md:pt-10 md:pb-[70px] xl:grid-cols-[220px_minmax(0,720px)] xl:gap-x-[68px]",
+        // the sample carries a fixed dock on phones, so the last block needs room above it
+        sample && "pb-[110px] md:pb-[70px]",
+      )}
+    >
+      {banner ? <div className="md:col-span-2">{banner}</div> : null}
       <aside className="hidden md:sticky md:top-[35px] md:block md:pt-[15px]">
         <p className="eyebrow text-[9px] text-[#758289]">YOUR INNER WORLD</p>
         <div className="mt-[26px] text-[64px] font-medium tracking-[-0.06em]">{profile.type}</div>
         <p className="mt-1 text-[12px] text-[#75828a]">
           {name} · {sample ? "示例" : "本次"}人格报告
         </p>
-        <Badge variant="unlocked" className="mt-[18px]">
-          <Check size={12} />
-          已解锁{demo ? " · 演示" : ""}
-        </Badge>
+        {sample ? (
+          <Badge className="mt-[18px]">示例报告</Badge>
+        ) : (
+          <Badge variant="unlocked" className="mt-[18px]">
+            <Check size={12} />
+            已解锁{demo ? " · 演示" : ""}
+          </Badge>
+        )}
         <ChapterSidebarNav />
         <p className="mt-20 text-[9px] tracking-[0.1em] text-[#8b999f] whitespace-pre-line">{"YOU ARE MORE\nTHAN FOUR LETTERS."}</p>
       </aside>
@@ -48,7 +61,7 @@ export function ReportBody({ data }: { data: ReportData }) {
           <span>
             {profile.type} · {name}
           </span>
-          <span>完整报告{demo ? " · 演示" : ""}</span>
+          <span>{sample ? "示例报告" : `完整报告${demo ? " · 演示" : ""}`}</span>
         </div>
         <ChapterTabs />
 
@@ -69,42 +82,10 @@ export function ReportBody({ data }: { data: ReportData }) {
           <ChapterFour data={data} />
         </ChapterPanel>
 
-        <ChapterFooterNav />
+        <ChapterFooterNav sample={sample} />
       </article>
+      {footer ? <div className="mt-4 md:col-span-2 md:mt-10">{footer}</div> : null}
     </main>
-  );
-}
-
-/**
- * The same report with every chapter expanded and both insight lists open — no tabs,
- * no toggles. Used by the public sample so a visitor reads the whole thing by scrolling.
- */
-export function ReportFullReading({ data }: { data: ReportData }) {
-  const { profile } = data;
-  return (
-    <article className="bg-night px-[25px] pt-[25px] pb-[45px] text-[#eff2f4] md:p-[35px] xl:px-[50px] xl:py-11">
-      <ChapterSection index={0} type={profile.type}>
-        <ChapterOne data={data} />
-      </ChapterSection>
-      <ChapterSection index={1} type={profile.type}>
-        <ChapterTwo data={data} expanded />
-      </ChapterSection>
-      <ChapterSection index={2} type={profile.type}>
-        <ChapterThree data={data} />
-      </ChapterSection>
-      <ChapterSection index={3} type={profile.type}>
-        <ChapterFour data={data} />
-      </ChapterSection>
-    </article>
-  );
-}
-
-function ChapterSection({ index, type, children }: { index: number; type: string; children: ReactNode }) {
-  return (
-    <section className={index > 0 ? "mt-[46px] border-t border-night-line pt-[40px]" : undefined}>
-      <ChapterLabel index={index} type={type} />
-      {children}
-    </section>
   );
 }
 
@@ -147,18 +128,11 @@ function ChapterOne({ data, heading = "h2" }: { data: ReportData; heading?: "h1"
   );
 }
 
-function ChapterTwo({ data, expanded = false }: { data: ReportData; expanded?: boolean }) {
+function ChapterTwo({ data }: { data: ReportData }) {
   return (
     <>
       <ChapterHeading>{"理解你的优势，\n也温柔地看见盲点。"}</ChapterHeading>
-      {expanded ? (
-        <>
-          <InsightGroup label="你的优势" items={data.strengths} />
-          <InsightGroup label="容易忽略的" items={data.blindspots} />
-        </>
-      ) : (
-        <StrengthSwitch strengths={<InsightList items={data.strengths} />} blindspots={<InsightList items={data.blindspots} />} />
-      )}
+      <StrengthSwitch strengths={<InsightList items={data.strengths} />} blindspots={<InsightList items={data.blindspots} />} />
       <Quote>{"优势不需要时时在线。\n适合自己的节奏，同样重要。"}</Quote>
     </>
   );
@@ -205,16 +179,6 @@ function ChapterLabel({ index, type }: { index: number; type: string }) {
 function ChapterHeading({ as = "h2", children }: { as?: "h1" | "h2"; children: string }) {
   const Tag = as;
   return <Tag className="text-[27px] leading-[1.6] tracking-[-0.03em] md:text-[31px]">{children}</Tag>;
-}
-
-/** Labelled list used when both insight sets are shown at once. */
-function InsightGroup({ label, items }: { label: string; items: Insight[] }) {
-  return (
-    <div className="mt-7">
-      <p className="inline-flex rounded-[50px] bg-[#263034] px-[18px] py-[9px] text-[11px] text-[#cbd6da] md:text-[12px]">{label}</p>
-      <InsightList items={items} />
-    </div>
-  );
 }
 
 function InsightList({ items }: { items: Insight[] }) {

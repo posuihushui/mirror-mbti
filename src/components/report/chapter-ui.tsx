@@ -76,15 +76,15 @@ export function ChapterTabs() {
   );
 }
 
-/** "下一章" link, or the closing link on the last chapter. */
-export function ChapterFooterNav() {
+/** "下一章" link, or the closing link on the last chapter. The sample closes with the test instead. */
+export function ChapterFooterNav({ sample = false }: { sample?: boolean }) {
   const chapter = useChapter();
   const last = chapter === chapterLabels.length - 1;
   return (
     <div className="mt-[38px] border-t border-night-line pt-[21px] text-right">
       {last ? (
-        <Link href="/" className="text-link text-[11px] text-[#e0e7ea]">
-          带着新的理解，回到生活
+        <Link href={sample ? "/quiz" : "/"} className="text-link text-[11px] text-[#e0e7ea]">
+          {sample ? "开始属于你的测试" : "带着新的理解，回到生活"}
           <ArrowUpRight size={17} />
         </Link>
       ) : (

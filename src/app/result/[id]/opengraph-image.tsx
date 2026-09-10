@@ -1,9 +1,9 @@
 import { ImageResponse } from "next/og";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { OG_FONT_FAMILY, ogFonts } from "@/lib/og/fonts";
 import { OgRadar } from "@/lib/og/radar";
 import { typeMeta } from "@/lib/personality";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
-import { site } from "@/lib/site";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -22,10 +22,8 @@ export default async function ResultOgImage({ params }: { params: Promise<{ id: 
     (
       <div style={{ width: "100%", height: "100%", display: "flex", background: "#edf2f3", color: "#171b1c", fontFamily: OG_FONT_FAMILY, padding: "64px 84px" }}>
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: 640 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 34, fontWeight: 700, letterSpacing: -2 }}>
-            {site.brand}
-            <span style={{ fontSize: 16, fontWeight: 400, letterSpacing: 4, borderLeft: "1px solid #919b9e", paddingLeft: 18 }}>{site.brandZh}</span>
-          </div>
+          {/* Satori requires native SVG elements. */}
+          {BrandLogo({ width: 240 })}
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 14, letterSpacing: 3, color: "#738087" }}>{sample ? "SAMPLE REPORT · 示例报告" : "PERSONALITY · 性格画像"}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 24, marginTop: 20 }}>
