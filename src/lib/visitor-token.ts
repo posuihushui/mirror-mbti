@@ -11,7 +11,13 @@ function sign(id: string, secret: string) {
 
 export function issueVisitorToken(secret: string): { id: string; token: string } {
   const id = randomUUID();
-  return { id, token: `${id}.${sign(id, secret)}` };
+  return { id, token: signVisitorToken(id, secret) };
+}
+
+/** Reissues a session only after server-side recovery has established its owner. */
+export function signVisitorToken(id: string, secret: string): string {
+  if (!UUID_RE.test(id)) throw new Error("Invalid visitor id");
+  return `${id}.${sign(id, secret)}`;
 }
 
 /** Returns the visitor id when the cookie value carries a valid signature. */

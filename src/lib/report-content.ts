@@ -1,4 +1,4 @@
-import { poles, typeMeta } from "@/lib/personality";
+import { poles, typeMeta, type Profile } from "@/lib/personality";
 import { blindspotTitles } from "@/lib/site";
 
 export type Insight = { title: string; body: string };
@@ -50,4 +50,21 @@ export function workInsights(letters: string[]): Insight[] {
 export function reportSummary(type: string) {
   const { name, line, summary, letters } = typeMeta(type);
   return { name, line, summary, letters };
+}
+
+/** Everything the report needs for one profile. Shared by the report page and the public sample. */
+export function buildReportData(profile: Profile, options: { sample: boolean; demo: boolean }) {
+  const { name, line, summary, letters } = reportSummary(profile.type);
+  return {
+    profile,
+    name,
+    line,
+    summary,
+    sample: options.sample,
+    demo: options.demo,
+    strengths: strengthInsights(letters),
+    blindspots: blindspotInsights(letters),
+    relationships: relationshipInsights(letters),
+    work: workInsights(letters),
+  };
 }

@@ -15,7 +15,6 @@ type Props = {
   priceLabel: string;
   mode: PaymentMode;
   owner: boolean;
-  sample: boolean;
   unlocked: boolean;
   /** Which slot this instance renders: the desktop panel button or the phone dock. */
   slot: "panel" | "dock";
@@ -25,7 +24,7 @@ type Props = {
  * Unlock / read CTA for the result page. The payment sheet is owned by the "dock" instance
  * (mounted once); the "panel" instance only triggers it through the `?unlock=1` search param.
  */
-export function ResultActions({ resultId, type, name, priceLabel, mode, owner, sample, unlocked, slot }: Props) {
+export function ResultActions({ resultId, type, name, priceLabel, mode, owner, unlocked, slot }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -33,13 +32,12 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, owner, s
   const open = searchParams.get("unlock") === "1";
 
   useEffect(() => {
-    if (owner && !sample) writeLastResultId(resultId);
-  }, [owner, sample, resultId]);
+    if (owner) writeLastResultId(resultId);
+  }, [owner, resultId]);
 
   const readHref = `/report/${resultId}`;
   const isUnlocked = unlocked || unlockedNow;
-  const canPay = owner && !sample && !isUnlocked;
-  const canRead = sample || isUnlocked;
+  const canPay = owner && !isUnlocked;
 
   const setOpen = (next: boolean) => {
     if (next) {
@@ -53,7 +51,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, owner, s
 
   const dockClass = slot === "dock" ? "min-h-[51px] px-[17px] text-[12px]" : undefined;
   let button: React.ReactNode;
-  if (canRead) {
+  if (isUnlocked) {
     button = (
       <PrimaryButton href={readHref} light={slot === "panel"} className={dockClass}>
         {slot === "panel" ? "阅读完整报告" : "阅读报告"}
@@ -89,7 +87,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, owner, s
           {button}
         </div>
       </Dock>
-      {owner && !sample && (
+      {owner && (
         <PaymentSheet
           open={open && !unlocked}
           onOpenChange={setOpen}

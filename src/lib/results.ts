@@ -69,6 +69,43 @@ export async function latestResultForVisitor(visitorId: string): Promise<ResultV
   return row ? toView(row, visitorId) : null;
 }
 
+export type ResultHistoryItem = ResultView & {
+  order: { id: string; provider: "mock" | "wechat"; status: typeof schema.orders.$inferSelect.status } | null;
+};
+
+/** Owner-only history, including unpaid results. Neither raw answers nor payment payloads leave the data layer. */
+export async function resultsForVisitor(visitorId: string): Promise<ResultHistoryItem[]> {
+  const [rows, orders] = await Promise.all([
+    db().query.results.findMany({
+      where: eq(schema.results.visitorId, visitorId),
+      orderBy: [desc(schema.results.createdAt), desc(schema.results.id)],
+      columns: { answers: false },
+    }),
+    db().query.orders.findMany({
+      where: eq(schema.orders.visitorId, visitorId),
+      orderBy: [desc(schema.orders.createdAt), desc(schema.orders.id)],
+      columns: { id: true, resultId: true, provider: true, status: true },
+    }),
+  ]);
+  const latestOrders = new Map<string, (typeof orders)[number]>();
+  const ordersById = new Map(orders.map((order) => [order.id, order]));
+  for (const order of orders) {
+    if (!latestOrders.has(order.resultId)) latestOrders.set(order.resultId, order);
+  }
+  return rows.map((row) => {
+    const order = (row.unlockOrderId && ordersById.get(row.unlockOrderId)) || latestOrders.get(row.id);
+    return {
+      id: row.id,
+      profile: { type: row.type, values: row.values, balanced: row.balanced },
+      sample: false,
+      owner: true,
+      unlocked: row.unlockedAt !== null,
+      createdAt: row.createdAt,
+      order: order ? { id: order.id, provider: order.provider, status: order.status } : null,
+    };
+  });
+}
+
 export async function markResultUnlocked(resultId: string, orderId: string) {
   await db()
     .update(schema.results)

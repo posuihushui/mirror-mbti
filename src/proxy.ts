@@ -13,6 +13,10 @@ function secret(): string {
  * orders can be attributed without accounts. Runs on the Node.js runtime.
  */
 export function proxy(request: NextRequest) {
+  // The recovery route sets the recovered cookie itself. A proxy cookie would
+  // otherwise compete with that Set-Cookie header on a session-less request.
+  if (request.method === "POST" && request.nextUrl.pathname === "/api/reports/recover") return NextResponse.next();
+
   const existing = request.cookies.get(VISITOR_COOKIE)?.value;
   if (verifyVisitorToken(existing, secret())) return NextResponse.next();
 

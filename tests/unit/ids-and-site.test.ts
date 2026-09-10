@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { newOrderId, newResultId } from "@/lib/ids";
+import { isValidOrderId, newOrderId, newResultId } from "@/lib/ids";
 import { formatPriceFen } from "@/lib/site";
 import { pickWeChatChannel } from "@/lib/ua";
 
@@ -9,9 +9,17 @@ describe("ids", () => {
   });
   it("order ids fit WeChat out_trade_no rules and the API validator", () => {
     const id = newOrderId(new Date("2026-09-10T00:00:00Z"));
-    expect(id).toMatch(/^M\d{8}[0-9A-F]{16}$/);
+    expect(id).toMatch(/^M\d{8}[0-9A-F]{22}$/);
+    expect(isValidOrderId(id)).toBe(true);
     expect(id.length).toBeLessThanOrEqual(32);
     expect(id.startsWith("M20260910")).toBe(true);
+  });
+  it("keeps existing order numbers usable and rejects partial identifiers", () => {
+    expect(isValidOrderId("M2026091000000000DEADBEEF")).toBe(true);
+    expect(isValidOrderId("M2026091000000000DEADBEEF123456")).toBe(true);
+    for (const invalid of ["M20260910", "DEADBEEF", "M2026091000000000DEADBEEF1", "M2026091000000000DEADBEEF1234567", "M2026091000000000deadbeef"]) {
+      expect(isValidOrderId(invalid)).toBe(false);
+    }
   });
 });
 

@@ -15,7 +15,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("/", 1, "weekly"),
     entry("/quiz", 0.9, "weekly"),
     entry("/result/sample", 0.8),
-    entry("/report/sample", 0.6),
     entry("/about", 0.7),
     entry("/types", 0.8),
     ...TYPES.map((t) => entry(`/types/${t}`, 0.7)),

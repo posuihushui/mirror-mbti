@@ -34,7 +34,9 @@ export function Radar({ profile, height = 310, className }: { profile: Profile; 
 
   return (
     <div className={cn("relative mx-auto w-full", className)} style={{ height }}>
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-full w-full" role="img" aria-label={label}>
+      {/* The 内向/直觉/情感/判断 labels sit just outside the outer ring, so the SVG must not
+          clip them at the viewBox edge — on a 393px phone that cut off the side labels. */}
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-full w-full overflow-visible" role="img" aria-label={label}>
         {RINGS.map((ring) => (
           <circle key={ring} cx={CENTER} cy={CENTER} r={(RADIUS * ring) / 100} fill="none" stroke="#d6dee0" strokeWidth={1} />
         ))}

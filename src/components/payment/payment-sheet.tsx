@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { ArrowUpRight, Check, CircleNotch, WechatLogo } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { ResponsiveSheet } from "@/components/site/responsive-sheet";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { Button } from "@/components/ui/button";
+import { OrderReceipt } from "@/components/payment/order-receipt";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import type { OrderView, PaymentPayload } from "@/lib/payments/types";
 import { unlockBullets, type PaymentMode } from "@/lib/site";
@@ -67,6 +69,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, onU
   const inWeChat = useSyncExternalStore(noopSubscribe, () => isWeChat(navigator.userAgent), () => false);
   const [state, setState] = useState<PayState>("ready");
   const [qrSvg, setQrSvg] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
   const cancelledRef = useRef(false);
   const pollRef = useRef<number | null>(null);
 
@@ -151,6 +154,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, onU
     try {
       const order = await api<OrderView>("/api/orders", { method: "POST", body: JSON.stringify({ resultId }) });
       if (cancelledRef.current) return;
+      setOrderId(order.id);
       if (order.provider === "mock") await runMock(order, startedAt);
       else if (order.payload) runWeChat(order, order.payload);
       else setState("cancelled");
@@ -198,6 +202,8 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, onU
           <PrimaryButton className="mt-[35px]" onClick={onRead}>
             开始阅读报告
           </PrimaryButton>
+          {orderId && <div className="mt-6 border-t border-line pt-5"><OrderReceipt orderId={orderId} /></div>}
+          <Link href="/my/report" prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center">查看全部测试记录</Link>
         </div>
       ) : (
         <div>

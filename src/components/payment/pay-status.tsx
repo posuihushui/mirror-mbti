@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { PrimaryButton } from "@/components/site/primary-button";
+import { OrderReceipt } from "@/components/payment/order-receipt";
 import type { OrderView } from "@/lib/payments/types";
 
 const LABELS: Record<OrderView["status"], string> = {
@@ -46,7 +48,7 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
       <div className="flex items-center justify-between border-b border-line pb-5">
         <span className="text-[14px] font-medium">
           完整人格报告
-          <small className="mt-2 block text-[10px] font-normal text-[#7c8b93]">订单 {order.id}</small>
+          <small className="mt-2 block text-[10px] font-normal text-[#7c8b93]">{order.provider === "mock" ? "演示订单 · 本次不会扣款" : "单次购买"}</small>
         </span>
         <strong className="text-[39px] font-medium tracking-[-2px]">
           <small className="mr-1 text-[20px]">¥</small>
@@ -75,6 +77,8 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
       <p className="mt-4 text-[10px] leading-[1.8] text-[#829094]">
         支付成功但报告未解锁时，请保留订单编号并联系我们；系统也会在收到支付结果后自动为你解锁。
       </p>
+      <div className="mt-6 border-t border-line pt-5"><OrderReceipt orderId={order.id} /></div>
+      <Link href="/my/report" prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center">查看全部测试记录</Link>
     </div>
   );
 }

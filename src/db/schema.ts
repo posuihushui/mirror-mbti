@@ -73,6 +73,17 @@ export const paymentEvents = pgTable("payment_events", {
   ...timestamps,
 });
 
+/** Atomic recovery throttles. Keys are secret-keyed IP hashes, never raw IPs or order numbers. */
+export const recoveryAttempts = pgTable(
+  "recovery_attempts",
+  {
+    bucketKey: char("bucket_key", { length: 64 }).primaryKey(),
+    attempts: integer("attempts").default(1).notNull(),
+    windowStartedAt: timestamp("window_started_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("recovery_attempts_window_idx").on(t.windowStartedAt)],
+);
+
 export type Visitor = typeof visitors.$inferSelect;
 export type ResultRow = typeof results.$inferSelect;
 export type OrderRow = typeof orders.$inferSelect;

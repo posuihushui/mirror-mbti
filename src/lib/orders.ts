@@ -3,7 +3,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { OrderRow, PaymentChannel } from "@/db/schema";
 import { appUrl, env, priceFen } from "@/lib/env";
-import { newOrderId } from "@/lib/ids";
+import { isValidOrderId, newOrderId } from "@/lib/ids";
 import { typeMeta } from "@/lib/personality";
 import { getPaymentProvider } from "@/lib/payments";
 import type { OrderView, PaymentPayload } from "@/lib/payments/types";
@@ -79,7 +79,7 @@ export async function createOrder(input: { visitorId: string; resultId: string; 
 }
 
 export async function getOrder(id: string, visitorId: string | null): Promise<OrderRow | null> {
-  if (!/^M\d{8}[0-9A-F]{16}$/.test(id)) return null;
+  if (!isValidOrderId(id)) return null;
   const order = await db().query.orders.findFirst({ where: eq(schema.orders.id, id) });
   if (!order || (visitorId && order.visitorId !== visitorId)) return null;
   return order;

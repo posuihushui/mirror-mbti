@@ -3,12 +3,17 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/site/app-header";
 import { JsonLd } from "@/components/seo/json-ld";
+import { ReportFullReading } from "@/components/report/report-body";
 import { ResultActions } from "@/components/result/result-actions";
 import { ResultChart } from "@/components/result/result-chart";
+import { SampleCta } from "@/components/result/sample-cta";
 import { TypeIntro } from "@/components/result/type-intro";
 import { UnlockPanel } from "@/components/result/unlock-panel";
+import { Dock } from "@/components/site/dock";
+import { PrimaryButton } from "@/components/site/primary-button";
 import { appUrl, paymentMode, priceFen } from "@/lib/env";
 import { typeMeta } from "@/lib/personality";
+import { buildReportData } from "@/lib/report-content";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
 import { getVisitorId } from "@/lib/session";
 import { formatPriceFen, site } from "@/lib/site";
@@ -25,9 +30,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     const { name, line } = typeMeta("INFJ");
     return {
       title: `报告示例 · INFJ ${name}`,
-      description: `${line.replace("\n", "")} 查看观己 mirror 的性格画像示例：四维偏好雷达图与完整报告说明。`,
+      description: `${line.replace("\n", "")} 观己 mirror 的完整示例报告：四维偏好雷达图，以及性格总览、优势与盲点、关系与沟通、工作与成长四章全文。`,
       alternates: { canonical: "/result/sample" },
-      openGraph: { title: `INFJ ${name} · 报告示例`, description: site.description },
+      openGraph: { title: `INFJ ${name} · 完整报告示例`, description: "免费阅读一份完整的示例人格报告：四个维度的偏好、优势与盲点、关系沟通与成长建议。" },
     };
   }
   return { title: "你的性格画像", robots: { index: false, follow: false } };
@@ -52,7 +57,6 @@ export default async function ResultPage({ params }: Params) {
     priceLabel: price,
     mode,
     owner: result.owner,
-    sample,
     unlocked: result.unlocked,
   } as const;
 
@@ -81,22 +85,44 @@ export default async function ResultPage({ params }: Params) {
           <TypeIntro profile={profile} sample={sample} />
           <ResultChart profile={profile} />
         </section>
-        <UnlockPanel
-          priceLabel={price}
-          secureNote={secureNote}
-          action={
-            <Suspense fallback={null}>
-              <ResultActions {...actionProps} slot="panel" />
-            </Suspense>
-          }
-        />
+        {sample ? (
+          <>
+            <div className="px-[27px] pt-2 pb-[18px] md:px-0 md:pt-6">
+              <p className="eyebrow text-[8px] text-[#738087] md:text-[10px]">A FULL READING · 完整解读</p>
+              <p className="mt-3 max-w-[520px] text-[13px] leading-[1.9] text-[#6b777d]">
+                以下是这份示例报告的全部内容。完成测试后，你会读到属于自己的那一份。
+              </p>
+            </div>
+            <ReportFullReading data={buildReportData(profile, { sample: true, demo: mode === "mock" })} />
+            {/* Nothing is locked on the sample, so it closes by inviting the test, not by quoting a price. */}
+            <div className="mt-4 md:mt-10">
+              <SampleCta priceLabel={price} />
+            </div>
+          </>
+        ) : (
+          <UnlockPanel
+            priceLabel={price}
+            secureNote={secureNote}
+            action={
+              <Suspense fallback={null}>
+                <ResultActions {...actionProps} slot="panel" />
+              </Suspense>
+            }
+          />
+        )}
         <p className="mx-[25px] my-[25px] text-center text-[9px] text-[#829094] md:mx-0 md:mt-[25px] md:mb-[35px] md:text-[10px]">
           认识自己是一段持续的旅程。这份画像用于自我探索，不定义你。
         </p>
       </main>
-      <Suspense fallback={null}>
-        <ResultActions {...actionProps} slot="dock" />
-      </Suspense>
+      {sample ? (
+        <Dock>
+          <PrimaryButton href="/quiz">开始认识自己</PrimaryButton>
+        </Dock>
+      ) : (
+        <Suspense fallback={null}>
+          <ResultActions {...actionProps} slot="dock" />
+        </Suspense>
+      )}
       {productJsonLd && <JsonLd data={productJsonLd} />}
     </>
   );
