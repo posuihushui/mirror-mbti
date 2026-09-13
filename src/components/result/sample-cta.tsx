@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { PrimaryButton } from "@/components/site/primary-button";
-import { QUESTION_COUNT } from "@/lib/personality";
 
 type Props = {
   priceLabel: string;
@@ -15,8 +14,8 @@ type Props = {
  */
 export function SampleCta({ priceLabel, secondary }: Props) {
   const meta: [string, string][] = [
-    [String(QUESTION_COUNT), "道情境题"],
-    ["5", "分钟左右"],
+    ["32/64", "题可选"],
+    ["5–10", "分钟"],
     ["16", "种人格倾向"],
   ];
 
@@ -26,7 +25,7 @@ export function SampleCta({ priceLabel, secondary }: Props) {
         <p className="eyebrow text-[9px] text-[#99a6a9]">YOUR TURN · 轮到你了</p>
         <h2 className="mt-[25px] text-[29px] leading-[1.55] md:text-[35px]">{"属于你的故事，\n还未开始。"}</h2>
         <p className="mt-[27px] text-[11px] leading-[2] text-[#a1afb2] md:text-[12px]">
-          这是一份示例报告。回答 {QUESTION_COUNT} 道日常情境题，你会看到自己的四维偏好，和一份同样完整的报告。
+          这是一份示例报告。选择 32 题或 64 题版本，免费了解自己的四维偏好；也可以按需解锁同样版式的完整报告。
         </p>
       </div>
       <div className="mt-[30px] md:mt-0">

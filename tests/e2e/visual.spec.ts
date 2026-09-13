@@ -6,9 +6,10 @@ import { expect, test } from "@playwright/test";
  * generated images against docs/design-evidence/*.
  */
 test.describe("visual", () => {
-  test("home", async ({ page }) => {
+  test("home", async ({ page }, testInfo) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
+    await page.screenshot({ path: testInfo.outputPath("home-current.png"), animations: "disabled", scale: "css" });
     await expect(page).toHaveScreenshot("home.png", { fullPage: false });
   });
 

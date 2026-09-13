@@ -8,7 +8,6 @@ import { Dock } from "@/components/site/dock";
 import { OverlayButton } from "@/components/site/overlay-button";
 import { StartButton } from "@/components/site/start-button";
 import { priceFen } from "@/lib/env";
-import { QUESTION_COUNT } from "@/lib/personality";
 import { formatPriceFen, site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -45,7 +44,7 @@ export default function HomePage() {
 
           <div className="relative z-1 px-[27px] pt-[98px] md:col-start-1 md:row-start-1 md:self-center md:px-0 md:pt-5 md:pb-[45px]">
             <p className="eyebrow text-[8px] tracking-[0.17em] text-[#627176] md:text-[10px] md:tracking-[0.14em] md:text-ink">
-              A LITTLE CLOSER TO YOU
+              MBTI 测试体验 · 16 型人格探索
             </p>
             <h1 className="mt-[18px] text-[36px] leading-[1.4] tracking-[-0.055em] md:mt-[34px] md:text-[53px] md:leading-[1.32] md:tracking-[-0.065em] xl:text-[68px] 2xl:text-[77px]">
               向内看见，
@@ -53,14 +52,14 @@ export default function HomePage() {
               真实的自己<span className="text-[#999c98]">。</span>
             </h1>
             <p className="mt-[17px] text-[12px] leading-[1.9] text-[#677276] md:mt-[26px] md:text-[14px] md:leading-[2]">
-              你如何感受世界、与人相处、做出选择？
+              通过日常情境题，了解你的四维人格偏好。
               <br />
-              给自己几分钟，从另一个角度认识自己。
+              原创自我探索问卷，非官方 MBTI 量表。
             </p>
             <div className="mt-[17px] flex items-center gap-[13px] md:mt-[42px] md:gap-[14px] xl:gap-6">
               {[
-                [String(QUESTION_COUNT), "道情境题"],
-                ["5", "分钟左右"],
+                ["32/64", "题可选"],
+                ["5–10", "分钟左右"],
                 ["16", "种人格倾向"],
               ].map(([n, l], i) => (
                 <span
@@ -96,6 +95,12 @@ export default function HomePage() {
             关于这次探索 <ArrowUpRight size={15} />
           </OverlayButton>
         </section>
+        <nav aria-label="探索更多" className="mb-[125px] flex flex-wrap gap-x-7 gap-y-4 border-t border-line px-[27px] py-7 text-[12px] md:mb-0 md:px-0">
+          <Link href="/preferences" className="text-link">了解四维偏好</Link>
+          <Link href="/types" className="text-link">16 型人格</Link>
+          <Link href="/about" className="text-link">测试说明</Link>
+          <Link href="/help" className="text-link">测试与订单帮助</Link>
+        </nav>
       </main>
 
       <Dock variant="home">

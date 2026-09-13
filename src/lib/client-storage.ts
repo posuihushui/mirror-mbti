@@ -1,104 +1,100 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { QUESTION_COUNT } from "@/lib/personality";
+import { getQuestionnaire, type QuestionnaireId } from "@/lib/questionnaires";
+import { migrateLegacyProgress, normalizeProgress, type QuizProgress } from "@/lib/quiz-progress";
 import { storageKeys } from "@/lib/site";
+export type { QuizProgress } from "@/lib/quiz-progress";
 
-export type QuizProgress = { answers: (number | null)[]; index: number; updatedAt: number };
-
-const EVENT = "mirror:storage";
 const listeners = new Set<() => void>();
-
-function emit() {
-  for (const l of listeners) l();
+const memory = new Map<string, unknown>();
+const unavailable = new Set<string>();
+const cache = new Map<string, { raw: string | null; value: unknown }>();
+const emit = () => { for (const listener of listeners) listener(); };
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+  window.addEventListener("storage", callback);
+  return () => { listeners.delete(callback); window.removeEventListener("storage", callback); };
 }
 
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  const onStorage = () => cb();
-  window.addEventListener("storage", onStorage);
-  window.addEventListener(EVENT, onStorage);
-  return () => {
-    listeners.delete(cb);
-    window.removeEventListener("storage", onStorage);
-    window.removeEventListener(EVENT, onStorage);
-  };
-}
-
-/* `useSyncExternalStore` needs referentially stable snapshots, so parsed values are cached per raw string. */
-const snapshotCache = new Map<string, { raw: string | null; value: unknown }>();
-
-function read<T>(key: string): T | null {
-  let raw: string | null = null;
-  try {
-    raw = window.localStorage.getItem(key);
-  } catch {
-    raw = null;
-  }
-  const cached = snapshotCache.get(key);
-  if (cached && cached.raw === raw) return cached.value as T | null;
-  let value: T | null = null;
-  if (raw) {
-    try {
-      value = JSON.parse(raw) as T;
-    } catch {
-      value = null;
-    }
-  }
-  snapshotCache.set(key, { raw, value });
+function read(key: string): unknown {
+  // Unsaved local state wins over a stale persistent value after quota/security failures.
+  if (memory.has(key)) return memory.get(key);
+  let raw: string | null;
+  try { raw = window.localStorage.getItem(key); }
+  catch { unavailable.add(key); return cache.get(key)?.value ?? null; }
+  if (cache.get(key)?.raw === raw) return cache.get(key)!.value;
+  let value: unknown = null;
+  try { value = raw ? JSON.parse(raw) : null; } catch { /* invalid persistence is ignored */ }
+  cache.set(key, { raw, value });
   return value;
 }
 
-function write(key: string, value: unknown | null) {
+function write(key: string, value: unknown) {
+  memory.set(key, value);
   try {
-    if (value === null) window.localStorage.removeItem(key);
-    else window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* private mode or quota: progress simply won't persist */
-  }
+    const raw = JSON.stringify(value);
+    window.localStorage.setItem(key, raw);
+    cache.set(key, { raw, value });
+    memory.delete(key);
+    unavailable.delete(key);
+  } catch { unavailable.add(key); }
   emit();
 }
 
-function validProgress(p: QuizProgress | null): QuizProgress | null {
-  if (!p || !Array.isArray(p.answers) || p.answers.length !== QUESTION_COUNT) return null;
-  return p;
+type DraftState = { activeId: QuestionnaireId | null; drafts: Partial<Record<QuestionnaireId, QuizProgress>> };
+const EMPTY_STATE: DraftState = { activeId: null, drafts: {} };
+let stateSource: unknown;
+let stateCache: DraftState = EMPTY_STATE;
+function readDrafts(): DraftState {
+  const saved = read(storageKeys.quizVersions);
+  const legacy = saved == null ? read(storageKeys.quiz) : null;
+  const source = saved ?? legacy;
+  if (source === stateSource) return stateCache;
+  stateSource = source;
+  if (saved && typeof saved === "object" && "drafts" in saved && saved.drafts && typeof saved.drafts === "object") {
+    const drafts: DraftState["drafts"] = {};
+    for (const [id, value] of Object.entries(saved.drafts)) {
+      const p = normalizeProgress(value);
+      if (p && p.questionnaireId === id) drafts[p.questionnaireId] = p;
+    }
+    const activeId = "activeId" in saved && typeof saved.activeId === "string" && getQuestionnaire(saved.activeId) && drafts[saved.activeId as QuestionnaireId] ? saved.activeId as QuestionnaireId : null;
+    stateCache = { activeId, drafts };
+  } else {
+    const p = migrateLegacyProgress(legacy);
+    stateCache = p ? { activeId: p.questionnaireId, drafts: { [p.questionnaireId]: p } } : EMPTY_STATE;
+  }
+  return stateCache;
 }
 
-export function readQuizProgress(): QuizProgress | null {
-  return validProgress(read<QuizProgress>(storageKeys.quiz));
+export function readQuizProgress(id?: QuestionnaireId): QuizProgress | null {
+  const state = readDrafts();
+  const key = id ?? state.activeId;
+  return key ? state.drafts[key] ?? null : null;
 }
 
-export function writeQuizProgress(p: Omit<QuizProgress, "updatedAt"> | null) {
-  write(storageKeys.quiz, p ? { ...p, updatedAt: Date.now() } : null);
+export function writeQuizProgress(progress: Omit<QuizProgress, "updatedAt"> | null) {
+  const state = readDrafts();
+  const drafts = { ...state.drafts };
+  if (progress) {
+    const normalized = normalizeProgress({ ...progress, updatedAt: Date.now() });
+    if (!normalized) throw new Error("Invalid quiz progress");
+    drafts[normalized.questionnaireId] = normalized;
+    write(storageKeys.quizVersions, { activeId: normalized.questionnaireId, drafts });
+  } else {
+    if (state.activeId) delete drafts[state.activeId];
+    const activeId = Object.values(drafts).sort((a, b) => b.updatedAt - a.updatedAt)[0]?.questionnaireId ?? null;
+    write(storageKeys.quizVersions, { activeId, drafts });
+  }
 }
 
 export function readLastResultId(): string | null {
-  const v = read<{ id: string }>(storageKeys.lastResult);
-  return v?.id ?? null;
+  const value = read(storageKeys.lastResult);
+  return value && typeof value === "object" && "id" in value && typeof value.id === "string" ? value.id : null;
 }
-
-export function writeLastResultId(id: string | null) {
-  write(storageKeys.lastResult, id ? { id } : null);
-}
-
-/** Live quiz progress; the store of record for the questionnaire island. Server snapshot is null. */
-export function useQuizProgress(): QuizProgress | null {
-  return useSyncExternalStore(subscribe, readQuizProgress, () => null);
-}
-
-/** True once at least one answer has been saved locally. Server snapshot is false. */
-export function useHasQuizProgress(): boolean {
-  return useSyncExternalStore(
-    subscribe,
-    () => {
-      const p = readQuizProgress();
-      return !!p && p.answers.some((a) => a !== null);
-    },
-    () => false,
-  );
-}
-
-/** Last completed result id, or null. Server snapshot is null. */
-export function useLastResultId(): string | null {
-  return useSyncExternalStore(subscribe, readLastResultId, () => null);
-}
+export function writeLastResultId(id: string | null) { write(storageKeys.lastResult, id ? { id } : null); }
+export function useQuizProgress() { return useSyncExternalStore(subscribe, readQuizProgress, () => null); }
+export function useQuizDrafts() { return useSyncExternalStore(subscribe, readDrafts, () => EMPTY_STATE); }
+export function useStorageAvailable() { return useSyncExternalStore(subscribe, () => unavailable.size === 0, () => true); }
+export function useHasQuizProgress() { return useSyncExternalStore(subscribe, () => Object.values(readDrafts().drafts).some((p) => Object.values(p.answers).some((a) => a !== null)), () => false); }
+export function useLastResultId() { return useSyncExternalStore(subscribe, readLastResultId, () => null); }

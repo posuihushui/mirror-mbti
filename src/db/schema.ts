@@ -1,4 +1,5 @@
 import { boolean, char, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type ResponseItem } from "@/lib/questionnaires";
 
 export const paymentProviderEnum = pgEnum("payment_provider", ["mock", "wechat"]);
 export const paymentChannelEnum = pgEnum("payment_channel", ["mock", "jsapi", "native", "h5"]);
@@ -26,6 +27,11 @@ export const results = pgTable(
       .notNull()
       .references(() => visitors.id),
     answers: jsonb("answers").$type<number[]>().notNull(),
+    questionnaireId: text("questionnaire_id").default(LEGACY_QUESTIONNAIRE_ID).notNull(),
+    questionCount: integer("question_count").default(32).notNull(),
+    responses: jsonb("responses").$type<ResponseItem[]>(),
+    scoringVersion: text("scoring_version").default(SCORING_VERSION).notNull(),
+    reportVersion: text("report_version").default(REPORT_VERSION).notNull(),
     type: char("type", { length: 4 }).notNull(),
     values: integer("values").array().notNull(),
     balanced: boolean("balanced").array().notNull(),

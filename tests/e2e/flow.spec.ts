@@ -1,10 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
+import { questions } from "../../src/lib/questionnaires";
 
-/** Answers all 32 questions with the given value (index in the 5-option list). */
-async function answerAll(page: Page, optionIndex: number) {
-  for (let i = 0; i < 32; i++) {
+/** A consistent first-pole preference, including reverse-scored items. */
+async function answerAll(page: Page) {
+  await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
+  for (const question of questions) {
     await expect(page.getByRole("group")).toBeVisible();
-    await page.getByRole("group").getByRole("button").nth(optionIndex).click();
+    await page.getByRole("group").getByRole("button").nth(question.reverse ? 4 : 0).click();
     const next = page.getByRole("button", { name: /下一题|查看我的结果|查看结果/ }).first();
     await next.click();
   }
@@ -14,7 +16,7 @@ test.describe("core flow", () => {
   test("home renders with the primary CTA and price", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("向内看见");
-    await expect(page.getByRole("link", { name: /开始认识自己/ }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /开始人格测试/ }).first()).toBeVisible();
     await expect(page.getByText(/完整报告 ¥6\.9/).filter({ visible: true }).first()).toBeVisible();
   });
 
@@ -28,6 +30,7 @@ test.describe("core flow", () => {
 
   test("quiz gates next until an answer is chosen and persists progress across reload", async ({ page }) => {
     await page.goto("/quiz");
+    await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
     const next = page.getByRole("button", { name: /下一题/ }).first();
     await expect(next).toBeDisabled();
     await page.getByRole("group").getByRole("button").first().click();
@@ -37,17 +40,16 @@ test.describe("core flow", () => {
     await page.reload();
     await expect(page.getByText(/^02/).filter({ visible: true }).first()).toBeVisible();
     await page.goto("/");
-    await expect(page.getByRole("link", { name: /继续认识自己/ }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "继续测试 · 1/32 题" }).first()).toBeVisible();
   });
 
   test("complete quiz → result → mock pay → report chapters", async ({ page }) => {
     await page.goto("/quiz");
-    await answerAll(page, 0);
+    await answerAll(page);
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     await expect(page.getByText("YOUR PERSONALITY · 你的性格画像")).toBeVisible();
-    // "非常符合" on every item cancels out across reverse-scored pairs: 50% on all four axes.
-    await expect(page.getByText(/^50/).first()).toBeVisible();
-    await expect(page.getByText("部分维度接近均衡，字母只描述这次作答中的倾向。")).toBeVisible();
+    await expect(page.getByText(/^100/).first()).toBeVisible();
+    await expect(page.getByText("ESTJ总经理", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: /解锁完整报告/ }).first().click();
     await expect(page.getByText("更完整地，认识自己。")).toBeVisible();
@@ -75,7 +77,7 @@ test.describe("core flow", () => {
     await expect(page).toHaveURL(reportPath);
   });
 
-  test("the sample closes by inviting the test, not by quoting a price", async ({ page }) => {
+  test("the sample closes by inviting the test, not by quoting a price", async ({ page }, testInfo) => {
     await page.goto("/result/sample");
     await expect(page.getByText("YOUR TURN · 轮到你了")).toBeVisible();
     await expect(page.getByRole("heading", { name: /属于你的故事/ })).toBeVisible();
@@ -88,6 +90,9 @@ test.describe("core flow", () => {
       await expect(cta).toHaveAttribute("href", "/quiz");
     }
     await expect(page.getByRole("link", { name: "阅读完整示例报告" })).toHaveAttribute("href", "/report/sample");
+    await page.getByRole("heading", { name: /属于你的故事/ }).scrollIntoViewIfNeeded();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath("sample-invitation.png"), animations: "disabled" });
     await page.getByRole("link", { name: /开始认识自己/ }).last().click();
     await expect(page).toHaveURL(/\/quiz$/);
   });
@@ -111,9 +116,9 @@ test.describe("core flow", () => {
   });
 
   test("sample report ships every chapter in the server HTML", async ({ request }) => {
-    const html = await (await request.get("/report/sample")).text();
+    const html = (await (await request.get("/report/sample")).text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<!--[\s\S]*?-->/g, "");
     for (const copy of [
-      "温柔地理解世界",
+      "先看清偏好",
       "理解你的优势",
       "好的关系",
       "找到适合你的方式",
@@ -122,14 +127,14 @@ test.describe("core flow", () => {
       "让精力的需要变得可见", // chapter 03
       "适合你的工作节奏", // chapter 04
     ]) {
-      expect(html, copy).toContain(copy);
+      expect(html.includes(copy), copy).toBe(true);
     }
   });
 
   test("report chapters deep-link, switch and keep both insight lists", async ({ page }) => {
     await page.goto("/report/sample?chapter=3");
     await expect(page.getByRole("heading", { name: /好的关系/ })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /温柔地理解世界/ })).toBeHidden();
+    await expect(page.getByRole("heading", { name: /先看清偏好/ })).toBeHidden();
 
     await page.getByRole("button", { name: /下一章/ }).click();
     await expect(page.getByRole("heading", { name: /找到适合你的方式/ })).toBeVisible();
@@ -146,7 +151,7 @@ test.describe("core flow", () => {
 
   test("locked report redirects to the result with the unlock sheet", async ({ page }) => {
     await page.goto("/quiz");
-    await answerAll(page, 2);
+    await answerAll(page);
     await page.waitForURL(/\/result\//);
     const id = page.url().split("/result/")[1];
     await page.goto(`/report/${id}`);

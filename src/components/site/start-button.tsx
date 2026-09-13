@@ -1,14 +1,15 @@
 "use client";
 
 import { PrimaryButton } from "@/components/site/primary-button";
-import { useHasQuizProgress } from "@/lib/client-storage";
+import { useQuizProgress } from "@/lib/client-storage";
 
-/** Home CTA: "继续认识自己" once local answers exist, otherwise "开始认识自己". */
+/** Home CTA exposes the active version's saved progress. */
 export function StartButton({ className }: { className?: string }) {
-  const inProgress = useHasQuizProgress();
+  const progress = useQuizProgress();
+  const answered = progress ? Object.values(progress.answers).filter((a) => a !== null).length : 0;
   return (
     <PrimaryButton href="/quiz" className={className}>
-      {inProgress ? "继续认识自己" : "开始认识自己"}
+      {progress && answered > 0 ? `继续测试 · ${answered}/${progress.questionOrder.length} 题` : "开始人格测试"}
     </PrimaryButton>
   );
 }

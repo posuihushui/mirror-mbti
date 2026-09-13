@@ -1,21 +1,19 @@
-import { z } from "zod";
+import { connection } from "next/server";
 import { fail, ok, readJson } from "@/lib/api";
-import { QUESTION_COUNT } from "@/lib/personality";
+import { publicProfile } from "@/lib/personality";
+import { parseSubmission } from "@/lib/questionnaires";
 import { createResult } from "@/lib/results";
 import { getVisitorId } from "@/lib/session";
 
-const bodySchema = z.object({
-  answers: z.array(z.number().int().min(-2).max(2)).length(QUESTION_COUNT),
-});
-
 /** Scores a completed questionnaire on the server and stores it for the visitor. */
 export async function POST(req: Request) {
+  await connection();
   const visitorId = await getVisitorId();
   if (!visitorId) return fail(401, "NO_SESSION", "缺少访客会话，请刷新页面后重试。");
 
-  const parsed = bodySchema.safeParse(await readJson(req));
-  if (!parsed.success) return fail(400, "INVALID_ANSWERS", "答案格式不正确，请重新作答。");
+  const parsed = parseSubmission(await readJson(req));
+  if (!parsed) return fail(400, "INVALID_ANSWERS", "题目或问卷版本不匹配，请检查答案后重新提交。");
 
-  const result = await createResult(visitorId, parsed.data.answers, req.headers.get("user-agent"));
-  return ok({ id: result.id, ...result.profile }, { status: 201 });
+  const result = await createResult(visitorId, parsed.answers, req.headers.get("user-agent"), parsed.questionnaire.id);
+  return ok({ id: result.id, ...publicProfile(result.profile), questionnaireId: result.questionnaireId, questionCount: result.questionCount }, { status: 201 });
 }

@@ -1,0 +1,397 @@
+
+> mirror-mbti@0.1.0 test:e2e
+> playwright test
+
+
+Running 54 tests using 5 workers
+
+(node:71142) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:71143) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:71146) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:71145) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:71144) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   4 [mobile] › tests/e2e/flow.spec.ts:16:7 › core flow › home renders with the primary CTA and price (1.1s)
+  ✓   6 [mobile] › tests/e2e/flow.spec.ts:23:7 › core flow › sample result and sample report are reachable (546ms)
+  ✓   2 [mobile] › tests/e2e/visual.spec.ts:9:7 › visual › home (1.7s)
+  ✓   3 [mobile] › tests/e2e/report-history.spec.ts:52:7 › report history and order recovery › lists every result, including an older paid report, without depending on local storage (2.2s)
+  ✓   7 [mobile] › tests/e2e/flow.spec.ts:31:7 › core flow › quiz gates next until an answer is chosen and persists progress across reload (710ms)
+  ✓   8 [mobile] › tests/e2e/visual.spec.ts:16:7 › visual › sample result (808ms)
+  ✓   5 [desktop] › tests/e2e/audit-updates.spec.ts:10:7 › review improvements › keeps separate drafts, checks answers and restarts only the chosen version (2.7s)
+  ✓   9 [mobile] › tests/e2e/report-history.spec.ts:81:7 › report history and order recovery › a visitor without a saved session can start a test or recover with an order number (617ms)
+  ✓  12 [desktop] › tests/e2e/audit-updates.spec.ts:40:7 › review improvements › migrates an existing 32-question browser draft without changing its answers (219ms)
+  ✓  11 [mobile] › tests/e2e/visual.spec.ts:22:7 › visual › sample report chapter 2 (749ms)
+(node:71245) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  15 [desktop] › tests/e2e/flow.spec.ts:16:7 › core flow › home renders with the primary CTA and price (301ms)
+  ✓  16 [desktop] › tests/e2e/flow.spec.ts:23:7 › core flow › sample result and sample report are reachable (479ms)
+  ✓  17 [desktop] › tests/e2e/flow.spec.ts:31:7 › core flow › quiz gates next until an answer is chosen and persists progress across reload (721ms)
+  ✓  14 [desktop] › tests/e2e/audit-updates.spec.ts:49:7 › review improvements › can finish the quiz when browser storage is blocked (2.8s)
+  ✓   1 [mobile] › tests/e2e/audit-updates.spec.ts:10:7 › review improvements › keeps separate drafts, checks answers and restarts only the chosen version (6.0s)
+  ✓  20 [mobile] › tests/e2e/audit-updates.spec.ts:40:7 › review improvements › migrates an existing 32-question browser draft without changing its answers (160ms)
+  ✘  13 [mobile] › tests/e2e/report-history.spec.ts:91:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked (11.2s)
+(node:71263) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  22 [mobile] › tests/e2e/report-history.spec.ts:117:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access (279ms)
+(node:71268) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  21 [mobile] › tests/e2e/audit-updates.spec.ts:49:7 › review improvements › can finish the quiz when browser storage is blocked (13.5s)
+  ✓  10 [mobile] › tests/e2e/flow.spec.ts:46:7 › core flow › complete quiz → result → mock pay → report chapters (18.0s)
+  ✓  18 [desktop] › tests/e2e/flow.spec.ts:46:7 › core flow › complete quiz → result → mock pay → report chapters (15.5s)
+  ✓  25 [mobile] › tests/e2e/flow.spec.ts:80:7 › core flow › the sample closes by inviting the test, not by quoting a price (364ms)
+  ✓  27 [mobile] › tests/e2e/flow.spec.ts:100:7 › core flow › the sample report is the real report layout, marked as a sample (213ms)
+  ✓  28 [mobile] › tests/e2e/flow.spec.ts:118:7 › core flow › sample report ships every chapter in the server HTML (16ms)
+  ✓  26 [desktop] › tests/e2e/flow.spec.ts:80:7 › core flow › the sample closes by inviting the test, not by quoting a price (398ms)
+  ✓  30 [desktop] › tests/e2e/flow.spec.ts:100:7 › core flow › the sample report is the real report layout, marked as a sample (176ms)
+  ✓  31 [desktop] › tests/e2e/flow.spec.ts:118:7 › core flow › sample report ships every chapter in the server HTML (21ms)
+  ✓  29 [mobile] › tests/e2e/flow.spec.ts:134:7 › core flow › report chapters deep-link, switch and keep both insight lists (648ms)
+  ✓  32 [desktop] › tests/e2e/flow.spec.ts:134:7 › core flow › report chapters deep-link, switch and keep both insight lists (660ms)
+  ✘  23 [mobile] › tests/e2e/report-history.spec.ts:148:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access (10.8s)
+(node:71339) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  35 [mobile] › tests/e2e/report-history.spec.ts:185:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery (685ms)
+(node:71344) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  36 [mobile] › tests/e2e/report-history.spec.ts:226:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity (253ms)
+(node:71349) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  37 [desktop] › tests/e2e/report-history.spec.ts:52:7 › report history and order recovery › lists every result, including an older paid report, without depending on local storage (910ms)
+  ✓  38 [desktop] › tests/e2e/report-history.spec.ts:81:7 › report history and order recovery › a visitor without a saved session can start a test or recover with an order number (500ms)
+  ✓  19 [desktop] › tests/e2e/audit-updates.spec.ts:64:7 › review improvements › completes all 64 questions, persists the version and serves the paid chapters as HTML (26.8s)
+  ✓  40 [desktop] › tests/e2e/audit-updates.spec.ts:95:7 › review improvements › unclear results cannot be sold; owners can review answers and keep the old record (1.4s)
+  ✓  41 [desktop] › tests/e2e/audit-updates.spec.ts:132:7 › review improvements › public pages explain MBTI, score limits and a working support contact (488ms)
+  ✓  42 [desktop] › tests/e2e/visual.spec.ts:9:7 › visual › home (818ms)
+  ✓  34 [desktop] › tests/e2e/flow.spec.ts:152:7 › core flow › locked report redirects to the result with the unlock sheet (13.4s)
+  ✓  44 [desktop] › tests/e2e/flow.spec.ts:162:7 › core flow › API rejects malformed answers and unknown results (159ms)
+  ✓  33 [mobile] › tests/e2e/flow.spec.ts:152:7 › core flow › locked report redirects to the result with the unlock sheet (14.1s)
+  ✓  45 [desktop] › tests/e2e/flow.spec.ts:177:7 › core flow › SEO endpoints respond (119ms)
+  ✓  46 [mobile] › tests/e2e/flow.spec.ts:162:7 › core flow › API rejects malformed answers and unknown results (207ms)
+  ✓  43 [desktop] › tests/e2e/visual.spec.ts:16:7 › visual › sample result (742ms)
+  ✓  47 [mobile] › tests/e2e/flow.spec.ts:177:7 › core flow › SEO endpoints respond (166ms)
+  ✓  48 [desktop] › tests/e2e/visual.spec.ts:22:7 › visual › sample report chapter 2 (730ms)
+  ✘  39 [desktop] › tests/e2e/report-history.spec.ts:91:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked (11.1s)
+(node:71376) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  24 [mobile] › tests/e2e/audit-updates.spec.ts:64:7 › review improvements › completes all 64 questions, persists the version and serves the paid chapters as HTML (21.7s)
+  ✘  49 [desktop] › tests/e2e/report-history.spec.ts:117:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access (280ms)
+(node:71384) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  50 [mobile] › tests/e2e/audit-updates.spec.ts:95:7 › review improvements › unclear results cannot be sold; owners can review answers and keep the old record (1.5s)
+  ✓  52 [mobile] › tests/e2e/audit-updates.spec.ts:132:7 › review improvements › public pages explain MBTI, score limits and a working support contact (470ms)
+  ✘  51 [desktop] › tests/e2e/report-history.spec.ts:148:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access (10.8s)
+(node:71415) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  53 [desktop] › tests/e2e/report-history.spec.ts:185:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery (604ms)
+(node:71420) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  54 [desktop] › tests/e2e/report-history.spec.ts:226:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity (158ms)
+
+
+  1) [mobile] › tests/e2e/report-history.spec.ts:91:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('article', { name: 'ESTJ 测试记录', exact: true }).filter({ has: locator('a[href="/report/YhzYMmMrQrr2"]') })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('article', { name: 'ESTJ 测试记录', exact: true }).filter({ has: locator('a[href="/report/YhzYMmMrQrr2"]') }) with timeout 10000ms
+      - waiting for getByRole('article', { name: 'ESTJ 测试记录', exact: true }).filter({ has: locator('a[href="/report/YhzYMmMrQrr2"]') })
+
+
+      40 |     has: page.locator(`a[href="${href}"]`),
+      41 |   });
+    > 42 |   await expect(card).toBeVisible();
+         |                      ^
+      43 |   await expect(card.getByRole("link", { name: paid ? "阅读详细报告" : "查看简要结果", exact: true })).toHaveAttribute("href", href);
+      44 |   if (!paid) await expect(card.getByRole("link", { name: "阅读详细报告", exact: true })).toHaveCount(0);
+      45 | }
+        at expectRecord (/Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:42:22)
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:104:11
+
+    Error Context: test-results/report-history-report-hist-ed8f3-e-other-result-stays-locked-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-ed8f3-e-other-result-stays-locked-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-ed8f3-e-other-result-stays-locked-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [mobile] › tests/e2e/report-history.spec.ts:117:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 403
+
+      129 |         headers: { Origin: new URL(baseURL!).origin },
+      130 |       });
+    > 131 |       expect(recovery.status()).toBe(200);
+          |                                 ^
+      132 |       expect((await recoveredContext.cookies()).filter((cookie) => cookie.name === "mid").map((cookie) => cookie.value)).toEqual([ownerCookie.value]);
+      133 |       expect(recovery.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie" && header.value.startsWith("mid="))).toHaveLength(1);
+      134 |
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:131:33
+
+    Error Context: test-results/report-history-report-hist-ff13e--does-not-grant-paid-access-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-ff13e--does-not-grant-paid-access-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-ff13e--does-not-grant-paid-access-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [mobile] › tests/e2e/report-history.spec.ts:148:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('article', { name: 'INFP 测试记录', exact: true }).filter({ has: locator('a[href="/result/FpFoynB3zchi"]') })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('article', { name: 'INFP 测试记录', exact: true }).filter({ has: locator('a[href="/result/FpFoynB3zchi"]') }) with timeout 10000ms
+      - waiting for getByRole('article', { name: 'INFP 测试记录', exact: true }).filter({ has: locator('a[href="/result/FpFoynB3zchi"]') })
+
+
+      40 |     has: page.locator(`a[href="${href}"]`),
+      41 |   });
+    > 42 |   await expect(card).toBeVisible();
+         |                      ^
+      43 |   await expect(card.getByRole("link", { name: paid ? "阅读详细报告" : "查看简要结果", exact: true })).toHaveAttribute("href", href);
+      44 |   if (!paid) await expect(card.getByRole("link", { name: "阅读详细报告", exact: true })).toHaveCount(0);
+      45 | }
+        at expectRecord (/Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:42:22)
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:170:13
+
+    Error Context: test-results/report-history-report-hist-33380-rds-or-changing-paid-access-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-33380-rds-or-changing-paid-access-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-33380-rds-or-changing-paid-access-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [mobile] › tests/e2e/report-history.spec.ts:185:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 403
+
+      204 |           headers: { Origin: new URL(baseURL!).origin },
+      205 |         });
+    > 206 |         expect(response.status()).toBe(status);
+          |                                   ^
+      207 |       }
+      208 |       const crossSite = await page.request.post("/api/reports/recover", {
+      209 |         data: { orderId: foreignOrder },
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:206:35
+
+    Error Context: test-results/report-history-report-hist-7b97c-alid-or-cross-site-recovery-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-7b97c-alid-or-cross-site-recovery-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-7b97c-alid-or-cross-site-recovery-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [mobile] › tests/e2e/report-history.spec.ts:226:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 403
+
+      232 |         headers: { Origin: new URL(baseURL!).origin },
+      233 |       });
+    > 234 |       expect(response.status()).toBe(400);
+          |                                 ^
+      235 |     }
+      236 |
+      237 |     const limited = await page.request.post("/api/reports/recover", {
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:234:33
+
+    Error Context: test-results/report-history-report-hist-0add4-uing-a-replacement-identity-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-0add4-uing-a-replacement-identity-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-0add4-uing-a-replacement-identity-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [desktop] › tests/e2e/report-history.spec.ts:91:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('article', { name: 'ESTJ 测试记录', exact: true }).filter({ has: locator('a[href="/report/3GuUTdLG-L-5"]') })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('article', { name: 'ESTJ 测试记录', exact: true }).filter({ has: locator('a[href="/report/3GuUTdLG-L-5"]') }) with timeout 10000ms
+      - waiting for getByRole('article', { name: 'ESTJ 测试记录', exact: true }).filter({ has: locator('a[href="/report/3GuUTdLG-L-5"]') })
+
+
+      40 |     has: page.locator(`a[href="${href}"]`),
+      41 |   });
+    > 42 |   await expect(card).toBeVisible();
+         |                      ^
+      43 |   await expect(card.getByRole("link", { name: paid ? "阅读详细报告" : "查看简要结果", exact: true })).toHaveAttribute("href", href);
+      44 |   if (!paid) await expect(card.getByRole("link", { name: "阅读详细报告", exact: true })).toHaveCount(0);
+      45 | }
+        at expectRecord (/Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:42:22)
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:104:11
+
+    Error Context: test-results/report-history-report-hist-ed8f3-e-other-result-stays-locked-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-ed8f3-e-other-result-stays-locked-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-ed8f3-e-other-result-stays-locked-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [desktop] › tests/e2e/report-history.spec.ts:117:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 403
+
+      129 |         headers: { Origin: new URL(baseURL!).origin },
+      130 |       });
+    > 131 |       expect(recovery.status()).toBe(200);
+          |                                 ^
+      132 |       expect((await recoveredContext.cookies()).filter((cookie) => cookie.name === "mid").map((cookie) => cookie.value)).toEqual([ownerCookie.value]);
+      133 |       expect(recovery.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie" && header.value.startsWith("mid="))).toHaveLength(1);
+      134 |
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:131:33
+
+    Error Context: test-results/report-history-report-hist-ff13e--does-not-grant-paid-access-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-ff13e--does-not-grant-paid-access-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-ff13e--does-not-grant-paid-access-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [desktop] › tests/e2e/report-history.spec.ts:148:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('article', { name: 'INFP 测试记录', exact: true }).filter({ has: locator('a[href="/result/YQLhXwK6Bruw"]') })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('article', { name: 'INFP 测试记录', exact: true }).filter({ has: locator('a[href="/result/YQLhXwK6Bruw"]') }) with timeout 10000ms
+      - waiting for getByRole('article', { name: 'INFP 测试记录', exact: true }).filter({ has: locator('a[href="/result/YQLhXwK6Bruw"]') })
+
+
+      40 |     has: page.locator(`a[href="${href}"]`),
+      41 |   });
+    > 42 |   await expect(card).toBeVisible();
+         |                      ^
+      43 |   await expect(card.getByRole("link", { name: paid ? "阅读详细报告" : "查看简要结果", exact: true })).toHaveAttribute("href", href);
+      44 |   if (!paid) await expect(card.getByRole("link", { name: "阅读详细报告", exact: true })).toHaveCount(0);
+      45 | }
+        at expectRecord (/Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:42:22)
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:170:13
+
+    Error Context: test-results/report-history-report-hist-33380-rds-or-changing-paid-access-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-33380-rds-or-changing-paid-access-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-33380-rds-or-changing-paid-access-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [desktop] › tests/e2e/report-history.spec.ts:185:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 403
+
+      204 |           headers: { Origin: new URL(baseURL!).origin },
+      205 |         });
+    > 206 |         expect(response.status()).toBe(status);
+          |                                   ^
+      207 |       }
+      208 |       const crossSite = await page.request.post("/api/reports/recover", {
+      209 |         data: { orderId: foreignOrder },
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:206:35
+
+    Error Context: test-results/report-history-report-hist-7b97c-alid-or-cross-site-recovery-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-7b97c-alid-or-cross-site-recovery-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-7b97c-alid-or-cross-site-recovery-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [desktop] › tests/e2e/report-history.spec.ts:226:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 403
+
+      232 |         headers: { Origin: new URL(baseURL!).origin },
+      233 |       });
+    > 234 |       expect(response.status()).toBe(400);
+          |                                 ^
+      235 |     }
+      236 |
+      237 |     const limited = await page.request.post("/api/reports/recover", {
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/report-history.spec.ts:234:33
+
+    Error Context: test-results/report-history-report-hist-0add4-uing-a-replacement-identity-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/report-history-report-hist-0add4-uing-a-replacement-identity-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/report-history-report-hist-0add4-uing-a-replacement-identity-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10 failed
+    [mobile] › tests/e2e/report-history.spec.ts:91:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked 
+    [mobile] › tests/e2e/report-history.spec.ts:117:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access 
+    [mobile] › tests/e2e/report-history.spec.ts:148:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access 
+    [mobile] › tests/e2e/report-history.spec.ts:185:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery 
+    [mobile] › tests/e2e/report-history.spec.ts:226:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity 
+    [desktop] › tests/e2e/report-history.spec.ts:91:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked 
+    [desktop] › tests/e2e/report-history.spec.ts:117:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access 
+    [desktop] › tests/e2e/report-history.spec.ts:148:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access 
+    [desktop] › tests/e2e/report-history.spec.ts:185:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery 
+    [desktop] › tests/e2e/report-history.spec.ts:226:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity 
+  44 passed (54.5s)

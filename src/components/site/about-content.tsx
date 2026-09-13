@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { faqs } from "@/lib/site";
@@ -19,11 +20,12 @@ export function AboutContent({ priceLabel, onStart }: { priceLabel: string; onSt
           <AccordionItem key={q} value={String(i)}>
             <AccordionTrigger>{q}</AccordionTrigger>
             <AccordionContent>
-              <p className="text-[11px] leading-[2.1] text-[#6d7f88]">{a}</p>
+              <p className="text-[13px] leading-[2.1] text-[#6d7f88]">{a}</p>
             </AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
+      <Link href="/help" className="text-link mt-5 min-h-11" onClick={onStart}>订单帮助与联系</Link>
       <PrimaryButton
         className="mt-6"
         onClick={() => {

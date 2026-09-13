@@ -4,8 +4,9 @@ export const site = {
   brand: "mirror",
   brandZh: "观己",
   tagline: "向内看见，真实的自己",
-  title: "观己 mirror — 向内看见，真实的自己",
-  description: "观己 Mirror，以 32 道日常情境题认识自己。免费测试与性格概览，完整人格报告一次解锁。",
+  title: "MBTI 测试体验｜16 型人格探索 · 观己 mirror",
+  description: "观己 Mirror 原创 MBTI 测试体验，32 题轻量版与 64 题标准版可选。免费了解四维人格偏好，完整报告按次解锁；非官方 MBTI 量表。",
+  supportEmail: "lakehu0x@gmail.com",
   themeColor: "#edf2f3",
   locale: "zh_CN",
 } as const;
@@ -22,7 +23,7 @@ export const chapterLabels = ["性格总览", "优势与盲点", "关系与沟�
 
 export const blindspotTitles = ["精力的边界", "视角的边界", "决策的边界", "节奏的边界"] as const;
 
-export const unlockBullets = ["性格画像与四维偏好", "优势、盲点与关系沟通", "工作方式与可实践的成长建议"] as const;
+export const unlockBullets = ["按偏好强弱与近均衡情况解读场景", "优势盲点、沟通示例与工作安排", "七天小实践与复盘问题"] as const;
 
 /** `690` -> `6.9`, `700` -> `7`, `1280` -> `12.8` */
 export function formatPriceFen(fen: number): string {
@@ -32,16 +33,22 @@ export function formatPriceFen(fen: number): string {
 
 export function faqs(priceLabel: string): [string, string][] {
   return [
-    ["测试需要多久？", "共 32 道日常情境题，通常约 5 分钟。选择最符合你最近状态的答案，每道题都可以返回修改。"],
+    ["测试需要多久？", "32 题轻量版约 5 分钟；64 题标准版覆盖更多情境，约 8–10 分钟。时长为初步估计，题数更多不代表更准确。"],
+    ["应该按什么状态回答？", "回想最近一段时间的日常，而非理想中的自己。没有好坏答案；如果情境不熟悉，可以选“说不准”，也可以返回检查。"],
+    ["可以暂停或重新开始吗？", "各版本进度分别保存在当前浏览器，可暂停续答、查看已答题或重新开始。浏览器不能保存时会提示，当前页面仍可作答，但关闭或刷新可能丢失草稿。"],
     ["哪些内容需要付费？", `测试、人格类型与简短概览免费。完整报告为 ¥${priceLabel} 一次性解锁，包含优势盲点、关系沟通和成长建议，无订阅、无自动续费。`],
     ["结果能定义我吗？", "不能。人格偏好会随情境和经历有所变化，结果用于自我探索，不用于诊断、招聘筛选或给他人贴标签。"],
     ["这是官方 MBTI 测评吗？", "这是参考四维人格偏好设计的独立体验，采用原创演示题目，并非官方 MBTI 量表。"],
+    ["为什么没有得到确定类型？", "当四个维度均接近中间位置时，本次回答暂未形成清晰倾向。可以检查答案或过一段时间再测，此时不提供新的付费解锁。已购报告的访问权益保留。"],
+    ["百分比和复测变化说明什么？", "百分比只是本问卷的作答位置，不是能力分、准确率或人群百分位。状态与情境会影响回答，先看维度变化，不同版本分数不直接视为等价。"],
+    ["如何找回之前的报告？", "“我的报告”列出同一用户的全部测试。换设备或清除浏览器数据后，可凭任意一个完整网站订单号找回；微信账单中使用商户单号。找回不会改变各报告的支付状态。"],
   ];
 }
 
 /** localStorage keys shared by client islands. */
 export const storageKeys = {
   quiz: "mirror.quiz.v1",
+  quizVersions: "mirror.quiz.v2",
   lastResult: "mirror.lastResult.v1",
 } as const;
 

@@ -1,5 +1,6 @@
 import type { Profile } from "@/lib/personality";
 import { poles } from "@/lib/personality";
+import { dimensions } from "@/lib/questionnaires";
 
 /**
  * Radar for satori. SVG `<text>` is unsupported there, so the grid/polygon is SVG and the
@@ -53,7 +54,7 @@ export function OgRadar({ profile, size = 320 }: { profile: Profile; size?: numb
             color: "#303a3d",
           }}
         >
-          {poles[l].label} {l}
+          {profile.balanced[i] ? dimensions[i].split("").join(" / ") : `${poles[l].label} ${l}`}
         </div>
       ))}
     </div>

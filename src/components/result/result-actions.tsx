@@ -16,6 +16,7 @@ type Props = {
   mode: PaymentMode;
   owner: boolean;
   unlocked: boolean;
+  clear: boolean;
   /** Which slot this instance renders: the desktop panel button or the phone dock. */
   slot: "panel" | "dock";
 };
@@ -24,7 +25,7 @@ type Props = {
  * Unlock / read CTA for the result page. The payment sheet is owned by the "dock" instance
  * (mounted once); the "panel" instance only triggers it through the `?unlock=1` search param.
  */
-export function ResultActions({ resultId, type, name, priceLabel, mode, owner, unlocked, slot }: Props) {
+export function ResultActions({ resultId, type, name, priceLabel, mode, owner, unlocked, clear, slot }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,7 +38,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, owner, u
 
   const readHref = `/report/${resultId}`;
   const isUnlocked = unlocked || unlockedNow;
-  const canPay = owner && !isUnlocked;
+  const canPay = owner && clear && !isUnlocked;
 
   const setOpen = (next: boolean) => {
     if (next) {
@@ -87,7 +88,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, owner, u
           {button}
         </div>
       </Dock>
-      {owner && (
+      {owner && clear && (
         <PaymentSheet
           open={open && !unlocked}
           onOpenChange={setOpen}

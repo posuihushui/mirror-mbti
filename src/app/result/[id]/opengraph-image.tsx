@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { OG_FONT_FAMILY, ogFonts } from "@/lib/og/fonts";
 import { OgRadar } from "@/lib/og/radar";
-import { typeMeta } from "@/lib/personality";
+import { hasClearPreference, profileMeta } from "@/lib/personality";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
 
 export const size = { width: 1200, height: 630 };
@@ -16,7 +16,7 @@ export default async function ResultOgImage({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const result = (await getResult(id, null)) ?? (await getResult(SAMPLE_RESULT_ID, null))!;
   const { profile, sample } = result;
-  const { name, line } = typeMeta(profile.type);
+  const { name, line, typeLabel } = profileMeta(profile);
   const fonts = await ogFonts();
   return new ImageResponse(
     (
@@ -27,7 +27,7 @@ export default async function ResultOgImage({ params }: { params: Promise<{ id: 
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 14, letterSpacing: 3, color: "#738087" }}>{sample ? "SAMPLE REPORT · 示例报告" : "PERSONALITY · 性格画像"}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 24, marginTop: 20 }}>
-              <span style={{ fontSize: 150, lineHeight: 1, fontWeight: 500, letterSpacing: -9 }}>{profile.type}</span>
+              <span style={{ fontSize: hasClearPreference(profile) ? 150 : 74, lineHeight: 1, fontWeight: 500, letterSpacing: -4 }}>{typeLabel}</span>
               <span style={{ fontSize: 24, letterSpacing: 4 }}>{name}</span>
             </div>
             <div style={{ marginTop: 26, fontSize: 36, lineHeight: 1.45, fontWeight: 500, display: "flex", flexDirection: "column" }}>

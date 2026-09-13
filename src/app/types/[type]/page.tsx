@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { appUrl } from "@/lib/env";
 import { isPersonalityType, poles, TYPES, typeMeta } from "@/lib/personality";
 import { site } from "@/lib/site";
+import { typeContext } from "@/lib/type-context";
 
 type Params = { params: Promise<{ type: string }> };
 
@@ -33,6 +34,7 @@ export default async function TypePage({ params }: Params) {
   const { type } = await params;
   if (!isPersonalityType(type)) notFound();
   const { name, line, summary, letters } = typeMeta(type);
+  const context = typeContext(type);
   const url = appUrl();
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -87,10 +89,21 @@ export default async function TypePage({ params }: Params) {
             </p>
           </div>
         </section>
+        <section className="mx-[27px] mb-8 border-t border-line pt-7 md:mx-0">
+          <h2 className="text-[22px]">在日常里，可能是什么样？</h2>
+          <p className="mt-4 text-[13px] leading-[2] text-mist">{context.everyday.join("")}这些只是供对照的情境，不是每个同类型的人都会如此。</p>
+          <h3 className="mt-6 text-[18px]">常见误解</h3>
+          <ul className="mt-3 flex list-disc flex-col gap-3 pl-5 text-[13px] leading-[2] text-mist">{context.misconceptions.map((text) => <li key={text}>{text}</li>)}</ul>
+          <h3 className="mt-6 text-[18px]">一次具体的沟通</h3>
+          <p className="mt-3 text-[13px] leading-[2] text-mist">“{context.communication}”先描述自己的实际需要，再听听对方，不用类型标签替双方下结论。</p>
+          <h3 className="mt-6 text-[18px]">如果一个维度换到另一端</h3>
+          <p className="mt-3 text-[12px] leading-[2] text-mist">相邻类型只差一对偏好。接近均衡时可以同时对照两种描述，不必把字母变化理解为性格突然改变。</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">{context.neighbors.map((neighbor) => <Link key={neighbor.type} href={`/types/${neighbor.type}`} className="text-link min-h-11">{neighbor.type} {typeMeta(neighbor.type).name} · {neighbor.dimension.split("").join(" / ")}</Link>)}</div>
+        </section>
         <section className="mx-4 bg-night-deep px-[27px] py-8 text-[#eff3f4] md:mx-0 md:flex md:items-center md:justify-between md:gap-10 md:p-10 xl:px-[60px] xl:py-14">
           <div>
             <p className="eyebrow text-[9px] text-[#99a6a9]">IS THIS YOU?</p>
-            <h2 className="mt-[25px] text-[29px] leading-[1.55] md:text-[35px]">{"用 32 道情境题，\n看看你的答案。"}</h2>
+            <h2 className="mt-[25px] text-[29px] leading-[1.55] md:text-[35px]">{"选择适合的版本，\n看看你的答案。"}</h2>
           </div>
           <div className="mt-[30px] flex flex-col gap-4 md:mt-0 md:w-[300px]">
             <div className="hidden md:block">

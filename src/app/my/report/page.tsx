@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { RecoverReports } from "@/components/report/recover-reports";
-import { poles, typeMeta } from "@/lib/personality";
+import { hasClearPreference, poles, profileMeta } from "@/lib/personality";
+import { dimensions, getQuestionnaire } from "@/lib/questionnaires";
 import { resultsForVisitor, type ResultHistoryItem } from "@/lib/results";
 import { getVisitorId } from "@/lib/session";
 
@@ -76,23 +77,25 @@ export default async function MyReportPage() {
 
 function HistoryItem({ result }: { result: ResultHistoryItem }) {
   const { profile, order, unlocked, createdAt } = result;
-  const { name, summary } = typeMeta(profile.type);
+  const { name, summary, typeLabel } = profileMeta(profile);
+  const clear = hasClearPreference(profile);
   const demo = order?.provider === "mock";
   return (
-    <article aria-label={`${profile.type} 测试记录`} className="border border-line px-[22px] py-6 md:px-[30px] md:py-7">
+    <article aria-label={`${typeLabel} 测试记录`} className="border border-line px-[22px] py-6 md:px-[30px] md:py-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {createdAt && <time dateTime={createdAt.toISOString()} className="text-[11px] text-mist">{dateFormat.format(createdAt)}</time>}
         <Badge variant={unlocked ? "unlocked" : "tag"}>{unlocked ? `已解锁${demo ? " · 演示" : ""}` : "简要结果 · 免费"}</Badge>
       </div>
+      <p className="mt-3 text-[12px] text-mist">{getQuestionnaire(result.questionnaireId)?.name ?? "历史版本"} · {result.questionCount} 题</p>
       <div className="mt-5 flex items-baseline gap-3">
-        <h2 className="text-[38px] font-medium tracking-[-0.06em] md:text-[44px]">{profile.type}</h2>
+        <h2 className="text-[38px] font-medium tracking-[-0.06em] md:text-[44px]">{typeLabel}</h2>
         <span className="text-[12px]">{name}</span>
       </div>
       <p className="mt-3 max-w-[680px] text-[12px] leading-[2] text-mist md:text-[13px]">{summary}</p>
       <dl className="mt-6 grid grid-cols-4 border-y border-line py-4">
         {profile.type.split("").map((letter, i) => (
           <div key={letter} className="flex flex-col gap-2 text-center not-first:border-l not-first:border-line">
-            <dt className="text-[10px] text-mist">{poles[letter].label} {letter}</dt>
+            <dt className="text-[11px] text-mist">{profile.balanced[i] ? dimensions[i].split("").join(" / ") : `${poles[letter].label} ${letter}`}</dt>
             <dd className="text-[20px]">{profile.values[i]}<span className="text-[11px]">%</span></dd>
           </div>
         ))}
@@ -101,8 +104,8 @@ function HistoryItem({ result }: { result: ResultHistoryItem }) {
         <PrimaryButton href={unlocked ? `/report/${result.id}` : `/result/${result.id}`} prefetch={false} className="md:w-[220px]">
           {unlocked ? "阅读详细报告" : "查看简要结果"}
         </PrimaryButton>
-        <Link href={unlocked ? `/result/${result.id}` : `/result/${result.id}?unlock=1`} prefetch={false} className="text-link justify-center text-[12px]">
-          {unlocked ? "查看简要结果" : "解锁详细报告"} <ArrowUpRight size={16} />
+        <Link href={unlocked || !clear ? `/result/${result.id}` : `/result/${result.id}?unlock=1`} prefetch={false} className="text-link justify-center text-[12px]">
+          {unlocked ? "查看简要结果" : clear ? "解锁详细报告" : "检查本次答案"} <ArrowUpRight size={16} />
         </Link>
       </div>
       {order && (

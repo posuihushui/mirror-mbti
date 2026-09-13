@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AppHeader } from "@/components/site/app-header";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
@@ -8,7 +9,7 @@ import { faqs, formatPriceFen, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "了解测试",
-  description: "观己 mirror 人格测试说明：32 道原创情境题、约 5 分钟、免费查看类型与概览，完整报告一次解锁，无订阅无自动续费。",
+  description: "观己 mirror 原创 MBTI 测试体验说明：32/64 题版本区别、如何回答、暂停续答、偏好分数与订单找回。",
   alternates: { canonical: "/about" },
 };
 
@@ -39,11 +40,12 @@ export default function AboutPage() {
         <dl className="mt-2">
           {items.map(([q, a]) => (
             <div key={q} className="border-t border-line">
-              <dt className="py-[15px] text-[12px] leading-[1.7]">{q}</dt>
-              <dd className="m-0 pb-5 text-[11px] leading-[2.1] text-[#6d7f88]">{a}</dd>
+              <dt className="py-[15px] text-[14px] leading-[1.7]">{q}</dt>
+              <dd className="m-0 pb-5 text-[13px] leading-[2.1] text-[#6d7f88]">{a}</dd>
             </div>
           ))}
         </dl>
+        <nav className="mt-6 flex flex-wrap gap-5 text-[12px]" aria-label="更多说明"><Link href="/preferences" className="text-link">四维偏好与复测</Link><Link href="/help" className="text-link">订单帮助与联系</Link></nav>
         <p className="mt-6 text-[10px] leading-[1.8] text-[#829094]">
           所有题目为独立原创的演示问卷，并非官方 MBTI 量表，也未经过心理测量学验证。结果用于自我探索，不用于诊断、招聘筛选或给他人贴标签。
         </p>

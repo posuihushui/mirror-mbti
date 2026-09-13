@@ -3,6 +3,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { newResultId } from "@/lib/ids";
 import { calculate, sampleProfile, type Profile } from "@/lib/personality";
+import { getQuestionnaire, LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type QuestionnaireId } from "@/lib/questionnaires";
 
 export const SAMPLE_RESULT_ID = "sample";
 
@@ -15,10 +16,14 @@ export type ResultView = {
   /** Whether the full report has been paid for. */
   unlocked: boolean;
   createdAt: Date | null;
+  questionnaireId: string;
+  questionCount: number;
+  scoringVersion: string;
+  reportVersion: string;
 };
 
 export function sampleResult(): ResultView {
-  return { id: SAMPLE_RESULT_ID, profile: sampleProfile, sample: true, owner: false, unlocked: true, createdAt: null };
+  return { id: SAMPLE_RESULT_ID, profile: sampleProfile, sample: true, owner: false, unlocked: true, createdAt: null, questionnaireId: LEGACY_QUESTIONNAIRE_ID, questionCount: 32, scoringVersion: SCORING_VERSION, reportVersion: REPORT_VERSION };
 }
 
 export async function ensureVisitor(visitorId: string, userAgent?: string | null) {
@@ -28,22 +33,26 @@ export async function ensureVisitor(visitorId: string, userAgent?: string | null
     .onConflictDoUpdate({ target: schema.visitors.id, set: { lastSeenAt: new Date() } });
 }
 
-export async function createResult(visitorId: string, answers: number[], userAgent?: string | null): Promise<ResultView> {
+export async function createResult(visitorId: string, answers: number[], userAgent?: string | null, questionnaireId: QuestionnaireId = LEGACY_QUESTIONNAIRE_ID): Promise<ResultView> {
   await ensureVisitor(visitorId, userAgent);
-  const profile = calculate(answers);
+  const profile = calculate(answers, questionnaireId);
+  const questionnaire = getQuestionnaire(questionnaireId)!;
+  const version = { questionnaireId, questionCount: questionnaire.count, scoringVersion: SCORING_VERSION, reportVersion: REPORT_VERSION };
   const id = newResultId();
   await db().insert(schema.results).values({
     id,
     visitorId,
     answers,
+    ...version,
+    responses: questionnaire.questions.map((q, i) => ({ questionId: q.id, value: answers[i] })),
     type: profile.type,
     values: profile.values,
     balanced: profile.balanced,
   });
-  return { id, profile, sample: false, owner: true, unlocked: false, createdAt: new Date() };
+  return { id, profile, sample: false, owner: true, unlocked: false, createdAt: new Date(), ...version };
 }
 
-function toView(row: typeof schema.results.$inferSelect, visitorId: string | null): ResultView {
+function toView(row: Omit<typeof schema.results.$inferSelect, "answers" | "responses">, visitorId: string | null): ResultView {
   return {
     id: row.id,
     profile: { type: row.type, values: row.values, balanced: row.balanced },
@@ -51,6 +60,10 @@ function toView(row: typeof schema.results.$inferSelect, visitorId: string | nul
     owner: visitorId === row.visitorId,
     unlocked: row.unlockedAt !== null,
     createdAt: row.createdAt,
+    questionnaireId: row.questionnaireId,
+    questionCount: row.questionCount,
+    scoringVersion: row.scoringVersion,
+    reportVersion: row.reportVersion,
   };
 }
 
@@ -79,7 +92,7 @@ export async function resultsForVisitor(visitorId: string): Promise<ResultHistor
     db().query.results.findMany({
       where: eq(schema.results.visitorId, visitorId),
       orderBy: [desc(schema.results.createdAt), desc(schema.results.id)],
-      columns: { answers: false },
+      columns: { answers: false, responses: false },
     }),
     db().query.orders.findMany({
       where: eq(schema.orders.visitorId, visitorId),
@@ -95,15 +108,20 @@ export async function resultsForVisitor(visitorId: string): Promise<ResultHistor
   return rows.map((row) => {
     const order = (row.unlockOrderId && ordersById.get(row.unlockOrderId)) || latestOrders.get(row.id);
     return {
-      id: row.id,
-      profile: { type: row.type, values: row.values, balanced: row.balanced },
-      sample: false,
-      owner: true,
-      unlocked: row.unlockedAt !== null,
-      createdAt: row.createdAt,
+      ...toView(row, visitorId),
       order: order ? { id: order.id, provider: order.provider, status: order.status } : null,
     };
   });
+}
+
+/** Raw answers are exposed only to their owner when they explicitly review an existing result. */
+export async function answersForReview(id: string, visitorId: string) {
+  if (!/^[A-Za-z0-9_-]{12}$/.test(id)) return null;
+  const row = await db().query.results.findFirst({ where: and(eq(schema.results.id, id), eq(schema.results.visitorId, visitorId)) });
+  if (!row) return null;
+  const questionnaire = getQuestionnaire(row.questionnaireId);
+  if (!questionnaire) return null;
+  return { questionnaireId: questionnaire.id, responses: row.responses ?? questionnaire.questions.map((q, i) => ({ questionId: q.id, value: row.answers[i] })) };
 }
 
 export async function markResultUnlocked(resultId: string, orderId: string) {

@@ -187,6 +187,9 @@
   background: #f2f5f6;
   color: #171b1c;
   border-color: #f2f5f6;
+  &:hover:not(:disabled) {
+    background: var(--color-paper);
+  }
 }
 
 /* Bottom safe-area helpers for fixed docks and sheets inside WeChat / iOS Safari. */

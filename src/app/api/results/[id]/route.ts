@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { fail, ok } from "@/lib/api";
 import { getResult } from "@/lib/results";
 import { getVisitorId } from "@/lib/session";
+import { publicProfile } from "@/lib/personality";
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   await connection();
@@ -11,7 +12,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (!result) return fail(404, "NOT_FOUND", "结果不存在。");
   return ok({
     id: result.id,
-    ...result.profile,
+    ...publicProfile(result.profile),
+    questionnaireId: result.questionnaireId,
+    questionCount: result.questionCount,
+    scoringVersion: result.scoringVersion,
+    reportVersion: result.reportVersion,
     sample: result.sample,
     owner: result.owner,
     unlocked: result.owner ? result.unlocked : undefined,

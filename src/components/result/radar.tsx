@@ -1,5 +1,6 @@
 import { cn } from "cn";
 import { poles, type Profile } from "@/lib/personality";
+import { dimensions } from "@/lib/questionnaires";
 
 /**
  * Pure-SVG radar chart replicating the Chart.js configuration used in the prototype:
@@ -30,7 +31,7 @@ export function Radar({ profile, height = 310, className }: { profile: Profile; 
   const letters = profile.type.split("");
   const points = profile.values.map((v, i) => polar(v, i));
   const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ") + " Z";
-  const label = letters.map((l, i) => `${poles[l].label}偏好 ${profile.values[i]}%`).join("，");
+  const label = letters.map((l, i) => profile.balanced[i] ? `${dimensions[i]} 接近均衡 ${profile.values[i]}%` : `${poles[l].label}偏好 ${profile.values[i]}%`).join("，");
 
   return (
     <div className={cn("relative mx-auto w-full", className)} style={{ height }}>
@@ -61,7 +62,7 @@ export function Radar({ profile, height = 310, className }: { profile: Profile; 
               fill="#303a3d"
               fontFamily="inherit"
             >
-              {poles[l].label} {l}
+              {profile.balanced[i] ? dimensions[i].split("").join(" / ") : `${poles[l].label} ${l}`}
             </text>
           );
         })}

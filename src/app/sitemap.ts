@@ -17,6 +17,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("/result/sample", 0.8),
     entry("/report/sample", 0.7),
     entry("/about", 0.7),
+    entry("/preferences", 0.7),
+    entry("/help", 0.6),
     entry("/types", 0.8),
     ...TYPES.map((t) => entry(`/types/${t}`, 0.7)),
     entry("/privacy", 0.2, "yearly"),

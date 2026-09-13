@@ -79,6 +79,7 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
       </p>
       <div className="mt-6 border-t border-line pt-5"><OrderReceipt orderId={order.id} /></div>
       <Link href="/my/report" prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center">查看全部测试记录</Link>
+      <Link href="/help#contact" className="text-link mt-3 flex min-h-11">订单帮助与联系</Link>
     </div>
   );
 }

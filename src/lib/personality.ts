@@ -1,48 +1,6 @@
-export type Dimension = "EI" | "SN" | "TF" | "JP";
-export type Letter = "E" | "I" | "S" | "N" | "T" | "F" | "J" | "P";
-export type Question = { text: string; dimension: Dimension; reverse?: boolean };
-
-export const dimensions: Dimension[] = ["EI", "SN", "TF", "JP"];
-
-// Original demonstration items, not the licensed MBTI questionnaire.
-export const questions: Question[] = [
-  { text: "和一群人相处之后，\n你通常觉得更有活力。", dimension: "EI" },
-  { text: "面对新事物，你会先关注\n它能带来哪些可能性。", dimension: "SN", reverse: true },
-  { text: "做重要决定时，你通常\n更看重逻辑是否说得通。", dimension: "TF" },
-  { text: "提前安排好一天的事情，\n会让你感到安心。", dimension: "JP" },
-  { text: "休息时，你更愿意\n一个人安静地待一会儿。", dimension: "EI", reverse: true },
-  { text: "学习新技能时，你更喜欢\n清晰、具体的操作示范。", dimension: "SN" },
-  { text: "朋友遇到难题时，你会先\n理解对方的感受。", dimension: "TF", reverse: true },
-  { text: "旅行时，随兴改变计划\n会让你觉得很有趣。", dimension: "JP", reverse: true },
-  { text: "在陌生的聚会中，\n你愿意主动开启对话。", dimension: "EI" },
-  { text: "比起眼前的细节，你更容易\n想到事情背后的联系。", dimension: "SN", reverse: true },
-  { text: "讨论分歧时，你会优先\n检查证据和推理。", dimension: "TF" },
-  { text: "开始一项任务之前，\n你喜欢先列出步骤。", dimension: "JP" },
-  { text: "表达重要想法之前，\n你需要独自整理思路。", dimension: "EI", reverse: true },
-  { text: "比起抽象的理论，\n你更信任亲身验证的经验。", dimension: "SN" },
-  { text: "即使方案很有效，你也会在意\n它给他人带来的感受。", dimension: "TF", reverse: true },
-  { text: "为临时出现的新机会\n保留空间，让你感到自在。", dimension: "JP", reverse: true },
-  { text: "和别人边聊边想，\n常常能帮你理清思路。", dimension: "EI" },
-  { text: "你经常会想象，\n事情未来可能变成什么样。", dimension: "SN", reverse: true },
-  { text: "评价一个方案时，你更重视\n标准一致，而非人情因素。", dimension: "TF" },
-  { text: "比起临近截止才动手，\n你更愿意提前完成任务。", dimension: "JP" },
-  { text: "比起认识很多新朋友，\n你更享受少数深入的交谈。", dimension: "EI", reverse: true },
-  { text: "听别人描述一件事时，\n你会留意具体发生了什么。", dimension: "SN" },
-  { text: "作出选择时，是否符合\n自己的价值观很重要。", dimension: "TF", reverse: true },
-  { text: "事情尚未确定时，\n你也能轻松地继续探索。", dimension: "JP", reverse: true },
-  { text: "遇到有趣的事情，\n你常常想马上和别人分享。", dimension: "EI" },
-  { text: "你喜欢讨论那些\n暂时还不能实现的想法。", dimension: "SN", reverse: true },
-  { text: "提供反馈时，你倾向于\n直接指出问题所在。", dimension: "TF" },
-  { text: "将待办事项逐一完成，\n会给你明显的满足感。", dimension: "JP" },
-  { text: "忙碌一周之后，你通常需要\n独处来恢复精力。", dimension: "EI", reverse: true },
-  { text: "判断一个想法是否可行时，\n你会先考虑现实条件。", dimension: "SN" },
-  { text: "团队里有人被忽略时，\n你会特别在意对方的处境。", dimension: "TF", reverse: true },
-  { text: "比起固定的日程，\n你喜欢根据当下情况调整。", dimension: "JP", reverse: true },
-];
-
-export const QUESTION_COUNT = questions.length;
-export const ANSWER_VALUES = [2, 1, 0, -1, -2] as const;
-export type AnswerValue = (typeof ANSWER_VALUES)[number];
+import { dimensions, getQuestionnaire, LEGACY_QUESTIONNAIRE_ID, type QuestionnaireId } from "@/lib/questionnaires";
+export { dimensions, questions, QUESTION_COUNT, ANSWER_VALUES } from "@/lib/questionnaires";
+export type { Dimension, Letter, Question, AnswerValue } from "@/lib/questionnaires";
 
 export const names: Record<string, [string, string, string]> = {
   INFJ: ["提倡者", "温柔地理解世界，\n坚定地走向自己。", "你倾向于在安静中整理想法，也在真实的连接里寻找意义。你关心一个决定是否符合内心的价值，并希望把对未来的想象慢慢变成现实。"],
@@ -85,10 +43,12 @@ export type Profile = { type: string; values: number[]; balanced: boolean[] };
 
 export const sampleProfile: Profile = { type: "INFJ", values: [79, 71, 64, 58], balanced: [false, false, false, true] };
 
-export function calculate(answers: number[]): Profile {
+export function calculate(answers: number[], questionnaireId: QuestionnaireId = LEGACY_QUESTIONNAIRE_ID): Profile {
+  const items = getQuestionnaire(questionnaireId)!.questions;
+  if (!validateAnswers(answers, questionnaireId)) throw new Error("Invalid questionnaire answers");
   const raw = dimensions.map((dim) => {
-    const indices = questions.flatMap((q, i) => (q.dimension === dim ? [i] : []));
-    const sum = indices.reduce((acc, i) => acc + (questions[i].reverse ? -answers[i] : answers[i]), 0);
+    const indices = items.flatMap((q, i) => (q.dimension === dim ? [i] : []));
+    const sum = indices.reduce((acc, i) => acc + (items[i].reverse ? -answers[i] : answers[i]), 0);
     return Math.round(50 + (sum / (indices.length * 2)) * 50);
   });
   return {
@@ -98,9 +58,9 @@ export function calculate(answers: number[]): Profile {
   };
 }
 
-/** Returns a normalized answers array (length 32, integers in [-2, 2]) or null. */
-export function validateAnswers(input: unknown): number[] | null {
-  if (!Array.isArray(input) || input.length !== QUESTION_COUNT) return null;
+/** Returns a normalized answer array for this questionnaire, or null. */
+export function validateAnswers(input: unknown, questionnaireId: QuestionnaireId = LEGACY_QUESTIONNAIRE_ID): number[] | null {
+  if (!Array.isArray(input) || input.length !== getQuestionnaire(questionnaireId)?.count) return null;
   const out: number[] = [];
   for (const v of input) {
     if (typeof v !== "number" || !Number.isInteger(v) || v < -2 || v > 2) return null;
@@ -117,4 +77,27 @@ export function profileForType(type: PersonalityType): Profile {
 export function typeMeta(type: string) {
   const [name, line, summary] = names[type] ?? names.INFJ;
   return { name, line, summary, letters: type.split("") };
+}
+
+/** A balanced result is meaningful feedback, but not a determinate four-letter type. */
+export function hasClearPreference(profile: Profile): boolean {
+  return profile.values.some((value) => value > 60);
+}
+
+export function profileMeta(profile: Profile) {
+  if (!hasClearPreference(profile)) return {
+    name: "倾向待探索", line: "本次回答暂未形成\n清晰倾向。",
+    summary: "四个维度都接近中间位置。这可能与情境差异、对题意的不确定或当前状态有关，不表示你没有特点。可以检查答案，也可以过一段时间再探索。",
+    letters: profile.type.split(""), typeLabel: "待探索",
+  };
+  const meta = typeMeta(profile.type);
+  if (profile.balanced.some(Boolean)) return {
+    ...meta, typeLabel: profile.type, line: "先看清偏好，\n再慢慢理解自己。",
+    summary: `这次作答中，${meta.letters.filter((_, i) => !profile.balanced[i]).map((l) => poles[l].label).join("、")}一侧呈现相对偏向；其余维度接近均衡，暂不做单侧判断。四个字母仅作为类型对照，具体解读以各维度为准。`,
+  };
+  return { ...meta, typeLabel: profile.type };
+}
+
+export function publicProfile(profile: Profile) {
+  return { ...profile, type: hasClearPreference(profile) ? profile.type : null, clear: hasClearPreference(profile) };
 }

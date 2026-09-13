@@ -4,8 +4,9 @@ import { cn } from "cn";
 import { Radar } from "@/components/result/radar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { poles, type Profile } from "@/lib/personality";
+import { type Profile } from "@/lib/personality";
 import type { Insight } from "@/lib/report-content";
+import { dimensionReading } from "@/lib/preference-content";
 import { ChapterFooterNav, ChapterPanel, ChapterSidebarNav, ChapterTabs, StrengthSwitch } from "./chapter-ui";
 
 export type ReportData = {
@@ -13,12 +14,14 @@ export type ReportData = {
   name: string;
   line: string;
   summary: string;
+  typeLabel: string;
   sample: boolean;
   demo: boolean;
   strengths: Insight[];
   blindspots: Insight[];
   relationships: Insight[];
   work: Insight[];
+  actionPlan: Insight[];
 };
 
 /**
@@ -27,7 +30,7 @@ export type ReportData = {
  * shipped in the HTML; the client only decides which one is visible.
  */
 export function ReportBody({ data, banner, footer }: { data: ReportData; banner?: ReactNode; footer?: ReactNode }) {
-  const { profile, name, sample, demo } = data;
+  const { name, sample, demo, typeLabel } = data;
 
   return (
     <main
@@ -40,7 +43,7 @@ export function ReportBody({ data, banner, footer }: { data: ReportData; banner?
       {banner ? <div className="md:col-span-2">{banner}</div> : null}
       <aside className="hidden md:sticky md:top-[35px] md:block md:pt-[15px]">
         <p className="eyebrow text-[9px] text-[#758289]">YOUR INNER WORLD</p>
-        <div className="mt-[26px] text-[64px] font-medium tracking-[-0.06em]">{profile.type}</div>
+        <div className="mt-[26px] text-[64px] font-medium tracking-[-0.06em]">{typeLabel}</div>
         <p className="mt-1 text-[12px] text-[#75828a]">
           {name} · {sample ? "示例" : "本次"}人格报告
         </p>
@@ -59,26 +62,26 @@ export function ReportBody({ data, banner, footer }: { data: ReportData; banner?
       <article className="bg-night px-[25px] pt-[25px] pb-[55px] text-[#eff2f4] md:p-[35px] xl:px-[50px] xl:py-11">
         <div className="mb-[18px] flex justify-between text-[9px] text-[#a5b5bc] md:hidden">
           <span>
-            {profile.type} · {name}
+            {typeLabel} · {name}
           </span>
           <span>{sample ? "示例报告" : `完整报告${demo ? " · 演示" : ""}`}</span>
         </div>
         <ChapterTabs />
 
         <ChapterPanel index={0}>
-          <ChapterLabel index={0} type={profile.type} />
+          <ChapterLabel index={0} type={typeLabel} />
           <ChapterOne data={data} heading="h1" />
         </ChapterPanel>
         <ChapterPanel index={1}>
-          <ChapterLabel index={1} type={profile.type} />
+          <ChapterLabel index={1} type={typeLabel} />
           <ChapterTwo data={data} />
         </ChapterPanel>
         <ChapterPanel index={2}>
-          <ChapterLabel index={2} type={profile.type} />
+          <ChapterLabel index={2} type={typeLabel} />
           <ChapterThree data={data} />
         </ChapterPanel>
         <ChapterPanel index={3}>
-          <ChapterLabel index={3} type={profile.type} />
+          <ChapterLabel index={3} type={typeLabel} />
           <ChapterFour data={data} />
         </ChapterPanel>
 
@@ -103,7 +106,7 @@ function ChapterOne({ data, heading = "h2" }: { data: ReportData; heading?: "h1"
             <div key={l} className="not-first:mt-[22px]">
               <div className="flex items-center justify-between text-[12px]">
                 <b className="font-medium">
-                  {poles[l].label} <small className="ml-1 text-[#8a969b]">{l}</small>
+                  {dimensionReading(profile, i).label}
                 </b>
                 <span>{profile.values[i]}%</span>
               </div>
@@ -112,11 +115,10 @@ function ChapterOne({ data, heading = "h2" }: { data: ReportData; heading?: "h1"
                 max={100}
                 className="mt-[9px]"
                 indicatorClassName="bg-[#b89273]"
-                aria-label={`${poles[l].label} ${profile.values[i]}%`}
+                aria-label={`${dimensionReading(profile, i).label} ${profile.values[i]}%`}
               />
-              <p className="mt-[6px] text-[9px] text-[#73858c]">
-                {poles[l].need}
-                {profile.balanced[i] ? " · 偏好接近均衡" : ""}
+              <p className="mt-[6px] text-[12px] leading-[1.9] text-[#73858c]">
+                {dimensionReading(profile, i).interpretation}
               </p>
             </div>
           ))}
@@ -156,6 +158,9 @@ function ChapterFour({ data }: { data: ReportData }) {
       <ChapterHeading>{"找到适合你的方式，\n让成长具体一点。"}</ChapterHeading>
       <Lead>与其用人格类型决定职业，不如观察：什么环境能让你稳定发挥，什么习惯值得调整。</Lead>
       <InsightList items={data.work} />
+      <h3 className="mt-9 text-[20px]">把理解放进一周生活里。</h3>
+      <p className="mt-3 text-[12px] leading-[2] text-[#a9b7bc]">每天只做一个小尝试。以下安排根据本次四维作答选择，不是效果保证；不符合你的部分可以跳过或调整。</p>
+      <InsightList items={data.actionPlan} />
       <div className="my-[33px] bg-[#243034] p-[25px]">
         <p className="eyebrow text-[9px] text-[#b1bfc4]">A SMALL STEP THIS WEEK</p>
         <p className="mt-5 text-[20px] leading-[1.7] font-normal whitespace-pre-line md:text-[21px]">{"记录一次让你感到\n“这很像我”的时刻。"}</p>

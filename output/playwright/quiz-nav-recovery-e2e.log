@@ -1,0 +1,27 @@
+
+> mirror-mbti@0.1.0 test:e2e
+> playwright test tests/e2e/report-history.spec.ts
+
+
+Running 14 tests using 2 workers
+
+(node:71859) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:71858) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   2 [desktop] › tests/e2e/report-history.spec.ts:52:7 › report history and order recovery › lists every result, including an older paid report, without depending on local storage (1.2s)
+  ✓   1 [mobile] › tests/e2e/report-history.spec.ts:52:7 › report history and order recovery › lists every result, including an older paid report, without depending on local storage (1.4s)
+  ✓   3 [desktop] › tests/e2e/report-history.spec.ts:81:7 › report history and order recovery › a visitor without a saved session can start a test or recover with an order number (467ms)
+  ✓   4 [mobile] › tests/e2e/report-history.spec.ts:81:7 › report history and order recovery › a visitor without a saved session can start a test or recover with an order number (486ms)
+  ✓   6 [mobile] › tests/e2e/report-history.spec.ts:91:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked (2.7s)
+  ✓   5 [desktop] › tests/e2e/report-history.spec.ts:91:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked (3.5s)
+  ✓   7 [mobile] › tests/e2e/report-history.spec.ts:117:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access (699ms)
+  ✓   8 [desktop] › tests/e2e/report-history.spec.ts:117:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access (785ms)
+  ✓   9 [mobile] › tests/e2e/report-history.spec.ts:148:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access (1.6s)
+  ✓  10 [desktop] › tests/e2e/report-history.spec.ts:148:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access (1.5s)
+  ✓  11 [mobile] › tests/e2e/report-history.spec.ts:185:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery (964ms)
+  ✓  13 [mobile] › tests/e2e/report-history.spec.ts:226:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity (165ms)
+  ✓  12 [desktop] › tests/e2e/report-history.spec.ts:185:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery (995ms)
+  ✓  14 [desktop] › tests/e2e/report-history.spec.ts:226:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity (174ms)
+
+  14 passed (9.2s)

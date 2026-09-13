@@ -264,6 +264,8 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, onU
             暂不支付
           </button>
           <p className="mt-[6px] text-center text-[9px] text-[#92a1a6]">单次购买 · 无自动续费</p>
+          <p className="mt-3 text-[12px] leading-[1.9] text-mist">购买后在“我的报告”查看；请保存订单号，以便换设备时找回。</p>
+          <Link href="/help" className="text-link mt-2 min-h-11">订单帮助与联系</Link>
         </div>
       )}
     </>

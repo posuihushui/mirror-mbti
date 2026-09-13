@@ -4,7 +4,7 @@ import { db, schema } from "@/db";
 import type { OrderRow, PaymentChannel } from "@/db/schema";
 import { appUrl, env, priceFen } from "@/lib/env";
 import { isValidOrderId, newOrderId } from "@/lib/ids";
-import { typeMeta } from "@/lib/personality";
+import { hasClearPreference, typeMeta } from "@/lib/personality";
 import { getPaymentProvider } from "@/lib/payments";
 import type { OrderView, PaymentPayload } from "@/lib/payments/types";
 import { getResult, markResultUnlocked } from "@/lib/results";
@@ -41,6 +41,7 @@ export async function createOrder(input: { visitorId: string; resultId: string; 
   if (!result || result.sample) throw new OrderError(404, "RESULT_NOT_FOUND", "结果不存在。");
   if (!result.owner) throw new OrderError(403, "NOT_OWNER", "只能为自己的测试结果购买报告。");
   if (result.unlocked) throw new OrderError(409, "ALREADY_UNLOCKED", "这份报告已经解锁。");
+  if (!hasClearPreference(result.profile)) throw new OrderError(422, "UNCLEAR_RESULT", "本次回答暂未形成清晰倾向，请先检查答案或重新测试，暂不提供付费解锁。");
 
   const provider = await getPaymentProvider();
   const channel: PaymentChannel = provider.mode === "mock" ? "mock" : pickWeChatChannel(input.userAgent);
