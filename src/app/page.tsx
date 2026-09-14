@@ -34,7 +34,7 @@ export default function HomePage() {
               quality={82}
               sizes="(max-width: 720px) 100vw, 45vw"
               placeholder="blur"
-              className="object-cover object-[48%_35%] md:object-[50%_50%]"
+              className="home-portrait-motion object-cover object-[48%_35%] md:object-[50%_50%]"
             />
             <div className="absolute right-[30px] bottom-[27px] left-[30px] hidden items-center justify-between gap-[10px] text-[10px] tracking-[0.06em] text-[#c9d2d5] md:flex">
               <span className="text-[9px] tracking-[0.14em]">THE WORLD WITHIN.</span>
@@ -47,11 +47,11 @@ export default function HomePage() {
               MBTI 测试体验 · 16 型人格探索
             </p>
             <h1 className="mt-[18px] text-[36px] leading-[1.4] tracking-[-0.055em] md:mt-[34px] md:text-[53px] md:leading-[1.32] md:tracking-[-0.065em] xl:text-[68px] 2xl:text-[77px]">
-              向内看见，
+              <span className="home-title-motion inline-block">向内看见，</span>
               <br />
-              真实的自己<span className="text-[#999c98]">。</span>
+              <span className="home-title-motion home-title-motion-later inline-block">真实的自己<span className="text-[#999c98]">。</span></span>
             </h1>
-            <p className="mt-[17px] text-[12px] leading-[1.9] text-[#677276] md:mt-[26px] md:text-[14px] md:leading-[2]">
+            <p className="home-description-motion mt-[17px] text-[12px] leading-[1.9] text-[#677276] md:mt-[26px] md:text-[14px] md:leading-[2]">
               通过日常情境题，了解你的四维人格偏好。
               <br />
               原创自我探索问卷，非官方 MBTI 量表。

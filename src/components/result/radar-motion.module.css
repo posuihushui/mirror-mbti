@@ -1,0 +1,26 @@
+/* The SVG's normal styles are its final state. CSS can finish without hydration. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .radar:not([data-radar-motion]) [data-radar-outline] {
+    animation: radar-outline 720ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  .radar:not([data-radar-motion]) [data-radar-fill] {
+    animation: radar-fill 440ms ease-out 240ms backwards;
+  }
+}
+
+@keyframes radar-outline {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes radar-fill {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

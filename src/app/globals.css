@@ -68,6 +68,10 @@
 }
 
 :root {
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-duration-detail: 240ms;
+  --motion-duration-chapter: 280ms;
+  --motion-duration-entry: 600ms;
   --background: #edf2f3;
   --foreground: #171b1c;
   --card: #f2f6f7;
@@ -198,6 +202,76 @@
 }
 @utility pb-safe-5 {
   padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+
+/* Motion enhances the existing, visible server HTML. Only the portrait and copy
+   move; fixed docks and primary actions stay outside animated containers. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .home-title-motion {
+    animation: home-copy-enter var(--motion-duration-entry) var(--motion-ease-out) backwards;
+  }
+
+  .home-title-motion-later {
+    animation-delay: 90ms;
+  }
+
+  .home-description-motion {
+    animation: home-copy-enter 500ms var(--motion-ease-out) 180ms backwards;
+  }
+
+  .home-portrait-motion {
+    animation: home-portrait-settle 1100ms var(--motion-ease-out) backwards;
+  }
+
+  .report-chapter-motion:not([hidden]) {
+    animation: chapter-enter var(--motion-duration-chapter) var(--motion-ease-out) backwards;
+  }
+
+  .chapter-tab-motion {
+    transition: color var(--motion-duration-detail) ease-out;
+  }
+
+  .chapter-arrow-motion {
+    transform: translate(-2px, 2px);
+    transition:
+      opacity var(--motion-duration-detail) ease-out,
+      transform var(--motion-duration-detail) var(--motion-ease-out);
+  }
+
+  [aria-current="true"] .chapter-arrow-motion {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes home-copy-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-portrait-settle {
+  from {
+    transform: scale(1.025);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes chapter-enter {
+  from {
+    opacity: 0.35;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

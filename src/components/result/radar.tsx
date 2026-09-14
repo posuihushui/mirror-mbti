@@ -1,12 +1,14 @@
 import { cn } from "cn";
 import { poles, type Profile } from "@/lib/personality";
 import { dimensions } from "@/lib/questionnaires";
+import { RadarReveal } from "./radar-reveal";
 
 /**
  * Pure-SVG radar chart replicating the Chart.js configuration used in the prototype:
  * four axes starting at the top and going clockwise, four circular grid rings
  * (25 / 50 / 75 / 100), #d6dee0 grid, warm fill and 1.4px stroke, 2px points,
- * 12px point labels. Renders on the server; no client JS.
+ * 12px point labels. SVG and data render on the server; a small client shell
+ * preserves the first-paint CSS drawing or draws once on entering the viewport.
  */
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -34,7 +36,7 @@ export function Radar({ profile, height = 310, className }: { profile: Profile; 
   const label = letters.map((l, i) => profile.balanced[i] ? `${dimensions[i]} 接近均衡 ${profile.values[i]}%` : `${poles[l].label}偏好 ${profile.values[i]}%`).join("，");
 
   return (
-    <div className={cn("relative mx-auto w-full", className)} style={{ height }}>
+    <RadarReveal className={cn("relative mx-auto w-full", className)} style={{ height }}>
       {/* The 内向/直觉/情感/判断 labels sit just outside the outer ring, so the SVG must not
           clip them at the viewBox edge — on a 393px phone that cut off the side labels. */}
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-full w-full overflow-visible" role="img" aria-label={label}>
@@ -45,7 +47,8 @@ export function Radar({ profile, height = 310, className }: { profile: Profile; 
           const end = polar(100, i);
           return <line key={l} x1={CENTER} y1={CENTER} x2={end.x} y2={end.y} stroke="#d6dee0" strokeWidth={1} />;
         })}
-        <path d={path} fill="rgba(218,165,126,0.14)" stroke="#c49473" strokeWidth={1.4} strokeLinejoin="round" />
+        <path data-radar-fill d={path} fill="rgba(218,165,126,0.14)" />
+        <path data-radar-outline d={path} pathLength={1} fill="none" stroke="#c49473" strokeWidth={1.4} strokeLinejoin="round" />
         {points.map((p, i) => (
           <circle key={i} cx={p.x} cy={p.y} r={2} fill="#c49473" />
         ))}
@@ -67,6 +70,6 @@ export function Radar({ profile, height = 310, className }: { profile: Profile; 
           );
         })}
       </svg>
-    </div>
+    </RadarReveal>
   );
 }

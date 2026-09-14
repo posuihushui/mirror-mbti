@@ -20,7 +20,7 @@ export function ChapterPanel({ index, children }: { index: number; children: Rea
       role="tabpanel"
       aria-labelledby={chapterTabId(index)}
       hidden={chapter !== index}
-      className="animate-appear"
+      className="report-chapter-motion"
     >
       {children}
     </div>
@@ -38,11 +38,11 @@ export function ChapterSidebarNav() {
           type="button"
           onClick={() => setChapter(i)}
           aria-current={chapter === i ? "true" : undefined}
-          className={cn("flex min-h-[54px] items-center gap-4 border-b border-line text-left text-[12px]", chapter === i && "font-semibold")}
+          className={cn("chapter-tab-motion flex min-h-[54px] items-center gap-4 border-b border-line text-left text-[12px]", chapter === i && "font-semibold")}
         >
           <span className="text-[10px] text-[#929ea4]">0{i + 1}</span>
           {label}
-          <ArrowUpRight size={15} className={cn("ml-auto opacity-0", chapter === i && "opacity-100")} />
+          <ArrowUpRight size={15} className={cn("chapter-arrow-motion ml-auto opacity-0", chapter === i && "opacity-100")} />
         </button>
       ))}
     </nav>
@@ -67,7 +67,7 @@ export function ChapterTabs() {
           aria-selected={chapter === i}
           aria-controls={chapterPanelId(i)}
           onClick={() => setChapter(i)}
-          className={cn("py-[9px] text-[10px] leading-[1.8] whitespace-nowrap text-[#7f949c]", chapter === i && "text-[#e1c4aa]")}
+          className={cn("chapter-tab-motion py-[9px] text-[10px] leading-[1.8] whitespace-nowrap text-[#7f949c]", chapter === i && "text-[#e1c4aa]")}
         >
           {label}
         </button>
