@@ -14,23 +14,32 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ResponsiveSheet } from "@/components/site/responsive-sheet";
 import { QuizVersions } from "@/components/quiz/quiz-versions";
 import { useQuizProgress, useStorageAvailable, writeLastResultId, writeQuizProgress, type QuizProgress } from "@/lib/client-storage";
+import { href } from "@/lib/i18n/locale";
+import { useLocale } from "@/lib/i18n/locale-provider";
+import { quizMessages } from "@/lib/i18n/messages/quiz";
 import { getQuestionnaire } from "@/lib/questionnaires";
 import { emptyProgress } from "@/lib/quiz-progress";
-import { choices } from "@/lib/site";
-import { pad2 } from "@/lib/utils";
+import { choicesFor } from "@/lib/site";
+import { NumberMotion, NumberTextMotion } from "@/components/site/number-motion";
 
 type CreateResultResponse = { ok: true; data: { id: string } } | { ok: false; error: { code: string; message: string } };
 
 /** The questionnaire island: answers and position persist in localStorage; scoring happens on the server. */
 export function Quiz({ priceLabel }: { priceLabel: string }) {
   const progress = useQuizProgress();
+  const locale = useLocale();
   const [choosing, setChoosing] = useState(false);
-  if (!progress || choosing) return <QuizVersions priceLabel={priceLabel} onChoose={() => setChoosing(false)} />;
-  return <QuizRunner key={progress.questionnaireId} progress={progress} onChoose={() => setChoosing(true)} />;
+  const [previousCount, setPreviousCount] = useState<number>();
+  // A draft from the other language's questionnaire is kept, but this page starts from its own versions.
+  const own = progress && getQuestionnaire(progress.questionnaireId)?.locale === locale ? progress : null;
+  if (!own || choosing) return <QuizVersions priceLabel={priceLabel} onChoose={() => setChoosing(false)} />;
+  return <QuizRunner key={own.questionnaireId} progress={own} previousCount={previousCount} onChoose={() => { setPreviousCount(getQuestionnaire(own.questionnaireId)!.count); setChoosing(true); }} />;
 }
 
-function QuizRunner({ progress, onChoose }: { progress: QuizProgress; onChoose: () => void }) {
+function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgress; onChoose: () => void; previousCount?: number }) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = quizMessages[locale].runner;
   const questionnaire = getQuestionnaire(progress.questionnaireId)!;
   const questions = questionnaire.questions;
   const count = questionnaire.count;
@@ -38,9 +47,16 @@ function QuizRunner({ progress, onChoose }: { progress: QuizProgress; onChoose: 
   const storageAvailable = useStorageAvailable();
   const [submitting, setSubmitting] = useState(false);
   const [restartOpen, setRestartOpen] = useState(false);
+  const [direction, setDirection] = useState<"forward" | "backward">("forward");
 
   const save = (patch: Partial<Pick<QuizProgress, "answers" | "index">>) => {
     writeQuizProgress({ ...progress, ...patch });
+  };
+
+  const goTo = (nextIndex: number) => {
+    if (nextIndex === index) return;
+    setDirection(nextIndex > index ? "forward" : "backward");
+    save({ index: nextIndex });
   };
 
   const answered = Object.values(answers).filter((a) => a !== null).length;
@@ -52,17 +68,17 @@ function QuizRunner({ progress, onChoose }: { progress: QuizProgress; onChoose: 
   };
 
   const back = () => {
-    if (index > 0) save({ index: index - 1 });
+    if (index > 0) goTo(index - 1);
   };
 
   const next = async () => {
     if (current === null || submitting) return;
     if (!last) {
-      save({ index: index + 1 });
+      goTo(index + 1);
       return;
     }
     const missing = questions.findIndex((q) => answers[q.id] === null);
-    if (missing >= 0) { save({ index: missing }); toast("请先补全未回答的题目"); return; }
+    if (missing >= 0) { goTo(missing); toast(t.incomplete); return; }
     setSubmitting(true);
     try {
       const res = await fetch("/api/results", {
@@ -74,51 +90,51 @@ function QuizRunner({ progress, onChoose }: { progress: QuizProgress; onChoose: 
       if (!json.ok) throw new Error(json.error.message);
       writeLastResultId(json.data.id);
       writeQuizProgress(null);
-      router.push(`/result/${json.data.id}`);
+      router.push(href(locale, `/result/${json.data.id}`));
     } catch (e) {
-      toast(e instanceof Error ? e.message : "提交失败，请稍后重试");
+      toast(e instanceof Error ? e.message : t.submitFailed);
       setSubmitting(false);
     }
   };
 
-  const nextLabel = submitting ? "正在生成结果…" : last ? "查看我的结果" : "下一题";
-  const mobileNextLabel = submitting ? "生成中…" : last ? "查看结果" : "下一题";
+  const nextLabel = submitting ? t.submitting : last ? t.viewResult : t.next;
+  const mobileNextLabel = submitting ? t.mobileSubmitting : last ? t.mobileViewResult : t.next;
 
   return (
     <>
       <main className="block max-w-[510px] px-[26px] pt-4 pb-[135px] md:mx-auto md:grid md:max-w-[1140px] md:grid-cols-2 md:gap-[70px] md:px-10 md:pt-[60px] md:pb-[55px] xl:gap-[125px]">
         <aside className="hidden md:block md:pt-5">
           <p className="eyebrow">DISCOVER YOUR TYPE</p>
-          <h1 className="mt-[35px] text-[45px] leading-[1.5]">{"不必成为谁。\n只要是你自己。"}</h1>
-          <p className="mt-[26px] text-[13px] text-[#6d797e] whitespace-pre-line">{"回想最近一段时间的日常，\n选择最接近真实状态的答案。"}</p>
+          <h1 className="mt-[35px] text-[45px] leading-[1.5]">{t.asideHeading}</h1>
+          <p className="mt-[26px] text-[13px] text-[#6d797e] whitespace-pre-line">{t.asideText}</p>
           <div className="mt-[75px] flex items-baseline">
-            <strong className="text-[98px] font-normal tracking-[-0.08em]">{pad2(index + 1)}</strong>
-            <span className="pl-[14px] text-[16px] text-[#869196]"> / {count}</span>
+            <strong className="text-[98px] font-normal tracking-[-0.08em]"><NumberMotion value={index + 1} digits={2} /></strong>
+            <span className="pl-[14px] text-[16px] text-[#869196]"> / <NumberMotion value={count} initialFrom={previousCount} /></span>
           </div>
-          <p className="text-[10px] text-[#6d797e]">跟随第一感觉，也可以返回修改。</p>
+          <p className="text-[10px] text-[#6d797e]">{t.asideHint}</p>
         </aside>
 
         <section className="md:max-w-[460px]">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-[12px] text-mist">
-            <span>{questionnaire.name} · {count} 题</span>
-            <Button variant="link" onClick={onChoose} disabled={submitting} className="min-h-11">切换版本</Button>
+            <span><NumberTextMotion initialFrom={t.version(questionnaire.name, previousCount ?? count)}>{t.version(questionnaire.name, count)}</NumberTextMotion></span>
+            <Button variant="link" onClick={onChoose} disabled={submitting} className="min-h-11">{t.switchVersion}</Button>
           </div>
-          {!storageAvailable && <Alert className="mb-5"><AlertTitle>当前进度仅保存在本页</AlertTitle><AlertDescription>浏览器暂时无法保存数据，但可以继续作答。刷新或关闭页面可能丢失未提交的进度。</AlertDescription></Alert>}
+          {!storageAvailable && <Alert className="mb-5"><AlertTitle>{t.storageTitle}</AlertTitle><AlertDescription>{t.storageBody}</AlertDescription></Alert>}
           <div className="flex items-center justify-between text-[11px] text-[#758287]">
             <span className="text-[27px] font-[650] text-ink md:text-[23px]">
-              {pad2(index + 1)} <small className="text-[13px] font-normal text-[#8b969b]">/ {count}</small>
+              <NumberMotion value={index + 1} digits={2} /> <small className="text-[13px] font-normal text-[#8b969b]">/ <NumberMotion value={count} initialFrom={previousCount} /></small>
             </span>
-            <span>已答 {answered}/{count} 题</span>
+            <span><NumberTextMotion>{t.answered(answered, count)}</NumberTextMotion></span>
           </div>
-          <Progress value={answered} max={count} className="mt-[15px] h-[2px]" aria-label="测试完成进度" />
+          <Progress value={answered} max={count} className="mt-[15px] h-[2px]" indicatorClassName="quiz-progress-motion" aria-label={t.progressLabel} />
 
-          <div className="animate-appear" key={index}>
-            <p className="eyebrow mt-9 text-[9px] font-normal text-[#859297] md:mt-[42px] md:text-[10px]">跟随你的第一感觉</p>
+          <div className="quiz-question-motion" data-direction={direction} key={index}>
+            <p className="eyebrow mt-9 text-[9px] font-normal text-[#859297] md:mt-[42px] md:text-[10px]">{t.eyebrow}</p>
             <h2 id="question-title" aria-live="polite" aria-atomic="true" className="mt-[18px] min-h-[86px] text-[24px] leading-[1.6] tracking-[-0.03em] md:text-[27px]">
               {questions[index].text}
             </h2>
             <div className="mt-[27px] flex flex-col gap-[9px] md:mt-[29px]" role="group" aria-labelledby="question-title">
-              {choices.map(({ v, l }) => {
+              {choicesFor(locale).map(({ v, l }) => {
                 const selected = current === v;
                 return (
                   <button
@@ -127,7 +143,7 @@ function QuizRunner({ progress, onChoose }: { progress: QuizProgress; onChoose: 
                     aria-pressed={selected}
                     onClick={() => select(v)} disabled={submitting}
                     className={cn(
-                      "flex min-h-[55px] items-center justify-between rounded-[3px] border border-[#cfd9dc] px-[17px] text-left text-[14px] transition-colors duration-150 hover:bg-[#e3e9ea] md:px-5 md:text-[13px]",
+                      "quiz-choice-motion flex min-h-[55px] items-center justify-between rounded-[3px] border border-[#cfd9dc] px-[17px] text-left text-[14px] transition-colors duration-150 hover:bg-[#e3e9ea] md:px-5 md:text-[13px]",
                       selected && "border-[#1c2223] bg-[#1c2223] text-[#f7fafa] hover:bg-[#1c2223]",
                     )}
                   >
@@ -138,33 +154,33 @@ function QuizRunner({ progress, onChoose }: { progress: QuizProgress; onChoose: 
                         selected && "border-[#f3f5f6] bg-[#f3f5f6] text-[#242929]",
                       )}
                     >
-                      {selected && <Check size={15} />}
+                      {selected && <Check size={15} className="quiz-check-motion" />}
                     </span>
                   </button>
                 );
               })}
             </div>
           </div>
-          <p className="mt-5 text-center text-[11px] text-[#7d898e] md:text-[10px]">没有好坏之分，选择符合日常的你。</p>
+          <p className="mt-5 text-center text-[11px] text-[#7d898e] md:text-[10px]">{t.noWrong}</p>
           <Accordion type="single" collapsible className="mt-5">
-            <AccordionItem value="answers"><AccordionTrigger>检查已答题 · {answered}/{count}</AccordionTrigger>
+            <AccordionItem value="answers"><AccordionTrigger aria-label={t.review(answered, count)}><span><NumberTextMotion>{t.review(answered, count)}</NumberTextMotion></span></AccordionTrigger>
               <AccordionContent>
-                <p className="mb-3 text-[12px] text-mist">点击题号返回修改。带 ✓ 的题目已回答。</p>
+                <p className="mb-3 text-[12px] text-mist">{t.reviewHint}</p>
                 <div className="grid grid-cols-6 gap-2 md:grid-cols-8">
-                  {questions.map((q, i) => <Button key={q.id} disabled={submitting} onClick={() => save({ index: i })} className="min-h-11 justify-center border border-line text-[12px]" aria-label={`第 ${i + 1} 题，${answers[q.id] === null ? "未作答" : "已作答"}`} aria-current={index === i ? "step" : undefined}>{i + 1}{answers[q.id] === null ? "" : " ✓"}</Button>)}
+                  {questions.map((q, i) => <Button key={q.id} disabled={submitting} onClick={() => goTo(i)} className="min-h-11 justify-center border border-line text-[12px]" aria-label={t.questionLabel(i + 1, answers[q.id] !== null)} aria-current={index === i ? "step" : undefined}>{i + 1}{answers[q.id] === null ? "" : " ✓"}</Button>)}
                 </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
           <div className="mt-3 flex items-center justify-between gap-4">
-            <p className="text-[11px] leading-[1.8] text-mist">{storageAvailable ? "进度已保存在此浏览器，可以稍后继续。" : "请保持本页打开，完成后提交保存结果。"}</p>
-            <Button variant="link" className="min-h-11" disabled={submitting} onClick={() => setRestartOpen(true)}>重新开始</Button>
+            <p className="text-[11px] leading-[1.8] text-mist">{storageAvailable ? t.saved : t.keepOpen}</p>
+            <Button variant="link" className="min-h-11" disabled={submitting} onClick={() => setRestartOpen(true)}>{t.restart}</Button>
           </div>
 
-          <nav aria-label="题目导航" className="mt-[33px] hidden items-center justify-between gap-[30px] md:flex">
+          <nav aria-label={t.navLabel} className="mt-[33px] hidden items-center justify-between gap-[30px] md:flex">
             <Button variant="back" disabled={index === 0} onClick={back} className="text-[13px]">
               <ArrowLeft size={17} />
-              上一题
+              {t.back}
             </Button>
             <PrimaryButton disabled={current === null || submitting} onClick={next} className="min-h-[52px] w-[180px] min-w-0 shrink">
               {nextLabel}
@@ -174,19 +190,19 @@ function QuizRunner({ progress, onChoose }: { progress: QuizProgress; onChoose: 
       </main>
 
       <Dock>
-        <nav aria-label="底部题目导航" className="flex items-center justify-between gap-[30px]">
+        <nav aria-label={t.dockNavLabel} className="flex items-center justify-between gap-[30px]">
           <Button variant="back" disabled={index === 0} onClick={back} className="min-w-[75px] gap-2 text-[11px]">
             <ArrowLeft size={17} />
-            上一题
+            {t.back}
           </Button>
           <PrimaryButton disabled={current === null || submitting} onClick={next} className="min-h-[52px] min-w-0 max-w-[190px] flex-1 shrink">
             {mobileNextLabel}
           </PrimaryButton>
         </nav>
       </Dock>
-      <ResponsiveSheet open={restartOpen} onOpenChange={setRestartOpen} title="重新开始本版本？" description="只清空当前版本未提交的答案；其他版本进度和已完成报告都会保留。">
-        <PrimaryButton className="mt-6" onClick={() => { writeQuizProgress(emptyProgress(questionnaire.id)); setRestartOpen(false); }}>确认重新开始</PrimaryButton>
-        <Button variant="link" className="mt-3 min-h-11" onClick={() => setRestartOpen(false)}>保留当前进度</Button>
+      <ResponsiveSheet open={restartOpen} onOpenChange={setRestartOpen} title={t.restartTitle} description={t.restartDescription}>
+        <PrimaryButton className="mt-6" onClick={() => { writeQuizProgress(emptyProgress(questionnaire.id)); setRestartOpen(false); }}>{t.restartConfirm}</PrimaryButton>
+        <Button variant="link" className="mt-3 min-h-11" onClick={() => setRestartOpen(false)}>{t.restartKeep}</Button>
       </ResponsiveSheet>
     </>
   );

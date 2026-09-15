@@ -4,19 +4,25 @@ import { AppHeader } from "@/components/site/app-header";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { JsonLd } from "@/components/seo/json-ld";
-import { priceFen } from "@/lib/env";
-import { faqs, formatPriceFen, site } from "@/lib/site";
+import { priceLabelFor } from "@/lib/env";
+import { href } from "@/lib/i18n/locale";
+import { pageMessages } from "@/lib/i18n/messages/pages";
+import { siteMessages } from "@/lib/i18n/messages/site";
+import { getLocale } from "@/lib/i18n/server";
+import { pageMetadata } from "@/lib/seo";
+import { faqsFor, siteCopy } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "了解测试",
-  description: "观己 mirror 原创 MBTI 测试体验说明：32/64 题版本区别、如何回答、暂停续答、偏好分数与订单找回。",
-  alternates: { canonical: "/about" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = pageMessages[locale].about;
+  return pageMetadata({ locale, title: t.metaTitle, description: t.metaDescription, path: "/about" });
+}
 
 /** Static "了解测试" page. The same copy also appears in the in-app sheet; this page exists for search and direct links. */
-export default function AboutPage() {
-  const price = formatPriceFen(priceFen());
-  const items = faqs(price);
+export default async function AboutPage() {
+  const locale = await getLocale();
+  const t = pageMessages[locale].about;
+  const items = faqsFor(locale, priceLabelFor(locale));
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -28,14 +34,14 @@ export default function AboutPage() {
   };
   return (
     <>
-      <AppHeader variant="page" title="关于这次探索" backHref="/" />
+      <AppHeader variant="page" title={t.headerTitle} backHref={href(locale, "/")} path="/about" />
       <main className="mx-auto max-w-[560px] px-[27px] pt-4 pb-[135px] md:px-10 md:pt-[60px] md:pb-[80px]">
-        <p className="eyebrow text-[#738087]">ABOUT · 了解测试</p>
+        <p className="eyebrow text-[#738087]">{t.eyebrow}</p>
         <h1 className="mt-[18px] text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[32px]">
-          关于这次探索
+          {t.headerTitle}
         </h1>
         <p className="mt-[27px] text-[14px] leading-[2] text-[#78878e] whitespace-pre-line">
-          {"认识自己，不是把自己放进一个盒子。\n是多一种理解自己的语言。"}
+          {siteMessages[locale].about.intro}
         </p>
         <dl className="mt-2">
           {items.map(([q, a]) => (
@@ -45,21 +51,21 @@ export default function AboutPage() {
             </div>
           ))}
         </dl>
-        <nav className="mt-6 flex flex-wrap gap-5 text-[12px]" aria-label="更多说明"><Link href="/preferences" className="text-link">四维偏好与复测</Link><Link href="/help" className="text-link">订单帮助与联系</Link></nav>
+        <nav className="mt-6 flex flex-wrap gap-5 text-[12px]" aria-label={t.navLabel}><Link href={href(locale, "/preferences")} className="text-link">{t.preferences}</Link><Link href={href(locale, "/help")} className="text-link">{t.help}</Link></nav>
         <p className="mt-6 text-[10px] leading-[1.8] text-[#829094]">
-          所有题目为独立原创的演示问卷，并非官方 MBTI 量表，也未经过心理测量学验证。结果用于自我探索，不用于诊断、招聘筛选或给他人贴标签。
+          {t.disclaimer}
         </p>
         <div className="mt-6 hidden md:block">
-          <PrimaryButton href="/quiz" className="max-w-[246px]">
-            开始认识自己
+          <PrimaryButton href={href(locale, "/quiz")} className="max-w-[246px]">
+            {t.start}
           </PrimaryButton>
         </div>
       </main>
       <Dock>
-        <PrimaryButton href="/quiz">开始认识自己</PrimaryButton>
+        <PrimaryButton href={href(locale, "/quiz")}>{t.start}</PrimaryButton>
       </Dock>
       <JsonLd data={faqJsonLd} />
-      <span className="sr-only">{site.name}</span>
+      <span className="sr-only">{siteCopy(locale).name}</span>
     </>
   );
 }

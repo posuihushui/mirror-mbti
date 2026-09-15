@@ -2,14 +2,21 @@
 
 import { PrimaryButton } from "@/components/site/primary-button";
 import { useQuizProgress } from "@/lib/client-storage";
+import { href } from "@/lib/i18n/locale";
+import { useLocale } from "@/lib/i18n/locale-provider";
+import { siteMessages } from "@/lib/i18n/messages/site";
+import { getQuestionnaire } from "@/lib/questionnaires";
 
-/** Home CTA exposes the active version's saved progress. */
+/** Home CTA exposes the active version's saved progress, when that draft belongs to this language. */
 export function StartButton({ className }: { className?: string }) {
+  const locale = useLocale();
+  const t = siteMessages[locale].startButton;
   const progress = useQuizProgress();
-  const answered = progress ? Object.values(progress.answers).filter((a) => a !== null).length : 0;
+  const own = progress && getQuestionnaire(progress.questionnaireId)?.locale === locale ? progress : null;
+  const answered = own ? Object.values(own.answers).filter((a) => a !== null).length : 0;
   return (
-    <PrimaryButton href="/quiz" className={className}>
-      {progress && answered > 0 ? `继续测试 · ${answered}/${progress.questionOrder.length} 题` : "开始人格测试"}
+    <PrimaryButton href={href(locale, "/quiz")} className={className}>
+      {own && answered > 0 ? t.resume(answered, own.questionOrder.length) : t.start}
     </PrimaryButton>
   );
 }

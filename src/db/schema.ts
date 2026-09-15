@@ -1,8 +1,8 @@
-import { boolean, char, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, char, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type ResponseItem } from "@/lib/questionnaires";
 
-export const paymentProviderEnum = pgEnum("payment_provider", ["mock", "wechat"]);
-export const paymentChannelEnum = pgEnum("payment_channel", ["mock", "jsapi", "native", "h5"]);
+export const paymentProviderEnum = pgEnum("payment_provider", ["mock", "wechat", "crypto"]);
+export const paymentChannelEnum = pgEnum("payment_channel", ["mock", "jsapi", "native", "h5", "ethereum", "solana"]);
 export const orderStatusEnum = pgEnum("order_status", ["created", "paid", "cancelled", "failed", "expired", "refunded"]);
 
 const timestamps = {
@@ -61,6 +61,12 @@ export const orders = pgTable(
     providerTxnId: text("provider_txn_id"),
     prepayPayload: jsonb("prepay_payload").$type<Record<string, unknown>>(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    /** Crypto (Ethereum): the wallet that signed this order's challenge, lowercase. Only its transfers count. */
+    payerAddress: text("payer_address"),
+    /** Crypto (Solana): the Solana Pay reference key, unique per order, that the payment transaction must carry. */
+    paymentReference: text("payment_reference").unique(),
+    /** Crypto (Ethereum): the first block searched for this order's transfer, fixed when the payer is confirmed. */
+    startBlock: bigint("start_block", { mode: "number" }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     ...timestamps,

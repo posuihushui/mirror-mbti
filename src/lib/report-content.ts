@@ -1,4 +1,6 @@
-import { dimensions, poles, profileMeta, type Letter, type Profile } from "@/lib/personality";
+import { enReportCopy, enScenes } from "@/lib/i18n/content/en/report";
+import type { Locale } from "@/lib/i18n/locale";
+import { dimensions, polesFor, profileMeta, type Letter, type Profile } from "@/lib/personality";
 import { dimensionReading } from "@/lib/preference-content";
 import { blindspotTitles } from "@/lib/site";
 
@@ -64,36 +66,58 @@ const scenes: Record<Letter, { scene: string; watch: string; phrase: string; wor
   },
 };
 
-function context(profile: Profile, index: number) {
-  const reading = dimensionReading(profile, index);
-  const scene = scenes[profile.type[index] as Letter];
-  const qualifier = reading.degree === "偏向较明显" ? "这次偏向较明显，可以优先观察以下情境。" : "这次只有轻微偏向，以下情境只是可对照的一种可能。";
-  return { reading, scene, qualifier };
-}
+/** The Chinese report copy, shaped like `enReportCopy` so both locales share one builder. */
+const zhReportCopy = {
+  qualifierClear: "这次偏向较明显，可以优先观察以下情境。",
+  qualifierSlight: "这次只有轻微偏向，以下情境只是可对照的一种可能。",
+  strengthBalancedTitle: (pair: string) => `观察${pair}两种需要`,
+  strengthBalancedBody: (balanced: string) => `${balanced}这不是“两边都擅长”的能力结论；请用不同情境的实际经历检验。`,
+  blindspotTitles,
+  blindspotBalancedBody: (pair: string, question: string) => `当${pair}接近均衡时，不必为自己选定一个固定标签。${question}分别写出两种答案对应的场景，看看改变的是任务、角色还是精力。`,
+  relationshipTitles: ["让精力的需要变得可见", "把彼此理解的起点说清楚", "一起说明决定背后的取舍", "约定稳定部分与可变部分"],
+  relationshipBalancedBody: (balanced: string) => `${balanced}可以这样开始：“我在不同情境下会有不同需要，这一次我更希望……你呢？”`,
+  relationshipBody: (qualifier: string, phrase: string) => `${qualifier}可以尝试这样说：“${phrase}”然后邀请对方用自己的话回应，避免用类型猜测对方。`,
+  workTitles: ["适合你的工作节奏", "让理解变成可见的成果", "给选择设定可讨论的条件", "兼顾推进与调整"],
+  workBalancedBody: (balanced: string) => `${balanced}在学习或工作中各试用一次，记录哪种安排更适合当前任务，而非为自己选择固定职业标签。`,
+  dayOne: { title: "第 1 天 · 留下一次真实记录", body: "选一个今天发生的小情境，记下当时的任务、与你互动的人、你的第一反应和精力变化。先描述事实，暂时不套用人格标签。" },
+  dayTitle: (day: number, title: string) => `第 ${day} 天 · ${title}`,
+  dayBalancedBody: (question: string) => `${question}找出两种不同表现的例子，分别记录它们出现的条件。`,
+  daySix: { title: "第 6 天 · 换一种方式试试", body: "从前几天挑一个最熟悉的反应，在低风险的小事上试一次不同做法。记录它是否带来新信息；不需要强迫自己长期使用不合适的方式。" },
+  daySeven: { title: "第 7 天 · 保留一个小调整", body: "回看这一周：哪项描述有具体经历支持？哪项不符合？选一个确实有帮助的安排保留一周。复测前先看这些记录，不追求得到某一种类型。" },
+};
 
-export function buildReportData(profile: Profile, options: { sample: boolean; demo: boolean }) {
-  const { name, line, summary, typeLabel } = profileMeta(profile);
-  const contexts = dimensions.map((_, i) => context(profile, i));
+export function buildReportData(profile: Profile, options: { sample: boolean; demo: boolean; locale?: Locale }) {
+  const locale = options.locale ?? "zh";
+  const en = locale === "en";
+  const copy = en ? enReportCopy : zhReportCopy;
+  const sceneSet = en ? enScenes : scenes;
+  // Chinese sentences run together; English sentences need a space.
+  const join = (a: string, b: string) => (en ? `${a} ${b}` : `${a}${b}`);
+  const { name, line, summary, typeLabel } = profileMeta(profile, locale);
+  const contexts = dimensions.map((_, i) => ({
+    reading: dimensionReading(profile, i, locale),
+    scene: sceneSet[profile.type[i] as Letter],
+    qualifier: !profile.balanced[i] && profile.values[i] >= 75 ? copy.qualifierClear : copy.qualifierSlight,
+  }));
   const strengths = contexts.map(({ reading, scene, qualifier }, i) => ({
-    title: profile.balanced[i] ? `观察${reading.pair}两种需要` : poles[profile.type[i]].need,
-    body: profile.balanced[i] ? `${reading.balanced}这不是“两边都擅长”的能力结论；请用不同情境的实际经历检验。` : `${qualifier}${scene.scene}`,
+    title: profile.balanced[i] ? copy.strengthBalancedTitle(reading.pair) : polesFor(locale)[profile.type[i] as Letter].need,
+    body: profile.balanced[i] ? copy.strengthBalancedBody(reading.balanced) : join(qualifier, scene.scene),
   }));
   const blindspots = contexts.map(({ reading, scene, qualifier }, i) => ({
-    title: blindspotTitles[i], body: profile.balanced[i] ? `当${reading.pair}接近均衡时，不必为自己选定一个固定标签。${reading.question}分别写出两种答案对应的场景，看看改变的是任务、角色还是精力。` : `${qualifier}${scene.watch}`,
+    title: copy.blindspotTitles[i], body: profile.balanced[i] ? copy.blindspotBalancedBody(reading.pair, reading.question) : join(qualifier, scene.watch),
   }));
-  const relationshipTitles = ["让精力的需要变得可见", "把彼此理解的起点说清楚", "一起说明决定背后的取舍", "约定稳定部分与可变部分"];
   const relationships = contexts.map(({ reading, scene, qualifier }, i) => ({
-    title: relationshipTitles[i], body: profile.balanced[i] ? `${reading.balanced}可以这样开始：“我在不同情境下会有不同需要，这一次我更希望……你呢？”` : `${qualifier}可以尝试这样说：“${scene.phrase}”然后邀请对方用自己的话回应，避免用类型猜测对方。`,
+    title: copy.relationshipTitles[i], body: profile.balanced[i] ? copy.relationshipBalancedBody(reading.balanced) : copy.relationshipBody(qualifier, scene.phrase),
   }));
   const work = contexts.map(({ reading, scene, qualifier }, i) => ({
-    title: ["适合你的工作节奏", "让理解变成可见的成果", "给选择设定可讨论的条件", "兼顾推进与调整"][i],
-    body: profile.balanced[i] ? `${reading.balanced}在学习或工作中各试用一次，记录哪种安排更适合当前任务，而非为自己选择固定职业标签。` : `${qualifier}${scene.work}`,
+    title: copy.workTitles[i],
+    body: profile.balanced[i] ? copy.workBalancedBody(reading.balanced) : join(qualifier, scene.work),
   }));
   const actionPlan: Insight[] = [
-    { title: "第 1 天 · 留下一次真实记录", body: "选一个今天发生的小情境，记下当时的任务、与你互动的人、你的第一反应和精力变化。先描述事实，暂时不套用人格标签。" },
-    ...contexts.map(({ reading, scene }, i) => ({ title: `第 ${i + 2} 天 · ${reading.title}`, body: profile.balanced[i] ? `${reading.question}找出两种不同表现的例子，分别记录它们出现的条件。` : scene.experiment })),
-    { title: "第 6 天 · 换一种方式试试", body: "从前几天挑一个最熟悉的反应，在低风险的小事上试一次不同做法。记录它是否带来新信息；不需要强迫自己长期使用不合适的方式。" },
-    { title: "第 7 天 · 保留一个小调整", body: "回看这一周：哪项描述有具体经历支持？哪项不符合？选一个确实有帮助的安排保留一周。复测前先看这些记录，不追求得到某一种类型。" },
+    copy.dayOne,
+    ...contexts.map(({ reading, scene }, i) => ({ title: copy.dayTitle(i + 2, reading.title), body: profile.balanced[i] ? copy.dayBalancedBody(reading.question) : scene.experiment })),
+    copy.daySix,
+    copy.daySeven,
   ];
   return { profile, name, line, summary, typeLabel, sample: options.sample, demo: options.demo, strengths, blindspots, relationships, work, actionPlan };
 }

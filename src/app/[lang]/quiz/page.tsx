@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
 import { AppHeader } from "@/components/site/app-header";
 import { Quiz } from "@/components/quiz/quiz";
-import { priceFen } from "@/lib/env";
-import { formatPriceFen } from "@/lib/site";
+import { priceLabelFor } from "@/lib/env";
+import { href } from "@/lib/i18n/locale";
+import { pageMessages } from "@/lib/i18n/messages/pages";
+import { getLocale } from "@/lib/i18n/server";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "MBTI 测试体验 · 32 / 64 题可选",
-  description: "选择 32 题轻量版或 64 题标准版，通过原创日常情境题了解四维人格偏好，免费查看概览，可暂停续答。非官方 MBTI 量表。",
-  alternates: { canonical: "/quiz" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = pageMessages[locale].quiz;
+  return pageMetadata({ locale, title: t.metaTitle, description: t.metaDescription, path: "/quiz" });
+}
 
-export default function QuizPage() {
+export default async function QuizPage() {
+  const locale = await getLocale();
   return (
     <>
-      <AppHeader variant="page" title="认识自己" backHref="/" active="quiz" />
-      <Quiz priceLabel={formatPriceFen(priceFen())} />
+      <AppHeader variant="page" title={pageMessages[locale].quiz.headerTitle} backHref={href(locale, "/")} active="quiz" path="/quiz" />
+      <Quiz priceLabel={priceLabelFor(locale)} />
     </>
   );
 }

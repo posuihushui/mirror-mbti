@@ -4,6 +4,9 @@ import { cn } from "cn";
 import { Radar } from "@/components/result/radar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import type { Locale } from "@/lib/i18n/locale";
+import { reportMessages } from "@/lib/i18n/messages/report";
+import { getLocale } from "@/lib/i18n/server";
 import { type Profile } from "@/lib/personality";
 import type { Insight } from "@/lib/report-content";
 import { dimensionReading } from "@/lib/preference-content";
@@ -29,7 +32,9 @@ export type ReportData = {
  * there is no second reading view. All four chapters are rendered on the server and
  * shipped in the HTML; the client only decides which one is visible.
  */
-export function ReportBody({ data, banner, footer }: { data: ReportData; banner?: ReactNode; footer?: ReactNode }) {
+export async function ReportBody({ data, banner, footer }: { data: ReportData; banner?: ReactNode; footer?: ReactNode }) {
+  const locale = await getLocale();
+  const t = reportMessages[locale].aside;
   const { name, sample, demo, typeLabel } = data;
 
   return (
@@ -41,22 +46,25 @@ export function ReportBody({ data, banner, footer }: { data: ReportData; banner?
       )}
     >
       {banner ? <div className="md:col-span-2">{banner}</div> : null}
-      <aside className="hidden md:sticky md:top-[35px] md:block md:pt-[15px]">
-        <p className="eyebrow text-[9px] text-[#758289]">YOUR INNER WORLD</p>
-        <div className="mt-[26px] text-[64px] font-medium tracking-[-0.06em]">{typeLabel}</div>
-        <p className="mt-1 text-[12px] text-[#75828a]">
-          {name} · {sample ? "示例" : "本次"}人格报告
-        </p>
-        {sample ? (
-          <Badge className="mt-[18px]">示例报告</Badge>
-        ) : (
-          <Badge variant="unlocked" className="mt-[18px]">
-            <Check size={12} />
-            已解锁{demo ? " · 演示" : ""}
-          </Badge>
-        )}
-        <ChapterSidebarNav />
-        <p className="mt-20 text-[9px] tracking-[0.1em] text-[#8b999f] whitespace-pre-line">{"YOU ARE MORE\nTHAN FOUR LETTERS."}</p>
+      {/* Stretch the sidebar cell to the reading row so sticky content stops before the footer. */}
+      <aside className="hidden md:block md:self-stretch">
+        <div className="md:sticky md:top-[35px] md:pt-[15px]">
+          <p className="eyebrow text-[9px] text-[#758289]">YOUR INNER WORLD</p>
+          <div className="mt-[26px] text-[64px] font-medium tracking-[-0.06em]">{typeLabel}</div>
+          <p className="mt-1 text-[12px] text-[#75828a]">
+            {t.reportOf(name, sample)}
+          </p>
+          {sample ? (
+            <Badge className="mt-[18px]">{t.sampleBadge}</Badge>
+          ) : (
+            <Badge variant="unlocked" className="mt-[18px]">
+              <Check size={12} />
+              {t.unlocked(demo)}
+            </Badge>
+          )}
+          <ChapterSidebarNav />
+          <p className="mt-20 text-[9px] tracking-[0.1em] text-[#8b999f] whitespace-pre-line">{"YOU ARE MORE\nTHAN FOUR LETTERS."}</p>
+        </div>
       </aside>
 
       <article className="bg-night px-[25px] pt-[25px] pb-[55px] text-[#eff2f4] md:p-[35px] xl:px-[50px] xl:py-11">
@@ -64,25 +72,25 @@ export function ReportBody({ data, banner, footer }: { data: ReportData; banner?
           <span>
             {typeLabel} · {name}
           </span>
-          <span>{sample ? "示例报告" : `完整报告${demo ? " · 演示" : ""}`}</span>
+          <span>{t.mobileLabel(sample, demo)}</span>
         </div>
         <ChapterTabs />
 
         <ChapterPanel index={0}>
           <ChapterLabel index={0} type={typeLabel} />
-          <ChapterOne data={data} heading="h1" />
+          <ChapterOne data={data} locale={locale} heading="h1" />
         </ChapterPanel>
         <ChapterPanel index={1}>
           <ChapterLabel index={1} type={typeLabel} />
-          <ChapterTwo data={data} />
+          <ChapterTwo data={data} locale={locale} />
         </ChapterPanel>
         <ChapterPanel index={2}>
           <ChapterLabel index={2} type={typeLabel} />
-          <ChapterThree data={data} />
+          <ChapterThree data={data} locale={locale} />
         </ChapterPanel>
         <ChapterPanel index={3}>
           <ChapterLabel index={3} type={typeLabel} />
-          <ChapterFour data={data} />
+          <ChapterFour data={data} locale={locale} />
         </ChapterPanel>
 
         <ChapterFooterNav sample={sample} />
@@ -92,7 +100,10 @@ export function ReportBody({ data, banner, footer }: { data: ReportData; banner?
   );
 }
 
-function ChapterOne({ data, heading = "h2" }: { data: ReportData; heading?: "h1" | "h2" }) {
+type ChapterProps = { data: ReportData; locale: Locale };
+
+function ChapterOne({ data, locale, heading = "h2" }: ChapterProps & { heading?: "h1" | "h2" }) {
+  const t = reportMessages[locale].one;
   const { profile, line, summary } = data;
   const letters = profile.type.split("");
   return (
@@ -102,71 +113,77 @@ function ChapterOne({ data, heading = "h2" }: { data: ReportData; heading?: "h1"
       <div className="my-7 bg-[#eaf0f2] p-5 text-[#182126] md:mt-[35px] md:mb-[27px] md:p-[22px]">
         <Radar profile={profile} height={260} className="mb-[25px]" />
         <div>
-          {letters.map((l, i) => (
-            <div key={l} className="not-first:mt-[22px]">
-              <div className="flex items-center justify-between text-[12px]">
-                <b className="font-medium">
-                  {dimensionReading(profile, i).label}
-                </b>
-                <span>{profile.values[i]}%</span>
+          {letters.map((l, i) => {
+            const reading = dimensionReading(profile, i, locale);
+            return (
+              <div key={l} className="not-first:mt-[22px]">
+                <div className="flex items-center justify-between text-[12px]">
+                  <b className="font-medium">
+                    {reading.label}
+                  </b>
+                  <span>{profile.values[i]}%</span>
+                </div>
+                <Progress
+                  value={profile.values[i]}
+                  max={100}
+                  className="mt-[9px]"
+                  indicatorClassName="bg-[#b89273]"
+                  aria-label={`${reading.label} ${profile.values[i]}%`}
+                />
+                <p className="mt-[6px] text-[12px] leading-[1.9] text-[#73858c]">
+                  {reading.interpretation}
+                </p>
               </div>
-              <Progress
-                value={profile.values[i]}
-                max={100}
-                className="mt-[9px]"
-                indicatorClassName="bg-[#b89273]"
-                aria-label={`${dimensionReading(profile, i).label} ${profile.values[i]}%`}
-              />
-              <p className="mt-[6px] text-[12px] leading-[1.9] text-[#73858c]">
-                {dimensionReading(profile, i).interpretation}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
-      <Quote>{"你不需要符合一个类型，\n你只需要更了解自己。"}</Quote>
-      <Body>这些倾向来自你本次的回答。环境、角色和最近的经历，都可能影响你的表达方式。把它当作观察自己的起点，看看哪些描述与你的生活相呼应。</Body>
+      <Quote>{t.quote}</Quote>
+      <Body>{t.body}</Body>
     </>
   );
 }
 
-function ChapterTwo({ data }: { data: ReportData }) {
+function ChapterTwo({ data, locale }: ChapterProps) {
+  const t = reportMessages[locale].two;
   return (
     <>
-      <ChapterHeading>{"理解你的优势，\n也温柔地看见盲点。"}</ChapterHeading>
+      <ChapterHeading>{t.heading}</ChapterHeading>
       <StrengthSwitch strengths={<InsightList items={data.strengths} />} blindspots={<InsightList items={data.blindspots} />} />
-      <Quote>{"优势不需要时时在线。\n适合自己的节奏，同样重要。"}</Quote>
+      <Quote>{t.quote}</Quote>
     </>
   );
 }
 
-function ChapterThree({ data }: { data: ReportData }) {
+function ChapterThree({ data, locale }: ChapterProps) {
+  const t = reportMessages[locale].three;
   return (
     <>
-      <ChapterHeading>{"好的关系，\n从被理解开始。"}</ChapterHeading>
-      <Lead>把“你应该懂我”，换成一次更具体的表达。你的偏好值得被看见，对方的也一样。</Lead>
+      <ChapterHeading>{t.heading}</ChapterHeading>
+      <Lead>{t.lead}</Lead>
       <InsightList items={data.relationships} />
-      <Quote>{"“这件事让我感到……\n我希望我们可以……”"}</Quote>
-      <Body>试着在一次小分歧中使用这句话。描述具体情境和自己的需要，避免用人格标签解释对方的一切。</Body>
+      <Quote>{t.quote}</Quote>
+      <Body>{t.body}</Body>
     </>
   );
 }
 
-function ChapterFour({ data }: { data: ReportData }) {
+function ChapterFour({ data, locale }: ChapterProps) {
+  const t = reportMessages[locale].four;
   return (
     <>
-      <ChapterHeading>{"找到适合你的方式，\n让成长具体一点。"}</ChapterHeading>
-      <Lead>与其用人格类型决定职业，不如观察：什么环境能让你稳定发挥，什么习惯值得调整。</Lead>
+      <ChapterHeading>{t.heading}</ChapterHeading>
+      <Lead>{t.lead}</Lead>
       <InsightList items={data.work} />
-      <h3 className="mt-9 text-[20px]">把理解放进一周生活里。</h3>
-      <p className="mt-3 text-[12px] leading-[2] text-[#a9b7bc]">每天只做一个小尝试。以下安排根据本次四维作答选择，不是效果保证；不符合你的部分可以跳过或调整。</p>
+      <h3 className="mt-9 text-[20px]">{t.weekHeading}</h3>
+      <p className="mt-3 text-[12px] leading-[2] text-[#a9b7bc]">{t.weekIntro}</p>
       <InsightList items={data.actionPlan} />
       <div className="my-[33px] bg-[#243034] p-[25px]">
         <p className="eyebrow text-[9px] text-[#b1bfc4]">A SMALL STEP THIS WEEK</p>
-        <p className="mt-5 text-[20px] leading-[1.7] font-normal whitespace-pre-line md:text-[21px]">{"记录一次让你感到\n“这很像我”的时刻。"}</p>
-        <p className="mt-[15px] text-[11px] text-[#a9b7bc] whitespace-pre-line">{"当时你在做什么？和谁在一起？\n哪一个需要被满足了？"}</p>
+        <p className="mt-5 text-[20px] leading-[1.7] font-normal whitespace-pre-line md:text-[21px]">{t.stepHeading}</p>
+        <p className="mt-[15px] text-[11px] text-[#a9b7bc] whitespace-pre-line">{t.stepQuestions}</p>
       </div>
-      <Body>一周后再回看这段记录。真实的生活体验，比任何四个字母都更能帮助你理解自己。</Body>
+      <Body>{t.closing}</Body>
     </>
   );
 }

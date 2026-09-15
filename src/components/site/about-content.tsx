@@ -4,16 +4,21 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PrimaryButton } from "@/components/site/primary-button";
-import { faqs } from "@/lib/site";
+import { href } from "@/lib/i18n/locale";
+import { useLocale } from "@/lib/i18n/locale-provider";
+import { siteMessages } from "@/lib/i18n/messages/site";
+import { faqsFor } from "@/lib/site";
 
 /** `.about-content`: intro line, FAQ accordion (first item open), CTA. */
 export function AboutContent({ priceLabel, onStart }: { priceLabel: string; onStart?: () => void }) {
   const router = useRouter();
-  const items = faqs(priceLabel);
+  const locale = useLocale();
+  const t = siteMessages[locale].about;
+  const items = faqsFor(locale, priceLabel);
   return (
     <div>
       <p className="my-[27px] text-[14px] leading-[2] text-[#78878e] whitespace-pre-line">
-        {"认识自己，不是把自己放进一个盒子。\n是多一种理解自己的语言。"}
+        {t.intro}
       </p>
       <Accordion type="single" collapsible defaultValue="0">
         {items.map(([q, a], i) => (
@@ -25,15 +30,15 @@ export function AboutContent({ priceLabel, onStart }: { priceLabel: string; onSt
           </AccordionItem>
         ))}
       </Accordion>
-      <Link href="/help" className="text-link mt-5 min-h-11" onClick={onStart}>订单帮助与联系</Link>
+      <Link href={href(locale, "/help")} className="text-link mt-5 min-h-11" onClick={onStart}>{t.help}</Link>
       <PrimaryButton
         className="mt-6"
         onClick={() => {
           onStart?.();
-          router.push("/quiz");
+          router.push(href(locale, "/quiz"));
         }}
       >
-        开始认识自己
+        {t.start}
       </PrimaryButton>
     </div>
   );

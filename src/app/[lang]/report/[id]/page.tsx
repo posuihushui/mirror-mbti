@@ -7,12 +7,15 @@ import { SampleNotice } from "@/components/report/sample-notice";
 import { SampleCta } from "@/components/result/sample-cta";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
-import { paymentMode, priceFen } from "@/lib/env";
+import { paymentModeFor, priceLabelFor } from "@/lib/env";
+import { href } from "@/lib/i18n/locale";
+import { pageMessages } from "@/lib/i18n/messages/pages";
+import { getLocale } from "@/lib/i18n/server";
 import { buildReportData } from "@/lib/report-content";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
-import { formatPriceFen } from "@/lib/site";
+import { pageMetadata } from "@/lib/seo";
 import { getVisitorId } from "@/lib/session";
-import { getQuestionnaire } from "@/lib/questionnaires";
+import { getQuestionnaire, questionnaireLocale } from "@/lib/questionnaires";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -22,42 +25,49 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
+  const locale = await getLocale();
+  const t = pageMessages[locale].report;
   if (id === SAMPLE_RESULT_ID) {
-    return {
-      title: "示例报告 · INFJ 提倡者",
-      description: "观己 mirror 的示例人格报告，与付费报告版式相同，只是数据来自一次示例作答：性格总览、优势与盲点、关系与沟通、工作与成长四章全文，可免费阅读。",
-      alternates: { canonical: "/report/sample" },
-    };
+    return pageMetadata({
+      locale,
+      title: t.sampleMetaTitle,
+      description: t.sampleMetaDescription,
+      path: "/report/sample",
+    });
   }
-  return { title: "完整人格报告", robots: { index: false, follow: false } };
+  return { title: t.ownTitle, robots: { index: false, follow: false } };
 }
 
 /** Entitlement is checked here on the server; the client never decides who can read. */
 export default async function ReportPage({ params }: Params) {
   const { id } = await params;
+  const locale = await getLocale();
+  const t = pageMessages[locale].report;
   const visitorId = id === SAMPLE_RESULT_ID ? null : await getVisitorId();
   const result = await getResult(id, visitorId);
   if (!result) notFound();
   if (!result.sample) {
-    if (!result.owner) redirect(`/result/${id}`);
-    if (!result.unlocked) redirect(`/result/${id}?unlock=1`);
+    const resultLocale = questionnaireLocale(result.questionnaireId);
+    if (resultLocale !== locale) redirect(href(resultLocale, `/report/${id}`));
+    if (!result.owner) redirect(href(locale, `/result/${id}`));
+    if (!result.unlocked) redirect(href(locale, `/result/${id}?unlock=1`));
   }
 
-  const data: ReportData = buildReportData(result.profile, { sample: result.sample, demo: paymentMode() === "mock" });
+  const data: ReportData = buildReportData(result.profile, { sample: result.sample, demo: paymentModeFor(locale) === "mock", locale });
 
-  const price = formatPriceFen(priceFen());
+  const price = priceLabelFor(locale);
 
   return (
     <>
-      <AppHeader variant="page" title={data.sample ? "示例人格报告" : "完整人格报告"} backHref={`/result/${id}`} />
+      <AppHeader variant="page" title={data.sample ? t.sampleHeader : t.ownTitle} backHref={href(locale, `/result/${id}`)} path={data.sample ? "/report/sample" : undefined} />
       <ReportBody
         data={data}
-        banner={<>{data.sample && <SampleNotice />}<p className="mx-[25px] my-5 text-[12px] leading-[1.9] text-mist md:mx-0">{getQuestionnaire(result.questionnaireId)?.name ?? "历史版本"} · {result.questionCount} 题 · 基于本次四维偏好的场景解读</p></>}
-        footer={data.sample ? <SampleCta priceLabel={price} /> : <nav aria-label="报告帮助" className="mx-[25px] flex flex-wrap gap-6 text-[12px] md:mx-0"><Link href="/my/report" prefetch={false} className="text-link">全部测试记录</Link><Link href="/help" className="text-link">订单与报告帮助</Link></nav>}
+        banner={<>{data.sample && <SampleNotice />}<p className="mx-[25px] my-5 text-[12px] leading-[1.9] text-mist md:mx-0">{t.banner(getQuestionnaire(result.questionnaireId)?.name ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p></>}
+        footer={data.sample ? <SampleCta priceLabel={price} /> : <nav aria-label={t.navLabel} className="mx-[25px] flex flex-wrap gap-6 text-[12px] md:mx-0"><Link href={href(locale, "/my/report")} prefetch={false} className="text-link">{t.allRecords}</Link><Link href={href(locale, "/help")} className="text-link">{t.help}</Link></nav>}
       />
       {data.sample && (
         <Dock>
-          <PrimaryButton href="/quiz">开始认识自己</PrimaryButton>
+          <PrimaryButton href={href(locale, "/quiz")}>{t.start}</PrimaryButton>
         </Dock>
       )}
     </>

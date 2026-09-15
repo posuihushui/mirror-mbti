@@ -1,16 +1,52 @@
 import "server-only";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { OrderRow, PaymentChannel } from "@/db/schema";
-import { appUrl, env, priceFen } from "@/lib/env";
+import { appUrl, env, paymentModeFor, priceMinorFor } from "@/lib/env";
+import { href, type Locale } from "@/lib/i18n/locale";
 import { isValidOrderId, newOrderId } from "@/lib/ids";
 import { hasClearPreference, typeMeta } from "@/lib/personality";
-import { getPaymentProvider } from "@/lib/payments";
-import type { OrderView, PaymentPayload } from "@/lib/payments/types";
+import { getCryptoProvider, getPaymentProvider } from "@/lib/payments";
+import type { CryptoNetwork, OrderView, PaymentPayload } from "@/lib/payments/types";
+import { questionnaireLocale } from "@/lib/questionnaires";
 import { getResult, markResultUnlocked } from "@/lib/results";
 import { pickWeChatChannel } from "@/lib/ua";
 
 export const ORDER_TTL_MS = 15 * 60 * 1000;
+/** On-chain payments take longer to send and confirm than WeChat Pay. */
+export const CRYPTO_ORDER_TTL_MS = 30 * 60 * 1000;
+/** A crypto transfer that lands after its order expired still unlocks the report within this window. */
+export const CRYPTO_LATE_WINDOW_MS = 24 * 60 * 60 * 1000;
+/** Status polls arrive every couple of seconds; chain reads per order are spaced out. */
+const CRYPTO_CHECK_INTERVAL_MS = 5000;
+const lastChainCheck = new Map<string, number>();
+
+const orderMessages = {
+  zh: {
+    notFound: "结果不存在。",
+    notOwner: "只能为自己的测试结果购买报告。",
+    unlocked: "这份报告已经解锁。",
+    unclear: "本次回答暂未形成清晰倾向，请先检查答案或重新测试，暂不提供付费解锁。",
+    openid: "需要先完成微信授权。",
+    network: "请选择支付网络。",
+    closed: "订单已关闭。",
+    payerLocked: "该订单已绑定其他付款钱包。",
+    notEthereum: "该订单不需要绑定钱包。",
+    description: (type: string, name: string) => `观己 mirror 完整人格报告 · ${type} ${name}`,
+  },
+  en: {
+    notFound: "Result not found.",
+    notOwner: "You can only buy reports for your own test results.",
+    unlocked: "This report is already unlocked.",
+    unclear: "Your answers didn’t form a clear lean this time. Please review your answers or retake the test; no paid unlock is offered.",
+    openid: "WeChat authorization is required first.",
+    network: "Please choose a payment network.",
+    closed: "This order is closed. Please start a new payment.",
+    payerLocked: "This order is already linked to a different wallet. Start a new payment to use another wallet.",
+    notEthereum: "This order doesn’t use a connected wallet.",
+    description: (type: string) => `mirror full personality report · ${type}`,
+  },
+};
 
 export class OrderError extends Error {
   constructor(
@@ -22,12 +58,18 @@ export class OrderError extends Error {
   }
 }
 
+/** An order belongs to the language of the result it unlocks; its currency records that. */
+export function orderLocale(order: Pick<OrderRow, "currency">): Locale {
+  return order.currency === "USD" ? "en" : "zh";
+}
+
 export function toOrderView(order: OrderRow): OrderView {
   return {
     id: order.id,
     resultId: order.resultId,
     status: order.status,
     amountFen: order.amountFen,
+    currency: order.currency,
     provider: order.provider,
     channel: order.channel,
     payload: (order.prepayPayload as PaymentPayload | null) ?? null,
@@ -36,16 +78,26 @@ export function toOrderView(order: OrderRow): OrderView {
   };
 }
 
-export async function createOrder(input: { visitorId: string; resultId: string; userAgent: string | null; clientIp: string; openid?: string | null }) {
+export async function createOrder(input: { visitorId: string; resultId: string; userAgent: string | null; clientIp: string; openid?: string | null; locale?: Locale; network?: CryptoNetwork }) {
   const result = await getResult(input.resultId, input.visitorId);
-  if (!result || result.sample) throw new OrderError(404, "RESULT_NOT_FOUND", "结果不存在。");
-  if (!result.owner) throw new OrderError(403, "NOT_OWNER", "只能为自己的测试结果购买报告。");
-  if (result.unlocked) throw new OrderError(409, "ALREADY_UNLOCKED", "这份报告已经解锁。");
-  if (!hasClearPreference(result.profile)) throw new OrderError(422, "UNCLEAR_RESULT", "本次回答暂未形成清晰倾向，请先检查答案或重新测试，暂不提供付费解锁。");
+  if (!result || result.sample) throw new OrderError(404, "RESULT_NOT_FOUND", orderMessages[input.locale ?? "zh"].notFound);
+  // Price, currency, provider and copy follow the language the result was taken in.
+  const locale = questionnaireLocale(result.questionnaireId);
+  const t = orderMessages[locale];
+  if (!result.owner) throw new OrderError(403, "NOT_OWNER", t.notOwner);
+  if (result.unlocked) throw new OrderError(409, "ALREADY_UNLOCKED", t.unlocked);
+  if (!hasClearPreference(result.profile)) throw new OrderError(422, "UNCLEAR_RESULT", t.unclear);
 
-  const provider = await getPaymentProvider();
-  const channel: PaymentChannel = provider.mode === "mock" ? "mock" : pickWeChatChannel(input.userAgent);
-  if (channel === "jsapi" && !input.openid) throw new OrderError(428, "OPENID_REQUIRED", "需要先完成微信授权。");
+  const provider = await getPaymentProvider(paymentModeFor(locale));
+  let channel: PaymentChannel;
+  if (provider.mode === "crypto") {
+    const { networks } = await getCryptoProvider();
+    if (!input.network || !networks.includes(input.network)) throw new OrderError(400, "NETWORK_REQUIRED", t.network);
+    channel = input.network;
+  } else {
+    channel = provider.mode === "mock" ? "mock" : pickWeChatChannel(input.userAgent);
+  }
+  if (channel === "jsapi" && !input.openid) throw new OrderError(428, "OPENID_REQUIRED", t.openid);
 
   const now = new Date();
   const id = newOrderId(now);
@@ -55,27 +107,38 @@ export async function createOrder(input: { visitorId: string; resultId: string; 
       id,
       visitorId: input.visitorId,
       resultId: input.resultId,
-      amountFen: priceFen(),
+      amountFen: priceMinorFor(locale),
+      currency: locale === "en" ? "USD" : "CNY",
       provider: provider.mode,
       channel,
       status: "created",
-      expiresAt: new Date(now.getTime() + ORDER_TTL_MS),
+      expiresAt: new Date(now.getTime() + (provider.mode === "crypto" ? CRYPTO_ORDER_TTL_MS : ORDER_TTL_MS)),
     })
     .returning();
 
-  const { name } = typeMeta(result.profile.type);
+  const { name } = typeMeta(result.profile.type, locale);
   const base = appUrl();
   const payload = await provider.createPayment(order, {
     channel,
     openid: input.openid,
     clientIp: input.clientIp,
     userAgent: input.userAgent,
-    description: `观己 mirror 完整人格报告 · ${result.profile.type} ${name}`,
+    description: t.description(result.profile.type, name),
     notifyUrl: env().WECHAT_PAY_NOTIFY_URL || `${base}/api/payments/wechat/notify`,
-    returnUrl: `${base}/pay/${id}`,
+    returnUrl: `${base}${href(locale, `/pay/${id}`)}`,
+    network: input.network,
   });
 
-  const [updated] = await db().update(schema.orders).set({ prepayPayload: payload, updatedAt: new Date() }).where(eq(schema.orders.id, id)).returning();
+  const [updated] = await db()
+    .update(schema.orders)
+    .set({
+      prepayPayload: payload,
+      paymentReference: payload.kind === "solana" ? payload.reference : null,
+      startBlock: payload.kind === "ethereum" ? payload.startBlock : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.orders.id, id))
+    .returning();
   return updated;
 }
 
@@ -90,12 +153,16 @@ export async function getOrderByIdUnchecked(id: string): Promise<OrderRow | null
   return (await db().query.orders.findFirst({ where: eq(schema.orders.id, id) })) ?? null;
 }
 
-/** Transitions `created` → `paid` exactly once and unlocks the result. Safe to call repeatedly. */
-export async function markOrderPaid(orderId: string, txnId: string | null, paidAt = new Date()): Promise<OrderRow | null> {
+/**
+ * Transitions `created` → `paid` exactly once and unlocks the result. Safe to call repeatedly.
+ * Crypto orders may also move from `expired`: the transfer is already on-chain and cannot be undone.
+ */
+export async function markOrderPaid(orderId: string, txnId: string | null, paidAt = new Date(), options: { allowExpired?: boolean } = {}): Promise<OrderRow | null> {
+  const from: OrderRow["status"][] = options.allowExpired ? ["created", "expired"] : ["created"];
   const [order] = await db()
     .update(schema.orders)
     .set({ status: "paid", providerTxnId: txnId, paidAt, updatedAt: new Date() })
-    .where(and(eq(schema.orders.id, orderId), eq(schema.orders.status, "created")))
+    .where(and(eq(schema.orders.id, orderId), inArray(schema.orders.status, from)))
     .returning();
   if (order) await markResultUnlocked(order.resultId, order.id);
   return order ?? (await getOrderByIdUnchecked(orderId));
@@ -110,23 +177,40 @@ export async function setOrderStatus(orderId: string, status: OrderRow["status"]
   return order ?? null;
 }
 
-/** Re-checks a pending order with the provider (active query fallback when the callback is late). */
+/**
+ * Re-checks a pending order with its provider (active query fallback when the callback is late).
+ * Crypto orders have no callback: the chain is read here, before expiring the order, and expired
+ * crypto orders keep being checked for a day so a late transfer still unlocks the report.
+ */
 export async function refreshOrder(order: OrderRow): Promise<OrderRow> {
-  if (order.status !== "created") return order;
-  if (order.expiresAt.getTime() < Date.now()) {
-    return (await setOrderStatus(order.id, "expired")) ?? order;
+  const crypto = order.provider === "crypto";
+  const now = Date.now();
+  const expired = order.expiresAt.getTime() < now;
+  const late = crypto && order.status === "expired" && now - order.expiresAt.getTime() < CRYPTO_LATE_WINDOW_MS;
+  if (order.status !== "created" && !late) return order;
+  if (expired && !crypto) return (await setOrderStatus(order.id, "expired")) ?? order;
+  if (now - order.createdAt.getTime() < 3000) return order;
+  // Query the provider that created the order, and only while that language still uses it.
+  if (paymentModeFor(orderLocale(order)) !== order.provider) return order;
+  if (crypto) {
+    if (now - (lastChainCheck.get(order.id) ?? 0) < CRYPTO_CHECK_INTERVAL_MS) return order;
+    if (lastChainCheck.size > 5000) lastChainCheck.clear();
+    lastChainCheck.set(order.id, now);
   }
-  const ageMs = Date.now() - order.createdAt.getTime();
-  if (ageMs < 3000) return order;
-  const provider = await getPaymentProvider();
-  if (provider.mode !== order.provider) return order;
+  const provider = await getPaymentProvider(order.provider);
   try {
     const q = await provider.queryPayment(order);
-    if (q.status === "paid") return (await markOrderPaid(order.id, q.txnId ?? null, q.paidAt)) ?? order;
+    if (q.status === "paid" && !q.candidates) return (await markOrderPaid(order.id, q.txnId ?? null, q.paidAt)) ?? order;
+    for (const candidate of q.candidates ?? []) {
+      if (await claimPaymentEvent({ orderId: order.id, provider: order.provider, eventId: candidate.eventId, raw: candidate.raw })) {
+        return (await markOrderPaid(order.id, candidate.txnId, new Date(), { allowExpired: crypto })) ?? order;
+      }
+    }
     if (q.status === "closed") return (await setOrderStatus(order.id, "cancelled")) ?? order;
   } catch (e) {
     console.error("[orders] queryPayment failed", order.id, e);
   }
+  if (expired && order.status === "created") return (await setOrderStatus(order.id, "expired")) ?? order;
   return order;
 }
 
@@ -137,6 +221,34 @@ export async function recordPaymentEvent(input: { orderId: string | null; provid
     .onConflictDoNothing({ target: schema.paymentEvents.eventId })
     .returning({ id: schema.paymentEvents.id });
   return rows.length > 0;
+}
+
+/**
+ * Claims an on-chain transfer for one order. The unique `event_id` makes the first claim win, so a
+ * transfer that could match two orders (same payer) unlocks only one. Re-claiming for the same
+ * order is allowed, so a claim whose unlock failed can be retried.
+ */
+export async function claimPaymentEvent(input: { orderId: string; provider: OrderRow["provider"]; eventId: string; raw: Record<string, unknown> }): Promise<boolean> {
+  if (await recordPaymentEvent({ ...input, kind: "transfer" })) return true;
+  const existing = await db().query.paymentEvents.findFirst({ where: eq(schema.paymentEvents.eventId, input.eventId) });
+  return existing?.orderId === input.orderId;
+}
+
+/** Links an Ethereum order to the wallet that signed its challenge. A payer can be set once. */
+export async function confirmOrderPayer(order: OrderRow, payer: string, signature: string): Promise<OrderRow> {
+  const t = orderMessages[orderLocale(order)];
+  if (order.provider !== "crypto" || order.channel !== "ethereum") throw new OrderError(409, "NOT_ETHEREUM", t.notEthereum);
+  if (order.status !== "created") throw new OrderError(409, "ORDER_CLOSED", t.closed);
+  const verified = await (await getCryptoProvider()).verifyPayer(order, payer, signature);
+  if (order.payerAddress && order.payerAddress !== verified) throw new OrderError(409, "PAYER_LOCKED", t.payerLocked);
+  const payload = { ...(order.prepayPayload as Record<string, unknown>), payer: verified };
+  const [updated] = await db()
+    .update(schema.orders)
+    .set({ payerAddress: verified, prepayPayload: payload, updatedAt: new Date() })
+    .where(and(eq(schema.orders.id, order.id), or(isNull(schema.orders.payerAddress), eq(schema.orders.payerAddress, verified))))
+    .returning();
+  if (!updated) throw new OrderError(409, "PAYER_LOCKED", t.payerLocked);
+  return updated;
 }
 
 export async function latestOrderForResult(resultId: string, visitorId: string) {

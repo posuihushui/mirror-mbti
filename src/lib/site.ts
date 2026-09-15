@@ -1,3 +1,6 @@
+import { enChapterLabels, enChoices, enFaqs, enSite, enUnlockBullets } from "@/lib/i18n/content/en/site";
+import type { Locale } from "@/lib/i18n/locale";
+
 /** Client-safe site constants and copy. Server-only configuration lives in `@/lib/env`. */
 export const site = {
   name: "观己 mirror",
@@ -45,6 +48,27 @@ export function faqs(priceLabel: string): [string, string][] {
   ];
 }
 
+/** Per-locale views of the shared copy above. Chinese returns the originals unchanged. */
+export function siteCopy(locale: Locale) {
+  return locale === "en" ? { ...site, ...enSite } : { ...site, trademark: null };
+}
+
+export function choicesFor(locale: Locale) {
+  return locale === "en" ? choices.map((choice, i) => ({ v: choice.v, l: enChoices[i] })) : choices;
+}
+
+export function chapterLabelsFor(locale: Locale): readonly string[] {
+  return locale === "en" ? enChapterLabels : chapterLabels;
+}
+
+export function unlockBulletsFor(locale: Locale): readonly string[] {
+  return locale === "en" ? enUnlockBullets : unlockBullets;
+}
+
+export function faqsFor(locale: Locale, priceLabel: string): [string, string][] {
+  return locale === "en" ? enFaqs(priceLabel) : faqs(priceLabel);
+}
+
 /** localStorage keys shared by client islands. */
 export const storageKeys = {
   quiz: "mirror.quiz.v1",
@@ -52,4 +76,4 @@ export const storageKeys = {
   lastResult: "mirror.lastResult.v1",
 } as const;
 
-export type PaymentMode = "mock" | "wechat";
+export type PaymentMode = "mock" | "wechat" | "crypto";

@@ -1,15 +1,18 @@
 import { connection } from "next/server";
 import { fail, ok } from "@/lib/api";
+import { requestLocale } from "@/lib/i18n/request";
 import { getResult } from "@/lib/results";
 import { getVisitorId } from "@/lib/session";
 import { publicProfile } from "@/lib/personality";
 
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+const notFound = { zh: "结果不存在。", en: "Result not found." };
+
+export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   await connection();
   const { id } = await ctx.params;
   const visitorId = await getVisitorId();
   const result = await getResult(id, visitorId);
-  if (!result) return fail(404, "NOT_FOUND", "结果不存在。");
+  if (!result) return fail(404, "NOT_FOUND", notFound[requestLocale(req)]);
   return ok({
     id: result.id,
     ...publicProfile(result.profile),

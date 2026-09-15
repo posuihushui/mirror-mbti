@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/site/app-header";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ResultActions } from "@/components/result/result-actions";
@@ -10,15 +10,21 @@ import { TypeIntro } from "@/components/result/type-intro";
 import { UnlockPanel } from "@/components/result/unlock-panel";
 import { PreferenceReading } from "@/components/result/preference-reading";
 import { ReviewAnswers } from "@/components/result/review-answers";
+import { RecoverReports } from "@/components/report/recover-reports";
 import Link from "next/link";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
-import { appUrl, paymentMode, priceFen } from "@/lib/env";
+import { appUrl, paymentModeFor, priceLabelFor } from "@/lib/env";
+import { href } from "@/lib/i18n/locale";
+import { pageMessages } from "@/lib/i18n/messages/pages";
+import { getLocale } from "@/lib/i18n/server";
 import { hasClearPreference, profileMeta, typeMeta } from "@/lib/personality";
-import { getQuestionnaire } from "@/lib/questionnaires";
+import { getQuestionnaire, questionnaireLocale } from "@/lib/questionnaires";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
+import { cryptoNetworks } from "@/lib/payments/crypto/config";
+import { pageMetadata } from "@/lib/seo";
 import { getVisitorId } from "@/lib/session";
-import { formatPriceFen, site } from "@/lib/site";
+import { siteCopy } from "@/lib/site";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -28,30 +34,40 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
+  const locale = await getLocale();
+  const t = pageMessages[locale].result;
   if (id === SAMPLE_RESULT_ID) {
-    const { name, line } = typeMeta("INFJ");
-    return {
-      title: `报告示例 · INFJ ${name}`,
-      description: `${line.replace("\n", "")} 观己 mirror 的示例性格画像：四维偏好雷达图与人格概览，并可免费阅读同版式的完整示例报告。`,
-      alternates: { canonical: "/result/sample" },
-      openGraph: { title: `INFJ ${name} · 报告示例`, description: "免费查看一份示例性格画像，并阅读同版式的完整示例报告。" },
-    };
+    const { name, line } = typeMeta("INFJ", locale);
+    return pageMetadata({
+      locale,
+      title: t.sampleMetaTitle(name),
+      description: t.sampleMetaDescription(line.replace("\n", locale === "en" ? " " : "")),
+      path: "/result/sample",
+      shareTitle: t.sampleShareTitle(name),
+      shareDescription: t.sampleShareDescription,
+      image: "/result/sample/opengraph-image",
+    });
   }
-  return { title: "你的性格画像", robots: { index: false, follow: false } };
+  return { title: t.ownTitle, robots: { index: false, follow: false } };
 }
 
 export default async function ResultPage({ params }: Params) {
   const { id } = await params;
+  const locale = await getLocale();
+  const t = pageMessages[locale].result;
   const visitorId = id === SAMPLE_RESULT_ID ? null : await getVisitorId();
   const result = await getResult(id, visitorId);
   if (!result) notFound();
+  // A real result is read in the language it was taken in; the sample exists in every locale.
+  const resultLocale = questionnaireLocale(result.questionnaireId);
+  if (!result.sample && resultLocale !== locale) redirect(href(resultLocale, `/result/${id}`));
 
   const { profile, sample } = result;
-  const { name } = profileMeta(profile);
+  const { name } = profileMeta(profile, locale);
   const clear = hasClearPreference(profile);
-  const price = formatPriceFen(priceFen());
-  const mode = paymentMode();
-  const secureNote = mode === "mock" ? "微信支付 · 支付前可再次确认" : "微信支付 · 安全加密";
+  const price = priceLabelFor(locale);
+  const mode = paymentModeFor(locale);
+  const secureNote = mode === "mock" ? t.secureMock : t.secureLive;
 
   const actionProps = {
     resultId: result.id,
@@ -59,6 +75,7 @@ export default async function ResultPage({ params }: Params) {
     name,
     priceLabel: price,
     mode,
+    networks: mode === "crypto" ? cryptoNetworks() : [],
     owner: result.owner,
     unlocked: result.owner && result.unlocked,
     clear,
@@ -68,24 +85,24 @@ export default async function ResultPage({ params }: Params) {
     ? {
         "@context": "https://schema.org",
         "@type": "Product",
-        name: "观己 mirror 完整人格报告",
-        description: "性格总览、优势与盲点、关系与沟通、工作与成长四章完整人格分析报告。",
-        brand: { "@type": "Brand", name: site.name },
+        name: t.productName,
+        description: t.productDescription,
+        brand: { "@type": "Brand", name: siteCopy(locale).name },
         offers: {
           "@type": "Offer",
           price: price,
-          priceCurrency: "CNY",
+          priceCurrency: t.currencyCode,
           availability: "https://schema.org/InStock",
-          url: `${appUrl()}/result/sample`,
+          url: `${appUrl()}${href(locale, "/result/sample")}`,
         },
       }
     : null;
 
   return (
     <>
-      <AppHeader variant="page" title={sample ? "示例性格画像" : "你的性格画像"} backHref="/" />
+      <AppHeader variant="page" title={sample ? t.sampleHeader : t.ownTitle} backHref={href(locale, "/")} path={sample ? "/result/sample" : undefined} />
       <main className="pt-[15px] pb-[110px] md:mx-auto md:max-w-[1150px] md:px-10 md:pt-0 md:pb-0">
-        <p className="mx-[27px] mt-5 text-[12px] text-mist md:mx-0">{getQuestionnaire(result.questionnaireId)?.name ?? "历史版本"} · {result.questionCount} 题{sample ? " · 示例数据" : ""}</p>
+        <p className="mx-[27px] mt-5 text-[12px] text-mist md:mx-0">{t.versionLine(getQuestionnaire(result.questionnaireId)?.name ?? t.legacyVersion, result.questionCount, sample)}</p>
         <section className="block md:grid md:grid-cols-2 md:items-center md:gap-10 md:pt-[58px] md:pb-[50px] xl:gap-20">
           <TypeIntro profile={profile} sample={sample} />
           <ResultChart profile={profile} />
@@ -93,7 +110,7 @@ export default async function ResultPage({ params }: Params) {
         <PreferenceReading profile={profile} />
         {sample ? (
           /* Nothing is locked on the sample, so it closes by inviting the test, not by quoting a price. */
-          <SampleCta priceLabel={price} secondary={{ href: `/report/${SAMPLE_RESULT_ID}`, label: "阅读完整示例报告" }} />
+          <SampleCta priceLabel={price} secondary={{ href: href(locale, `/report/${SAMPLE_RESULT_ID}`), label: t.readSample }} />
         ) : clear ? (
           <UnlockPanel
             priceLabel={price}
@@ -105,27 +122,35 @@ export default async function ResultPage({ params }: Params) {
             }
           />
         ) : <section className="mx-[27px] mb-8 border-t border-line pt-6 md:mx-0">
-          <h2 className="mb-4 text-[20px]">先理解答案，再决定下一步。</h2>
-          {result.owner ? <ReviewAnswers resultId={id} /> : <PrimaryButton href="/quiz">开始我的测试</PrimaryButton>}
-          {result.owner && result.unlocked && <PrimaryButton href={`/report/${id}`} className="mt-5 max-w-[300px]">阅读已购报告</PrimaryButton>}
+          <h2 className="mb-4 text-[20px]">{t.unclearHeading}</h2>
+          {result.owner ? <ReviewAnswers resultId={id} /> : <PrimaryButton href={href(locale, "/quiz")}>{t.startMine}</PrimaryButton>}
+          {result.owner && result.unlocked && <PrimaryButton href={href(locale, `/report/${id}`)} className="mt-5 max-w-[300px]">{t.readPurchased}</PrimaryButton>}
         </section>}
-        <nav aria-label="结果帮助" className="mx-[27px] mt-6 flex flex-wrap gap-6 text-[12px] md:mx-0">
-          <Link href="/my/report" className="text-link" prefetch={false}>全部测试记录</Link>
-          <Link href="/help" className="text-link">订单与测试帮助</Link>
+        {/* A buyer who reopened this page inside a wallet app has no visitor cookie; the order number restores it. */}
+        {!sample && !result.owner && clear && mode === "crypto" && (
+          <section className="mx-[27px] mb-8 max-w-[560px] border-t border-line pt-6 md:mx-0" aria-labelledby="wallet-handoff">
+            <h2 id="wallet-handoff" className="text-[20px] leading-[1.6]">{t.handoffHeading}</h2>
+            <p className="mt-3 mb-5 text-[12px] leading-[2] text-mist">{t.handoffBody}</p>
+            <RecoverReports returnTo={href(locale, `/result/${id}?unlock=1`)} />
+          </section>
+        )}
+        <nav aria-label={t.navLabel} className="mx-[27px] mt-6 flex flex-wrap gap-6 text-[12px] md:mx-0">
+          <Link href={href(locale, "/my/report")} className="text-link" prefetch={false}>{t.allRecords}</Link>
+          <Link href={href(locale, "/help")} className="text-link">{t.help}</Link>
         </nav>
         <p className="mx-[25px] my-[25px] text-center text-[9px] text-[#829094] md:mx-0 md:mt-[25px] md:mb-[35px] md:text-[10px]">
-          认识自己是一段持续的旅程。这份画像用于自我探索，不定义你。
+          {t.closing}
         </p>
       </main>
       {sample ? (
         <Dock>
-          <PrimaryButton href="/quiz">开始认识自己</PrimaryButton>
+          <PrimaryButton href={href(locale, "/quiz")}>{t.start}</PrimaryButton>
         </Dock>
       ) : clear ? (
         <Suspense fallback={null}>
           <ResultActions {...actionProps} slot="dock" />
         </Suspense>
-      ) : <Dock><PrimaryButton href="/quiz">重新探索自己</PrimaryButton></Dock>}
+      ) : <Dock><PrimaryButton href={href(locale, "/quiz")}>{t.retake}</PrimaryButton></Dock>}
       {productJsonLd && <JsonLd data={productJsonLd} />}
     </>
   );

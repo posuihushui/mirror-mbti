@@ -4,7 +4,10 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react";
 import { cn } from "cn";
-import { chapterLabels } from "@/lib/site";
+import { href } from "@/lib/i18n/locale";
+import { useLocale } from "@/lib/i18n/locale-provider";
+import { reportMessages } from "@/lib/i18n/messages/report";
+import { chapterLabelsFor } from "@/lib/site";
 import { chapterPanelId, chapterTabId, setChapter, useChapter } from "./chapter-store";
 
 /**
@@ -30,9 +33,10 @@ export function ChapterPanel({ index, children }: { index: number; children: Rea
 /** Desktop sidebar chapter list. */
 export function ChapterSidebarNav() {
   const chapter = useChapter();
+  const locale = useLocale();
   return (
-    <nav className="mt-[46px] flex flex-col gap-1" aria-label="报告章节">
-      {chapterLabels.map((label, i) => (
+    <nav className="mt-[46px] flex flex-col gap-1" aria-label={reportMessages[locale].nav.label}>
+      {chapterLabelsFor(locale).map((label, i) => (
         <button
           key={label}
           type="button"
@@ -52,13 +56,14 @@ export function ChapterSidebarNav() {
 /** Phone chapter tabs above the article. */
 export function ChapterTabs() {
   const chapter = useChapter();
+  const locale = useLocale();
   return (
     <div
       role="tablist"
-      aria-label="报告章节"
+      aria-label={reportMessages[locale].nav.label}
       className="-mx-[10px] mb-[31px] grid grid-cols-4 border-b border-[#344046] pb-[10px] md:hidden"
     >
-      {chapterLabels.map((label, i) => (
+      {chapterLabelsFor(locale).map((label, i) => (
         <button
           key={label}
           id={chapterTabId(i)}
@@ -79,17 +84,20 @@ export function ChapterTabs() {
 /** "下一章" link, or the closing link on the last chapter. The sample closes with the test instead. */
 export function ChapterFooterNav({ sample = false }: { sample?: boolean }) {
   const chapter = useChapter();
-  const last = chapter === chapterLabels.length - 1;
+  const locale = useLocale();
+  const t = reportMessages[locale].nav;
+  const labels = chapterLabelsFor(locale);
+  const last = chapter === labels.length - 1;
   return (
     <div className="mt-[38px] border-t border-night-line pt-[21px] text-right">
       {last ? (
-        <Link href={sample ? "/quiz" : "/"} className="text-link text-[11px] text-[#e0e7ea]">
-          {sample ? "开始属于你的测试" : "带着新的理解，回到生活"}
+        <Link href={href(locale, sample ? "/quiz" : "/")} className="text-link text-[11px] text-[#e0e7ea]">
+          {sample ? t.closingSample : t.closing}
           <ArrowUpRight size={17} />
         </Link>
       ) : (
         <button type="button" onClick={() => setChapter(chapter + 1)} className="text-link text-[11px] text-[#e0e7ea]">
-          下一章 · {chapterLabels[chapter + 1]}
+          {t.next(labels[chapter + 1])}
           <ArrowRight size={17} />
         </button>
       )}
@@ -100,13 +108,15 @@ export function ChapterFooterNav({ sample = false }: { sample?: boolean }) {
 /** Chapter 02 segmented control. Both lists are server-rendered; this toggles visibility. */
 export function StrengthSwitch({ strengths, blindspots }: { strengths: ReactNode; blindspots: ReactNode }) {
   const [strength, setStrength] = useState(true);
+  const t = reportMessages[useLocale()].nav;
   return (
     <>
-      <div className="my-7 flex rounded-[50px] bg-[#263034] p-1" role="tablist" aria-label="优势与盲点">
+      <div className="relative my-7 flex rounded-[50px] bg-[#263034] p-1" role="tablist" aria-label={t.switchLabel}>
+        <span aria-hidden="true" className="strength-indicator-motion pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-8px)/2)] rounded-[50px] bg-[#eef2f3]" style={{ transform: strength ? "translateX(0)" : "translateX(100%)" }} />
         {(
           [
-            ["你的优势", true],
-            ["容易忽略的", false],
+            [t.strengths, true],
+            [t.blindspots, false],
           ] as const
         ).map(([label, value]) => (
           <button
@@ -116,16 +126,16 @@ export function StrengthSwitch({ strengths, blindspots }: { strengths: ReactNode
             aria-selected={strength === value}
             onClick={() => setStrength(value)}
             className={cn(
-              "min-h-[37px] flex-1 rounded-[50px] text-[11px] text-[#9aaab0] md:text-[12px]",
-              strength === value && "bg-[#eef2f3] text-[#222a2d]",
+              "strength-tab-motion relative min-h-[37px] min-w-0 flex-1 rounded-[50px] text-[11px] text-[#9aaab0] md:text-[12px]",
+              strength === value && "text-[#222a2d]",
             )}
           >
             {label}
           </button>
         ))}
       </div>
-      <div hidden={!strength}>{strengths}</div>
-      <div hidden={strength}>{blindspots}</div>
+      <div className="strength-content-motion" hidden={!strength}>{strengths}</div>
+      <div className="strength-content-motion" hidden={strength}>{blindspots}</div>
     </>
   );
 }

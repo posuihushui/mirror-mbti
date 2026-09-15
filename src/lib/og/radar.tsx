@@ -1,15 +1,17 @@
-import type { Profile } from "@/lib/personality";
-import { poles } from "@/lib/personality";
+import type { Locale } from "@/lib/i18n/locale";
+import type { Letter, Profile } from "@/lib/personality";
+import { polesFor } from "@/lib/personality";
 import { dimensions } from "@/lib/questionnaires";
 
 /**
  * Radar for satori. SVG `<text>` is unsupported there, so the grid/polygon is SVG and the
  * four labels are absolutely positioned HTML.
  */
-export function OgRadar({ profile, size = 320 }: { profile: Profile; size?: number }) {
+export function OgRadar({ profile, size = 320, locale = "zh" }: { profile: Profile; size?: number; locale?: Locale }) {
   const C = 150;
   const R = 110;
   const scale = size / 300;
+  const poles = polesFor(locale);
   const polar = (value: number, i: number) => {
     const a = -Math.PI / 2 + (i * Math.PI) / 2;
     const r = (R * value) / 100;
@@ -17,8 +19,9 @@ export function OgRadar({ profile, size = 320 }: { profile: Profile; size?: numb
   };
   const pts = profile.values.map((v, i) => polar(v, i));
   const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x} ${p.y}`).join(" ") + " Z";
-  const letters = profile.type.split("");
-  const labelBox = 96;
+  const letters = profile.type.split("") as Letter[];
+  // English pole labels ("Introverted I") are wider than the two-character Chinese ones.
+  const labelBox = locale === "en" ? 128 : 96;
   const labels = [
     { left: (C - labelBox / 2) * scale, top: (C - R - 30) * scale, align: "center" },
     { left: (C + R + 10) * scale, top: (C - 10) * scale, align: "flex-start" },

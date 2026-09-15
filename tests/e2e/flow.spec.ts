@@ -175,7 +175,7 @@ test.describe("core flow", () => {
   });
 
   test("SEO endpoints respond", async ({ request }) => {
-    for (const path of ["/robots.txt", "/sitemap.xml", "/manifest.webmanifest", "/opengraph-image", "/types/INFJ/opengraph-image", "/icon"]) {
+    for (const path of ["/robots.txt", "/sitemap.xml", "/llms.txt", "/llms-full.txt", "/manifest.webmanifest", "/opengraph-image", "/types/INFJ/opengraph-image", "/icon"]) {
       const res = await request.get(path);
       expect(res.status(), path).toBe(200);
     }

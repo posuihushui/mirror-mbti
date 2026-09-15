@@ -83,7 +83,7 @@ export async function latestResultForVisitor(visitorId: string): Promise<ResultV
 }
 
 export type ResultHistoryItem = ResultView & {
-  order: { id: string; provider: "mock" | "wechat"; status: typeof schema.orders.$inferSelect.status } | null;
+  order: { id: string; provider: typeof schema.orders.$inferSelect.provider; status: typeof schema.orders.$inferSelect.status } | null;
 };
 
 /** Owner-only history, including unpaid results. Neither raw answers nor payment payloads leave the data layer. */

@@ -22,6 +22,13 @@
       "when": 1789047227729,
       "tag": "0002_oval_dagger",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789374604128,
+      "tag": "0003_crypto_payments",
+      "breakpoints": true
     }
   ]
 }

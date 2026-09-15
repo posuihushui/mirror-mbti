@@ -1,9 +1,13 @@
 import { AppHeader } from "@/components/site/app-header";
+import { href } from "@/lib/i18n/locale";
+import { pageMessages } from "@/lib/i18n/messages/pages";
+import { getLocale } from "@/lib/i18n/server";
 
-export default function ResultLoading() {
+export default async function ResultLoading() {
+  const locale = await getLocale();
   return (
     <>
-      <AppHeader variant="page" title="你的性格画像" backHref="/" />
+      <AppHeader variant="page" title={pageMessages[locale].result.ownTitle} backHref={href(locale, "/")} />
       <main className="mx-auto max-w-[1150px] px-[27px] pt-[17px] md:px-10 md:pt-[58px]" aria-busy>
         <div className="h-[15px] w-[160px] animate-pulse rounded bg-[#dfe6e8]" />
         <div className="mt-6 h-[90px] w-[240px] animate-pulse rounded bg-[#dfe6e8]" />

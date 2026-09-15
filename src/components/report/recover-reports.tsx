@@ -4,10 +4,16 @@ import { useState, type FormEvent } from "react";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { href } from "@/lib/i18n/locale";
+import { useLocale } from "@/lib/i18n/locale-provider";
+import { siteMessages } from "@/lib/i18n/messages/site";
 
 type RecoveryResponse = { ok: true; data: { recovered: true } } | { ok: false; error: { message: string } };
 
-export function RecoverReports() {
+/** `returnTo` (a same-site path) replaces the default history page, e.g. to resume a payment. */
+export function RecoverReports({ returnTo }: { returnTo?: string } = {}) {
+  const locale = useLocale();
+  const t = siteMessages[locale].recover;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,33 +26,32 @@ export function RecoverReports() {
     try {
       const response = await fetch("/api/reports/recover", {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ orderId }), cache: "no-store",
+        body: JSON.stringify({ orderId, locale }), cache: "no-store",
       });
       const json = (await response.json()) as RecoveryResponse;
       if (!json.ok) throw new Error(json.error.message);
       // A fresh navigation discards router data associated with the previous visitor cookie.
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.assign("/my/report");
+      window.location.assign(returnTo ?? href(locale, "/my/report"));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "暂时无法找回，请稍后重试。");
+      setError(reason instanceof Error ? reason.message : t.failed);
       setPending(false);
     }
   };
 
   return (
-    <form onSubmit={recover} aria-label="通过订单找回测试记录" aria-busy={pending}>
+    <form onSubmit={recover} aria-label={t.formLabel} aria-busy={pending}>
       <FieldGroup>
         <Field data-invalid={!!error} data-disabled={pending}>
-          <FieldLabel htmlFor="recovery-order-id">订单号</FieldLabel>
-          <Input id="recovery-order-id" name="orderId" placeholder="输入以 M 开头的完整订单号" required maxLength={64}
+          <FieldLabel htmlFor="recovery-order-id">{t.label}</FieldLabel>
+          <Input id="recovery-order-id" name="orderId" placeholder={t.placeholder} required maxLength={64}
             autoComplete="off" autoCapitalize="characters" spellCheck={false} disabled={pending}
             aria-invalid={!!error} aria-describedby={`recovery-order-help${error ? " recovery-error" : ""}`} />
-          <FieldDescription id="recovery-order-help">可在原浏览器的“我的报告 → 订单与找回凭据”中查看；微信账单中请使用商户单号，而非微信交易单号。</FieldDescription>
+          <FieldDescription id="recovery-order-help">{t.help}</FieldDescription>
           {error && <FieldError id="recovery-error">{error}</FieldError>}
         </Field>
-        <PrimaryButton type="submit" disabled={pending}>{pending ? "正在找回…" : "找回测试记录"}</PrimaryButton>
+        <PrimaryButton type="submit" disabled={pending}>{pending ? t.pending : t.submit}</PrimaryButton>
       </FieldGroup>
-      <p className="mt-4 text-[11px] leading-[1.9] text-mist">订单号是找回凭据，请仅输入自己的订单号。找回后，此浏览器将记住对应用户。</p>
+      <p className="mt-4 text-[11px] leading-[1.9] text-mist">{t.footnote}</p>
     </form>
   );
 }

@@ -1,9 +1,14 @@
+import { enAdditionTexts, enLegacyTexts, enQuestionnaireMeta, enRevisedTexts } from "@/lib/i18n/content/en/questionnaires";
+import type { Locale } from "@/lib/i18n/locale";
+
 export type Dimension = "EI" | "SN" | "TF" | "JP";
 export type Letter = "E" | "I" | "S" | "N" | "T" | "F" | "J" | "P";
 export type Question = { id: string; text: string; dimension: Dimension; reverse?: boolean };
 export const dimensions: Dimension[] = ["EI", "SN", "TF", "JP"];
 export const LEGACY_QUESTIONNAIRE_ID = "legacy32-v1";
 export const STANDARD_QUESTIONNAIRE_ID = "standard64-v1";
+export const EN_QUICK_QUESTIONNAIRE_ID = "en32-v1";
+export const EN_STANDARD_QUESTIONNAIRE_ID = "en64-v1";
 export const SCORING_VERSION = "preference-v1";
 export const REPORT_VERSION = "context-v2";
 
@@ -94,15 +99,33 @@ const revised: Record<number, string> = {
 const standardQuestions = [...legacyItems.map((q, i) => ({ ...q, text: revised[i] ?? q.text })), ...additions]
   .map((q, i) => ({ ...q, id: `standard64-q${String(i + 1).padStart(2, "0")}` }));
 
+// English versions reuse the Chinese item order, dimensions and reverse scoring; only the text differs.
+const enQuickQuestions: Question[] = legacyItems.map((q, i) => ({ ...q, text: enLegacyTexts[i], id: `en32-q${String(i + 1).padStart(2, "0")}` }));
+const enStandardQuestions: Question[] = [
+  ...legacyItems.map((q, i) => ({ ...q, text: enRevisedTexts[i] ?? enLegacyTexts[i] })),
+  ...additions.map((q, i) => ({ ...q, text: enAdditionTexts[i] })),
+].map((q, i) => ({ ...q, id: `en64-q${String(i + 1).padStart(2, "0")}` }));
+
 export const questionnaires = [
-  { id: LEGACY_QUESTIONNAIRE_ID, name: "轻量版", count: 32, duration: "约 5 分钟", description: "先认识四维偏好，适合时间有限的第一次探索。", questions },
-  { id: STANDARD_QUESTIONNAIRE_ID, name: "标准版", count: 64, duration: "约 8–10 分钟", description: "覆盖更多生活情境，适合愿意多花一点时间观察自己。", questions: standardQuestions },
+  { id: LEGACY_QUESTIONNAIRE_ID, locale: "zh", name: "轻量版", count: 32, duration: "约 5 分钟", description: "先认识四维偏好，适合时间有限的第一次探索。", questions },
+  { id: STANDARD_QUESTIONNAIRE_ID, locale: "zh", name: "标准版", count: 64, duration: "约 8–10 分钟", description: "覆盖更多生活情境，适合愿意多花一点时间观察自己。", questions: standardQuestions },
+  { id: EN_QUICK_QUESTIONNAIRE_ID, locale: "en", count: 32, ...enQuestionnaireMeta.quick, questions: enQuickQuestions },
+  { id: EN_STANDARD_QUESTIONNAIRE_ID, locale: "en", count: 64, ...enQuestionnaireMeta.standard, questions: enStandardQuestions },
 ] as const;
 export type QuestionnaireId = (typeof questionnaires)[number]["id"];
 export type Questionnaire = (typeof questionnaires)[number];
 
 export function getQuestionnaire(id: string): Questionnaire | undefined {
   return questionnaires.find((q) => q.id === id);
+}
+
+/** Versions offered on a locale's quiz page. A result's language follows its questionnaire. */
+export function questionnairesFor(locale: Locale): Questionnaire[] {
+  return questionnaires.filter((q) => q.locale === locale);
+}
+
+export function questionnaireLocale(id: string): Locale {
+  return getQuestionnaire(id)?.locale ?? "zh";
 }
 
 export type ResponseItem = { questionId: string; value: number };

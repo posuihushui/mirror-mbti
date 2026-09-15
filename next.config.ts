@@ -25,6 +25,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@phosphor-icons/react"],
     inlineCss: true,
+    // Pages live under `app/[lang]`, so unmatched URLs need a layout-free 404 (`app/global-not-found.tsx`).
+    globalNotFound: true,
   },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];

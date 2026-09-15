@@ -70,6 +70,7 @@
 :root {
   --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-duration-detail: 240ms;
+  --motion-duration-feedback: 160ms;
   --motion-duration-chapter: 280ms;
   --motion-duration-entry: 600ms;
   --background: #edf2f3;
@@ -183,7 +184,6 @@
   }
   &:hover:not(:disabled) {
     background: #313637;
-    transform: translateY(-1px);
   }
 }
 
@@ -203,6 +203,21 @@
 @utility pb-safe-5 {
   padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }
+
+/* One accessible value, with at most two decorative layers per changed digit.
+   The outgoing layer is absent from reduced-motion and print layouts. */
+.number-motion {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+.number-visual { display: inline-flex; }
+.number-digit { display: inline-grid; position: relative; overflow: clip; }
+.number-current { display: block; }
+.number-current::before, .number-previous::before { content: attr(data-digit); }
+.number-previous { display: none; }
+
+[data-slot="dropdown-menu-trigger"][data-state="open"] .language-caret { transform: rotate(180deg); }
 
 /* Motion enhances the existing, visible server HTML. Only the portrait and copy
    move; fixed docks and primary actions stay outside animated containers. */
@@ -241,6 +256,176 @@
   [aria-current="true"] .chapter-arrow-motion {
     transform: translate(0, 0);
   }
+
+  .quiz-question-motion {
+    --question-offset: 8px;
+    animation: question-enter var(--motion-duration-detail) var(--motion-ease-out) backwards;
+  }
+
+  .quiz-question-motion[data-direction="backward"] {
+    --question-offset: -8px;
+  }
+
+  .number-motion { --number-offset: 55%; }
+  .number-motion[data-direction="down"] { --number-offset: -55%; }
+  .number-changing {
+    animation: number-enter var(--motion-duration-detail) var(--motion-ease-out) backwards;
+  }
+  .number-previous {
+    display: block;
+    position: absolute;
+    inset: 0;
+    animation: number-exit var(--motion-duration-detail) var(--motion-ease-out) forwards;
+  }
+
+  .quiz-version-motion {
+    animation: chapter-enter var(--motion-duration-chapter) var(--motion-ease-out) backwards;
+  }
+  [data-version-index="1"] .quiz-version-motion { animation-delay: 60ms; }
+
+  .quiz-progress-motion {
+    transition-duration: 360ms;
+    transition-timing-function: var(--motion-ease-out);
+  }
+
+  [data-slot="accordion-content"][data-state="open"] {
+    animation: disclosure-open var(--motion-duration-detail) var(--motion-ease-out);
+  }
+  [data-slot="accordion-content"][data-state="closed"] {
+    animation: disclosure-close 200ms ease-in;
+  }
+
+  .back-button, .text-link > svg {
+    transition: transform var(--motion-duration-feedback) var(--motion-ease-out);
+  }
+  .back-button:active:not(:disabled) { transform: translateX(-2px); }
+
+  .quiz-choice-motion {
+    transition: background-color 150ms, border-color 150ms, color 150ms,
+      transform var(--motion-duration-feedback) var(--motion-ease-out);
+  }
+
+  .quiz-check-motion {
+    animation: choice-confirm var(--motion-duration-feedback) var(--motion-ease-out) backwards;
+  }
+
+  .pill, .pill > svg {
+    transition: background-color var(--motion-duration-feedback),
+      transform var(--motion-duration-feedback) var(--motion-ease-out);
+  }
+
+  .pill:active:not(:disabled), .quiz-choice-motion:active:not(:disabled) {
+    transform: scale(.985);
+  }
+
+  .strength-indicator-motion {
+    transition: transform var(--motion-duration-detail) var(--motion-ease-out);
+  }
+
+  .strength-tab-motion {
+    transition: color var(--motion-duration-feedback) ease-out;
+  }
+
+  .strength-content-motion:not([hidden]) {
+    animation: detail-fade-in 200ms ease-out backwards;
+  }
+
+  /* Radix owns presence and focus. Keep the viewport-sized overlay stationary;
+     Vaul drawers retain their own native gesture/transition system. */
+  [data-slot="dialog-overlay"][data-state="open"] {
+    animation: detail-fade-in 200ms ease-out backwards;
+  }
+
+  [data-slot="dialog-overlay"][data-state="closed"] {
+    animation: detail-fade-out 180ms ease-in forwards;
+  }
+
+  [data-slot="dialog-content"][data-state="open"] {
+    animation: dialog-enter var(--motion-duration-detail) var(--motion-ease-out) backwards;
+  }
+
+  [data-slot="dialog-content"][data-state="closed"] {
+    animation: dialog-exit 180ms ease-in forwards;
+  }
+
+  [data-slot="dropdown-menu-content"][data-state="open"] {
+    animation: menu-enter var(--motion-duration-feedback) var(--motion-ease-out) backwards;
+  }
+
+  [data-slot="dropdown-menu-content"][data-state="closed"] {
+    animation: detail-fade-out 120ms ease-in forwards;
+  }
+
+  .language-caret {
+    transition: transform var(--motion-duration-feedback) var(--motion-ease-out);
+  }
+}
+
+@media screen and (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .pill:hover:not(:disabled):not(:active) {
+    transform: translateY(-1px);
+  }
+
+  .pill:hover:not(:disabled) > svg {
+    transform: translate(2px, -2px);
+  }
+
+  .text-link:hover:not(:disabled) > svg { transform: translateX(2px); }
+}
+
+@keyframes number-enter {
+  from { opacity: 0; transform: translateY(var(--number-offset)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes number-exit {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(calc(-1 * var(--number-offset))); }
+}
+
+@keyframes disclosure-open {
+  from { height: 0; opacity: .4; }
+  to { height: var(--radix-accordion-content-height); opacity: 1; }
+}
+
+@keyframes disclosure-close {
+  from { height: var(--radix-accordion-content-height); opacity: 1; }
+  to { height: 0; opacity: .4; }
+}
+
+@keyframes question-enter {
+  from { opacity: .35; transform: translateX(var(--question-offset)); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes choice-confirm {
+  from { opacity: .35; transform: scale(.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes detail-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes detail-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes dialog-enter {
+  from { opacity: 0; transform: translateY(6px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes dialog-exit {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(4px) scale(.99); }
+}
+
+@keyframes menu-enter {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes home-copy-enter {

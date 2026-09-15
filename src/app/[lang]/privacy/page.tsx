@@ -1,16 +1,31 @@
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
+import { PrivacyEn } from "@/components/legal/privacy-en";
 import { LegalPage } from "@/components/site/legal-page";
+import { getLocale } from "@/lib/i18n/server";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "隐私政策",
-  description: "观己 mirror 如何收集、使用与保护你的作答与订单信息。",
-  alternates: { canonical: "/privacy" },
+const copy = {
+  zh: { title: "隐私政策", description: "观己 mirror 如何收集、使用与保护你的作答与订单信息。", updated: "2026-09-11" },
+  en: { title: "Privacy policy", description: "How mirror collects, uses and protects your answers and order information.", updated: "2026-09-14" },
 };
 
-export default function PrivacyPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return pageMetadata({ locale, title: copy[locale].title, description: copy[locale].description, path: "/privacy" });
+}
+
+export default async function PrivacyPage() {
+  const locale = await getLocale();
+  if (locale === "en") {
+    return (
+      <LegalPage eyebrow="PRIVACY" path="/privacy" title={copy.en.title} updated={copy.en.updated}>
+        <PrivacyEn />
+      </LegalPage>
+    );
+  }
   return (
-    <LegalPage eyebrow="PRIVACY" title="隐私政策" updated="2026-09-11">
+    <LegalPage eyebrow="PRIVACY" path="/privacy" title={copy.zh.title} updated={copy.zh.updated}>
       <h2>我们收集什么</h2>
       <p>观己 mirror 不要求注册账号。为了在刷新页面或再次打开时找回你的结果，我们会在浏览器中写入一个随机、经签名的访客标识 Cookie。作答完成后，你所选 32 题或 64 题问卷的答案、题目编号、问卷与计分版本、报告版本以及计算出的四维偏好会与该访客标识一并保存在服务器。</p>
       <p>购买完整报告时，我们会记录订单编号、金额、支付渠道、支付状态以及支付服务商返回的交易号。在微信内支付时，微信会提供你的 openid 以完成支付，我们仅将其用于该目的。</p>

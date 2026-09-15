@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowUpRight, Check, CircleNotch, WechatLogo } from "@phosphor-icons/react";
 import { toast } from "sonner";
@@ -9,9 +10,19 @@ import { PrimaryButton } from "@/components/site/primary-button";
 import { Button } from "@/components/ui/button";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import type { OrderView, PaymentPayload } from "@/lib/payments/types";
-import { unlockBullets, type PaymentMode } from "@/lib/site";
+import { href } from "@/lib/i18n/locale";
+import { useLocale } from "@/lib/i18n/locale-provider";
+import { paymentMessages } from "@/lib/i18n/messages/payment";
+import { cryptoMessages } from "@/lib/i18n/messages/crypto";
+import type { CryptoNetwork, OrderView, PaymentPayload } from "@/lib/payments/types";
+import { unlockBulletsFor, type PaymentMode } from "@/lib/site";
 import { isWeChat } from "@/lib/ua";
+
+// The stablecoin checkout (viem, wallet discovery) ships only to buyers who open it.
+const CryptoPayment = dynamic(() => import("@/components/payment/crypto-payment").then((m) => m.CryptoPayment), {
+  ssr: false,
+  loading: () => <p role="status" className="mt-5 text-[11px] text-mist">{cryptoMessages.loading}</p>,
+});
 
 type Props = {
   open: boolean;
@@ -21,6 +32,8 @@ type Props = {
   name: string;
   priceLabel: string;
   mode: PaymentMode;
+  /** Crypto mode: the networks the server has configured. */
+  networks?: CryptoNetwork[];
   onUnlocked: () => void;
   onRead: () => void;
 };
@@ -54,8 +67,9 @@ async function api<T>(input: string, init?: RequestInit): Promise<T> {
  * on the environment and polls the order until the callback lands.
  */
 export function PaymentSheet({ open, onOpenChange, ...flow }: Props) {
+  const t = paymentMessages[useLocale()].sheet;
   return (
-    <ResponsiveSheet open={open} onOpenChange={onOpenChange} title="更完整地，认识自己。" description="完整人格分析 · 一次解锁">
+    <ResponsiveSheet open={open} onOpenChange={onOpenChange} title={t.title} description={t.description}>
       {open && <PaymentFlow onOpenChange={onOpenChange} {...flow} />}
     </ResponsiveSheet>
   );
@@ -64,7 +78,10 @@ export function PaymentSheet({ open, onOpenChange, ...flow }: Props) {
 const noopSubscribe = () => () => {};
 
 /** Mounted only while the sheet is open, so every open starts from "ready" without effects. */
-function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, onUnlocked, onRead }: Omit<Props, "open">) {
+function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, networks = [], onUnlocked, onRead }: Omit<Props, "open">) {
+  const locale = useLocale();
+  const messages = paymentMessages[locale];
+  const t = messages.sheet;
   const compact = useMediaQuery("(max-width: 720px)", true);
   const inWeChat = useSyncExternalStore(noopSubscribe, () => isWeChat(navigator.userAgent), () => false);
   const [state, setState] = useState<PayState>("ready");
@@ -124,7 +141,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, onU
     if (payload.kind === "jsapi") {
       const bridge = window.WeixinJSBridge;
       if (!bridge) {
-        toast("请在微信内打开本页面完成支付");
+        toast(t.openInWeChat);
         setState("cancelled");
         return;
       }
@@ -171,7 +188,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, onU
         succeed();
         return;
       }
-      toast(err.message || "暂时无法发起支付，请稍后重试");
+      toast(err.message || t.payFailed);
       setState("ready");
     }
   };
@@ -184,12 +201,12 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, onU
       return;
     }
     onOpenChange(false);
-    toast("支付已取消，测试结果已保留");
+    toast(t.cancelledToast);
   };
 
   const scanMode = !inWeChat && !compact;
-  const methodTitle = scanMode ? "微信扫码支付" : "微信支付";
-  const methodSub = scanMode ? "使用手机微信完成支付" : mode === "wechat" && !inWeChat ? "跳转微信完成支付" : "在微信内确认支付";
+  const methodTitle = scanMode ? t.methodScan : t.methodWeChat;
+  const methodSub = scanMode ? t.methodScanSub : mode === "wechat" && !inWeChat ? t.methodRedirectSub : t.methodInAppSub;
 
   return (
     <>
@@ -197,75 +214,91 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, onU
         <div className="pt-[22px] pb-[15px] text-center md:pt-[35px]">
           <Check size={44} weight="light" className="mx-auto mb-[22px] text-[#748777]" />
           <p className="eyebrow text-[9px] tracking-[0.16em] text-[#8a9a9c]">READY FOR YOU</p>
-          <h3 className="mt-[25px] mb-[18px] text-[26px] leading-[1.5] font-normal whitespace-pre-line">{"你的完整报告，\n已经准备好了。"}</h3>
-          <p className="text-[11px] text-[#7e8b91]">{mode === "mock" ? "演示解锁成功，本次未产生扣款。" : "支付成功，本次报告已解锁。"}</p>
+          <h3 className="mt-[25px] mb-[18px] text-[26px] leading-[1.5] font-normal whitespace-pre-line">{t.readyHeading}</h3>
+          <p className="text-[11px] text-[#7e8b91]">{mode === "mock" ? t.demoSuccess : t.paidSuccess}</p>
           <PrimaryButton className="mt-[35px]" onClick={onRead}>
-            开始阅读报告
+            {t.startReading}
           </PrimaryButton>
           {orderId && <div className="mt-6 border-t border-line pt-5"><OrderReceipt orderId={orderId} /></div>}
-          <Link href="/my/report" prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center">查看全部测试记录</Link>
+          <Link href={href(locale, "/my/report")} prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center">{t.allRecords}</Link>
         </div>
       ) : (
         <div>
           <div className="mt-0 flex items-center justify-between border-b border-line pt-[13px] pb-[22px] md:mt-[10px] md:pt-[26px]">
             <span className="text-[14px] font-medium">
               {type} · {name}
-              <small className="mt-2 block text-[10px] font-normal text-[#7c8b93]">完整人格分析报告</small>
+              <small className="mt-2 block text-[10px] font-normal text-[#7c8b93]">{t.productLabel}</small>
             </span>
             <strong className="text-[39px] font-medium tracking-[-2px] md:text-[45px]">
-              <small className="mr-1 text-[20px]">¥</small>
+              <small className="mr-1 text-[20px]">{messages.currency}</small>
               {priceLabel}
             </strong>
           </div>
           <ul className="my-[18px] list-none p-0 md:my-[22px]">
-            {unlockBullets.map((l) => (
+            {unlockBulletsFor(locale).map((l) => (
               <li key={l} className="my-3 flex items-center gap-[9px] text-[11px] text-[#5d707a]">
                 <Check size={15} className="text-[#8d9c8b]" />
                 {l}
               </li>
             ))}
           </ul>
-          <div className="mt-[18px] flex items-center gap-3 rounded-[3px] border border-[#cdd9dc] px-[15px] py-4 md:mt-[25px]">
-            <WechatLogo size={25} weight="fill" className="text-[#299c63]" />
-            <span className="text-[13px] font-medium">
-              {methodTitle}
-              <small className="mt-[5px] block text-[9px] font-normal text-[#7e8d93]">{methodSub}</small>
-            </span>
-            <Check size={17} className="ml-auto" />
-          </div>
-          {qrSvg && (
-            <div className="mt-4 flex flex-col items-center gap-3">
-              <div className="size-[180px] bg-white p-2 [&_svg]:size-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
-              <p className="text-[10px] text-[#7e8d93]">请使用微信「扫一扫」完成支付，支付后本页会自动刷新。</p>
-            </div>
+          {mode === "crypto" ? (
+            <CryptoPayment
+              resultId={resultId}
+              networks={networks}
+              onPaid={(id) => {
+                setOrderId(id);
+                succeed();
+              }}
+              onAlreadyUnlocked={succeed}
+            />
+          ) : (
+            <>
+              {locale === "zh" && (
+                <div className="mt-[18px] flex items-center gap-3 rounded-[3px] border border-[#cdd9dc] px-[15px] py-4 md:mt-[25px]">
+                  <WechatLogo size={25} weight="fill" className="text-[#299c63]" />
+                  <span className="text-[13px] font-medium">
+                    {methodTitle}
+                    <small className="mt-[5px] block text-[9px] font-normal text-[#7e8d93]">{methodSub}</small>
+                  </span>
+                  <Check size={17} className="ml-auto" />
+                </div>
+              )}
+              {qrSvg && (
+                <div className="mt-4 flex flex-col items-center gap-3">
+                  <div className="size-[180px] bg-white p-2 [&_svg]:size-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
+                  <p className="text-[10px] text-[#7e8d93]">{t.scanHint}</p>
+                </div>
+              )}
+              <p className="mt-[18px] mb-3 text-center text-[10px] text-[#8c775f] md:mt-6">
+                {mode === "mock" ? t.demoNote : t.secureNote}
+              </p>
+              {state === "cancelled" && (
+                <p role="status" className="my-[10px] text-[11px] text-[#997c60]">
+                  {t.cancelledStatus}
+                </p>
+              )}
+              <Button variant="pill" className="min-h-[54px]" disabled={state === "processing"} onClick={pay}>
+                {state === "processing" ? (
+                  <>
+                    <CircleNotch className="animate-spin" size={20} />
+                    {mode === "mock" ? t.demoProcessing : t.waiting}
+                  </>
+                ) : (
+                  <>
+                    {mode === "mock" ? t.demoPay(priceLabel) : t.pay(priceLabel)}
+                    <ArrowUpRight size={18} />
+                  </>
+                )}
+              </Button>
+            </>
           )}
-          <p className="mt-[18px] mb-3 text-center text-[10px] text-[#8c775f] md:mt-6">
-            {mode === "mock" ? "支付演示 · 本次不会扣款" : "安全支付 · 由微信支付提供服务"}
-          </p>
-          {state === "cancelled" && (
-            <p role="status" className="my-[10px] text-[11px] text-[#997c60]">
-              支付已取消。你的测试结果仍可查看。
-            </p>
-          )}
-          <Button variant="pill" className="min-h-[54px]" disabled={state === "processing"} onClick={pay}>
-            {state === "processing" ? (
-              <>
-                <CircleNotch className="animate-spin" size={20} />
-                {mode === "mock" ? "正在演示解锁…" : "正在等待支付…"}
-              </>
-            ) : (
-              <>
-                {mode === "mock" ? "模拟支付" : "微信支付"} ¥{priceLabel}
-                <ArrowUpRight size={18} />
-              </>
-            )}
-          </Button>
           <button type="button" onClick={cancel} className="block min-h-11 w-full text-center text-[11px] text-[#78888d]">
-            暂不支付
+            {t.notNow}
           </button>
-          <p className="mt-[6px] text-center text-[9px] text-[#92a1a6]">单次购买 · 无自动续费</p>
-          <p className="mt-3 text-[12px] leading-[1.9] text-mist">购买后在“我的报告”查看；请保存订单号，以便换设备时找回。</p>
-          <Link href="/help" className="text-link mt-2 min-h-11">订单帮助与联系</Link>
+          <p className="mt-[6px] text-center text-[9px] text-[#92a1a6]">{t.oneTime}</p>
+          <p className="mt-3 text-[12px] leading-[1.9] text-mist">{t.keepOrder}</p>
+          <Link href={href(locale, "/help")} className="text-link mt-2 min-h-11">{t.help}</Link>
         </div>
       )}
     </>

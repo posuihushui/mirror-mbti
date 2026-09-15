@@ -22,7 +22,7 @@ test.describe("review improvements", () => {
     await page.getByRole("button", { name: "切换版本" }).click();
     await page.getByRole("button", { name: "继续 64 题标准版" }).click();
     await page.reload();
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(getQuestionnaire(STANDARD_QUESTIONNAIRE_ID)!.questions[2].text);
+    await expect(page.locator("#question-title")).toHaveText(getQuestionnaire(STANDARD_QUESTIONNAIRE_ID)!.questions[2].text);
     await page.getByRole("button", { name: "检查已答题 · 2/64" }).click();
     await page.getByRole("button", { name: "第 1 题，已作答", exact: true }).click();
     await expect(page.getByRole("group").getByRole("button").first()).toHaveAttribute("aria-pressed", "true");

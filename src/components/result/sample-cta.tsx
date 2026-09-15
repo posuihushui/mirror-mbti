@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { PrimaryButton } from "@/components/site/primary-button";
+import { href } from "@/lib/i18n/locale";
+import { resultMessages } from "@/lib/i18n/messages/result";
+import { getLocale } from "@/lib/i18n/server";
 
 type Props = {
   priceLabel: string;
-  /** Optional secondary link, e.g. from the sample result page into the sample report. */
+  /** Optional secondary link, e.g. from the sample result page into the sample report. `href` is already localized. */
   secondary?: { href: string; label: string };
 };
 
@@ -12,25 +15,22 @@ type Props = {
  * Closing block of the public sample. Everything here is already free to read, so the
  * invitation is to take the test — the price stays a footnote, not a headline.
  */
-export function SampleCta({ priceLabel, secondary }: Props) {
-  const meta: [string, string][] = [
-    ["32/64", "题可选"],
-    ["5–10", "分钟"],
-    ["16", "种人格倾向"],
-  ];
+export async function SampleCta({ priceLabel, secondary }: Props) {
+  const locale = await getLocale();
+  const t = resultMessages[locale].sampleCta;
 
   return (
     <section className="mx-4 block bg-night-deep px-[27px] py-8 text-[#eff3f4] md:mx-0 md:grid md:grid-cols-2 md:items-center md:gap-[45px] md:p-10 xl:gap-[90px] xl:px-[60px] xl:py-14">
       <div>
-        <p className="eyebrow text-[9px] text-[#99a6a9]">YOUR TURN · 轮到你了</p>
-        <h2 className="mt-[25px] text-[29px] leading-[1.55] md:text-[35px]">{"属于你的故事，\n还未开始。"}</h2>
+        <p className="eyebrow text-[9px] text-[#99a6a9]">{t.eyebrow}</p>
+        <h2 className="mt-[25px] text-[29px] leading-[1.55] md:text-[35px]">{t.heading}</h2>
         <p className="mt-[27px] text-[11px] leading-[2] text-[#a1afb2] md:text-[12px]">
-          这是一份示例报告。选择 32 题或 64 题版本，免费了解自己的四维偏好；也可以按需解锁同样版式的完整报告。
+          {t.body}
         </p>
       </div>
       <div className="mt-[30px] md:mt-0">
         <div className="flex items-center gap-[13px] xl:gap-6">
-          {meta.map(([value, label], i) => (
+          {t.meta.map(([value, label], i) => (
             <span
               key={label}
               className={
@@ -43,8 +43,8 @@ export function SampleCta({ priceLabel, secondary }: Props) {
           ))}
         </div>
         <div className="mt-[30px] hidden md:block">
-          <PrimaryButton href="/quiz" light>
-            开始认识自己
+          <PrimaryButton href={href(locale, "/quiz")} light>
+            {t.start}
           </PrimaryButton>
         </div>
         {secondary && (
@@ -54,7 +54,7 @@ export function SampleCta({ priceLabel, secondary }: Props) {
           </Link>
         )}
         <p className="mt-[22px] text-[9px] leading-[1.9] text-[#86999f] md:mt-[15px] md:text-[10px]">
-          免费测试与性格概览 · 完整报告 ¥{priceLabel} / 次 · 无订阅、无自动续费
+          {t.footnote(priceLabel)}
         </p>
       </div>
     </section>

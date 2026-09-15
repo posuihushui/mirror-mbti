@@ -1,16 +1,31 @@
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
+import { TermsEn } from "@/components/legal/terms-en";
 import { LegalPage } from "@/components/site/legal-page";
+import { getLocale } from "@/lib/i18n/server";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "用户协议",
-  description: "使用观己 mirror 与购买完整人格报告的条款。",
-  alternates: { canonical: "/terms" },
+const copy = {
+  zh: { title: "用户协议", description: "使用观己 mirror 与购买完整人格报告的条款。", updated: "2026-09-11" },
+  en: { title: "Terms of service", description: "The terms for using mirror and buying a full personality report.", updated: "2026-09-14" },
 };
 
-export default function TermsPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return pageMetadata({ locale, title: copy[locale].title, description: copy[locale].description, path: "/terms" });
+}
+
+export default async function TermsPage() {
+  const locale = await getLocale();
+  if (locale === "en") {
+    return (
+      <LegalPage eyebrow="TERMS" path="/terms" title={copy.en.title} updated={copy.en.updated}>
+        <TermsEn />
+      </LegalPage>
+    );
+  }
   return (
-    <LegalPage eyebrow="TERMS" title="用户协议" updated="2026-09-11">
+    <LegalPage eyebrow="TERMS" path="/terms" title={copy.zh.title} updated={copy.zh.updated}>
       <h2>服务内容</h2>
       <p>观己 mirror 提供 32 题轻量版与 64 题标准版的免费测试、人格倾向与简短概览，以及可付费解锁的完整人格报告。所有内容用于自我探索，不构成心理诊断、职业建议或对任何人的评价。</p>
       <h2>付费与解锁</h2>

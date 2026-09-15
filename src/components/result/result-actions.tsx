@@ -6,6 +6,10 @@ import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { PaymentSheet } from "@/components/payment/payment-sheet";
 import { writeLastResultId } from "@/lib/client-storage";
+import { href } from "@/lib/i18n/locale";
+import { useLocale } from "@/lib/i18n/locale-provider";
+import { resultMessages } from "@/lib/i18n/messages/result";
+import type { CryptoNetwork } from "@/lib/payments/types";
 import type { PaymentMode } from "@/lib/site";
 
 type Props = {
@@ -14,6 +18,8 @@ type Props = {
   name: string;
   priceLabel: string;
   mode: PaymentMode;
+  /** Crypto mode: networks configured on the server. */
+  networks?: readonly CryptoNetwork[];
   owner: boolean;
   unlocked: boolean;
   clear: boolean;
@@ -25,10 +31,13 @@ type Props = {
  * Unlock / read CTA for the result page. The payment sheet is owned by the "dock" instance
  * (mounted once); the "panel" instance only triggers it through the `?unlock=1` search param.
  */
-export function ResultActions({ resultId, type, name, priceLabel, mode, owner, unlocked, clear, slot }: Props) {
+export function ResultActions({ resultId, type, name, priceLabel, mode, networks, owner, unlocked, clear, slot }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const locale = useLocale();
+  const messages = resultMessages[locale];
+  const t = messages.actions;
   const [unlockedNow, setUnlockedNow] = useState(unlocked);
   const open = searchParams.get("unlock") === "1";
 
@@ -36,7 +45,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, owner, u
     if (owner) writeLastResultId(resultId);
   }, [owner, resultId]);
 
-  const readHref = `/report/${resultId}`;
+  const readHref = href(locale, `/report/${resultId}`);
   const isUnlocked = unlocked || unlockedNow;
   const canPay = owner && clear && !isUnlocked;
 
@@ -55,19 +64,19 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, owner, u
   if (isUnlocked) {
     button = (
       <PrimaryButton href={readHref} light={slot === "panel"} className={dockClass}>
-        {slot === "panel" ? "阅读完整报告" : "阅读报告"}
+        {slot === "panel" ? t.readFull : t.read}
       </PrimaryButton>
     );
   } else if (canPay) {
     button = (
       <PrimaryButton onClick={() => setOpen(true)} light={slot === "panel"} className={dockClass}>
-        解锁完整报告
+        {t.unlock}
       </PrimaryButton>
     );
   } else {
     button = (
-      <PrimaryButton href="/quiz" light={slot === "panel"} className={dockClass}>
-        开始我的测试
+      <PrimaryButton href={href(locale, "/quiz")} light={slot === "panel"} className={dockClass}>
+        {t.startMine}
       </PrimaryButton>
     );
   }
@@ -79,10 +88,10 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, owner, u
       <Dock>
         <div className="flex items-center gap-5">
           <div className="min-w-[101px]">
-            <small className="block text-[9px] text-[#839199]">完整人格报告</small>
+            <small className="block text-[9px] text-[#839199]">{t.dockLabel}</small>
             <strong className="mt-[3px] block text-[25px] leading-[1.1] font-medium tracking-[-1px]">
-              ¥{priceLabel}
-              <span className="text-[10px] font-normal tracking-normal text-[#8a989e]"> / 次</span>
+              {messages.currency}{priceLabel}
+              <span className="text-[10px] font-normal tracking-normal text-[#8a989e]">{t.perTime}</span>
             </strong>
           </div>
           {button}
@@ -97,6 +106,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, owner, u
           name={name}
           priceLabel={priceLabel}
           mode={mode}
+          networks={networks ? [...networks] : undefined}
           onUnlocked={() => setUnlockedNow(true)}
           onRead={() => router.push(readHref)}
         />

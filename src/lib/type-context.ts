@@ -1,4 +1,7 @@
-import { dimensions, type Letter } from "@/lib/personality";
+import { enPoles } from "@/lib/i18n/content/en/personality";
+import { enCommunication, enDefinition, enEveryday, enMisconceptions } from "@/lib/i18n/content/en/type-context";
+import type { Locale } from "@/lib/i18n/locale";
+import { dimensions, names, poles, type Letter } from "@/lib/personality";
 
 const everyday: Record<Letter, string> = {
   E: "刚想到一个主意时，可能会在交谈中慢慢把它讲清楚。",
@@ -21,12 +24,24 @@ const misconceptions: Record<Letter, string> = {
   P: "知觉偏好不等于拖延或不负责任，灵活安排仍可遵守约定。",
 };
 
-export function typeContext(type: string) {
+export function typeContext(type: string, locale: Locale = "zh") {
   const letters = type.split("") as Letter[];
+  const neighbors = dimensions.map((dimension, index) => ({ dimension, type: type.slice(0, index) + (type[index] === dimension[0] ? dimension[1] : dimension[0]) + type.slice(index + 1) }));
+  if (locale === "en") {
+    return {
+      definition: enDefinition(type, letters.map((l) => `${enPoles[l].label} (${l})`), letters.map((l) => enPoles[l].need)),
+      everyday: letters.map((letter) => enEveryday[letter]),
+      misconceptions: letters.map((letter) => enMisconceptions[letter]),
+      communication: `${letters[0] === "I" ? enCommunication.introverted : enCommunication.extraverted} ${letters[3] === "J" ? enCommunication.judging : enCommunication.perceiving}`,
+      neighbors,
+    };
+  }
   return {
+    /** A self-contained answer to "What does INFJ mean?" for search snippets and AI answers. */
+    definition: `${type}（${names[type][0]}）是 16 型人格倾向之一，由${letters.map((l) => `${poles[l].label}（${l}）`).join("、")}四种偏好组合而成：${letters.map((l) => poles[l].need).join("，")}。它描述作答中的偏好倾向，不代表能力、职业适配或心理诊断。`,
     everyday: letters.map((letter) => everyday[letter]),
     misconceptions: letters.map((letter) => misconceptions[letter]),
     communication: `${letters[0] === "I" ? "如果我没有立即回复，我可能还在整理想法。" : "我有时需要边说边梳理，先不用急着给我一个结论。"}${letters[3] === "J" ? "我们可以先约定下一次沟通的时间。" : "我们可以先试一个方案，再根据情况一起调整。"}`,
-    neighbors: dimensions.map((dimension, index) => ({ dimension, type: type.slice(0, index) + (type[index] === dimension[0] ? dimension[1] : dimension[0]) + type.slice(index + 1) })),
+    neighbors,
   };
 }

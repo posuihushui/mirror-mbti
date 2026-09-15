@@ -1,5 +1,7 @@
 import { cn } from "cn";
-import { poles, type Profile } from "@/lib/personality";
+import { resultMessages } from "@/lib/i18n/messages/result";
+import { getLocale } from "@/lib/i18n/server";
+import { polesFor, type Letter, type Profile } from "@/lib/personality";
 import { dimensions } from "@/lib/questionnaires";
 import { RadarReveal } from "./radar-reveal";
 
@@ -29,11 +31,14 @@ const LABEL_ANCHORS: Array<{ anchor: "middle" | "start" | "end"; dx: number; dy:
   { anchor: "end", dx: -4, dy: 4 },
 ];
 
-export function Radar({ profile, height = 310, className }: { profile: Profile; height?: number; className?: string }) {
-  const letters = profile.type.split("");
+export async function Radar({ profile, height = 310, className }: { profile: Profile; height?: number; className?: string }) {
+  const locale = await getLocale();
+  const t = resultMessages[locale].radar;
+  const poles = polesFor(locale);
+  const letters = profile.type.split("") as Letter[];
   const points = profile.values.map((v, i) => polar(v, i));
   const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ") + " Z";
-  const label = letters.map((l, i) => profile.balanced[i] ? `${dimensions[i]} 接近均衡 ${profile.values[i]}%` : `${poles[l].label}偏好 ${profile.values[i]}%`).join("，");
+  const label = letters.map((l, i) => profile.balanced[i] ? t.balanced(dimensions[i], profile.values[i]) : t.pole(poles[l].label, profile.values[i])).join(t.separator);
 
   return (
     <RadarReveal className={cn("relative mx-auto w-full", className)} style={{ height }}>

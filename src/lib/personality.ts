@@ -1,4 +1,6 @@
-import { dimensions, getQuestionnaire, LEGACY_QUESTIONNAIRE_ID, type QuestionnaireId } from "@/lib/questionnaires";
+import { enPoles, enProfileCopy, enTypeCopy } from "@/lib/i18n/content/en/personality";
+import type { Locale } from "@/lib/i18n/locale";
+import { dimensions, getQuestionnaire, LEGACY_QUESTIONNAIRE_ID, type Letter, type QuestionnaireId } from "@/lib/questionnaires";
 export { dimensions, questions, QUESTION_COUNT, ANSWER_VALUES } from "@/lib/questionnaires";
 export type { Dimension, Letter, Question, AnswerValue } from "@/lib/questionnaires";
 
@@ -74,9 +76,23 @@ export function profileForType(type: PersonalityType): Profile {
   return { type, values: [75, 75, 75, 75], balanced: [false, false, false, false] };
 }
 
-export function typeMeta(type: string) {
+export function polesFor(locale: Locale): Record<Letter, { label: string; need: string; strength: string; growth: string }> {
+  return locale === "en" ? enPoles : (poles as Record<Letter, (typeof poles)[string]>);
+}
+
+/**
+ * Display copy for a type. English has no nicknames: its `name` is the four preference labels
+ * (`Introverted · Intuitive · Feeling · Judging`), so no other publisher's type names are borrowed.
+ */
+export function typeMeta(type: string, locale: Locale = "zh") {
+  const letters = type.split("");
+  if (locale === "en") {
+    const known = Object.prototype.hasOwnProperty.call(enTypeCopy, type) ? type : "INFJ";
+    const [line, summary] = enTypeCopy[known];
+    return { name: known.split("").map((l) => enPoles[l as Letter].label).join(" · "), line, summary, letters: known.split("") };
+  }
   const [name, line, summary] = names[type] ?? names.INFJ;
-  return { name, line, summary, letters: type.split("") };
+  return { name, line, summary, letters };
 }
 
 /** A balanced result is meaningful feedback, but not a determinate four-letter type. */
@@ -84,7 +100,17 @@ export function hasClearPreference(profile: Profile): boolean {
   return profile.values.some((value) => value > 60);
 }
 
-export function profileMeta(profile: Profile) {
+export function profileMeta(profile: Profile, locale: Locale = "zh") {
+  if (locale === "en") {
+    const letters = profile.type.split("");
+    if (!hasClearPreference(profile)) return { ...enProfileCopy.unclear, letters };
+    const meta = typeMeta(profile.type, "en");
+    if (profile.balanced.some(Boolean)) return {
+      ...meta, typeLabel: profile.type, line: enProfileCopy.balancedLine,
+      summary: enProfileCopy.balancedSummary(meta.letters.filter((_, i) => !profile.balanced[i]).map((l) => enPoles[l as Letter].label.toLowerCase())),
+    };
+    return { ...meta, typeLabel: profile.type };
+  }
   if (!hasClearPreference(profile)) return {
     name: "倾向待探索", line: "本次回答暂未形成\n清晰倾向。",
     summary: "四个维度都接近中间位置。这可能与情境差异、对题意的不确定或当前状态有关，不表示你没有特点。可以检查答案，也可以过一段时间再探索。",
