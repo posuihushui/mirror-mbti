@@ -1,0 +1,2 @@
+guide-zh.png: http://localhost:3017/s/NPQ8ejVc9FnAk8qJnMAJdJacPjFPC9HW
+guide-en.png: http://localhost:3017/en/s/E5im4jhdYNrl7mUiXB7WVqRSeQ9mglp7

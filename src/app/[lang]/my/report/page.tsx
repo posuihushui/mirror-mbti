@@ -1,12 +1,15 @@
+import { shareMessages } from "@/lib/i18n/messages/share";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { TrackView } from "@/components/analytics/track-view";
 import { AppHeader } from "@/components/site/app-header";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { RecoverReports } from "@/components/report/recover-reports";
+import { trackAttrs } from "@/lib/analytics/events";
 import { href, type Locale } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
@@ -33,6 +36,7 @@ export default async function MyReportPage() {
       <AppHeader variant="page" title={t.title} backHref={href(locale, "/")} path="/my/report" />
       <main className="mx-auto max-w-[1000px] px-[27px] pt-7 pb-[80px] md:px-10 md:pt-[55px]">
         <p className="eyebrow text-mist">YOUR EXPLORATIONS</p>
+        <Link href={href(locale,"/my/shares")} prefetch={false} className="text-link mt-4">{shareMessages[locale].myShares}</Link>
         <div className="mt-[18px] flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[38px]">
@@ -42,7 +46,7 @@ export default async function MyReportPage() {
               {hasHistory ? t.summary(results.length) : t.empty}
             </p>
           </div>
-          <PrimaryButton href={href(locale, "/quiz")} className="md:w-[200px] md:shrink-0">{hasHistory ? t.continue : t.start}</PrimaryButton>
+          <PrimaryButton href={href(locale, "/quiz")} className="md:w-[200px] md:shrink-0" {...trackAttrs("start_quiz", "page_cta")}>{hasHistory ? t.continue : t.start}</PrimaryButton>
         </div>
         {hasHistory ? (
           <>
@@ -54,7 +58,7 @@ export default async function MyReportPage() {
             </p>
             <Accordion type="single" collapsible className="mt-6 max-w-[560px]">
               <AccordionItem value="recover">
-                <AccordionTrigger>{t.recoverOther}</AccordionTrigger>
+                <AccordionTrigger {...trackAttrs("recover_other", "page_cta")}>{t.recoverOther}</AccordionTrigger>
                 <AccordionContent>
                   <p className="mb-6 text-[12px] leading-[2] text-mist">{t.recoverSwitch}</p>
                   <RecoverReports />
@@ -69,10 +73,11 @@ export default async function MyReportPage() {
               {t.recoveryText}
             </p>
             <RecoverReports />
-            <Link href={href(locale, "/result/sample")} className="text-link mt-6">{t.sample} <ArrowUpRight size={16} /></Link>
+            <Link href={href(locale, "/result/sample")} className="text-link mt-6" {...trackAttrs("view_sample_result", "page_cta")}>{t.sample} <ArrowUpRight size={16} /></Link>
           </section>
         )}
       </main>
+      <TrackView event="my_report_view" params={{ record_count: results.length, unlocked_count: results.filter((result) => result.unlocked).length }} />
     </>
   );
 }
@@ -110,17 +115,17 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
         ))}
       </dl>
       <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <PrimaryButton href={href(own, unlocked ? `/report/${result.id}` : `/result/${result.id}`)} prefetch={false} className="md:w-[220px]">
+        <PrimaryButton href={href(own, unlocked ? `/report/${result.id}` : `/result/${result.id}`)} prefetch={false} className="md:w-[220px]" {...trackAttrs(unlocked ? "read_report" : "view_result", "history_item")}>
           {unlocked ? t.readDetailed : t.viewBrief}
         </PrimaryButton>
-        <Link href={href(own, unlocked || !clear ? `/result/${result.id}` : `/result/${result.id}?unlock=1`)} prefetch={false} className="text-link justify-center text-[12px]">
+        <Link href={href(own, unlocked || !clear ? `/result/${result.id}` : `/result/${result.id}?unlock=1`)} prefetch={false} className="text-link justify-center text-[12px]" {...trackAttrs(unlocked ? "view_result" : clear ? "unlock_report" : "review_answers", "history_item")}>
           {unlocked ? t.viewBrief : clear ? t.unlock : t.review} <ArrowUpRight size={16} />
         </Link>
       </div>
       {order && (
         <Accordion type="single" collapsible className="mt-6">
           <AccordionItem value="order">
-            <AccordionTrigger>{t.orderAccordion(demo)}</AccordionTrigger>
+            <AccordionTrigger {...trackAttrs("order_receipt", "history_item")}>{t.orderAccordion(demo)}</AccordionTrigger>
             <AccordionContent><OrderReceipt orderId={order.id} /></AccordionContent>
           </AccordionItem>
         </Accordion>

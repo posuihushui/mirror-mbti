@@ -37,6 +37,8 @@ async function main() {
       const svg = portable(renderToStaticMarkup(artwork), `观己 mirror · ${kind} ${name}`);
       await writeFile(path.join(assets, `${kind}-${name}.svg`), `${svg}\n`);
     }
+    const en = portable(renderToStaticMarkup(<BrandLogo {...props} locale="en" />), `mirror · look within · logo ${name}`);
+    await writeFile(path.join(assets, `logo-en-${name}.svg`), `${en}\n`);
   }
 
   await writeFile(path.join(assets, "app-icon.svg"), portable(appIcon(512), "观己 mirror"));

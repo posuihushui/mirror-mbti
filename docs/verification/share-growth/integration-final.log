@@ -1,0 +1,9 @@
+
+ RUN  v5.0.0 /Users/lake/work/mine/mirror-mbti
+
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  20:53:08
+   Duration  822ms (tests 63%, import 27%, transform 10%)
+

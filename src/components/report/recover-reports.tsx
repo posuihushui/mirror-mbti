@@ -4,11 +4,12 @@ import { useState, type FormEvent } from "react";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { track } from "@/lib/analytics/track";
 import { href } from "@/lib/i18n/locale";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { siteMessages } from "@/lib/i18n/messages/site";
 
-type RecoveryResponse = { ok: true; data: { recovered: true } } | { ok: false; error: { message: string } };
+type RecoveryResponse = { ok: true; data: { recovered: true } } | { ok: false; error: { code?: string; message: string } };
 
 /** `returnTo` (a same-site path) replaces the default history page, e.g. to resume a payment. */
 export function RecoverReports({ returnTo }: { returnTo?: string } = {}) {
@@ -23,16 +24,19 @@ export function RecoverReports({ returnTo }: { returnTo?: string } = {}) {
     const orderId = String(new FormData(event.currentTarget).get("orderId") ?? "").trim().toUpperCase();
     setError("");
     setPending(true);
+    track("recover_submit");
     try {
       const response = await fetch("/api/reports/recover", {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ orderId, locale }), cache: "no-store",
       });
       const json = (await response.json()) as RecoveryResponse;
-      if (!json.ok) throw new Error(json.error.message);
+      if (!json.ok) throw Object.assign(new Error(json.error.message), { code: json.error.code });
+      track("recover_success");
       // A fresh navigation discards router data associated with the previous visitor cookie.
       window.location.assign(returnTo ?? href(locale, "/my/report"));
     } catch (reason) {
+      track("recover_error", { error_code: (reason as { code?: string }).code ?? (reason instanceof Error ? reason.name : "UNKNOWN") });
       setError(reason instanceof Error ? reason.message : t.failed);
       setPending(false);
     }

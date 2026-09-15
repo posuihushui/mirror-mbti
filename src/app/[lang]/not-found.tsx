@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { TrackView } from "@/components/analytics/track-view";
 import { AppHeader } from "@/components/site/app-header";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
+import { trackAttrs } from "@/lib/analytics/events";
 import { href } from "@/lib/i18n/locale";
 import { siteMessages } from "@/lib/i18n/messages/site";
 import { getLocale } from "@/lib/i18n/server";
@@ -23,14 +25,15 @@ export default async function NotFound() {
         <h1 className="mt-[18px] text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[32px]">{t.heading}</h1>
         <p className="mt-[23px] text-[13px] leading-[1.9] text-[#6b777d]">{t.body}</p>
         <div className="mt-8 hidden md:block">
-          <PrimaryButton href={home} className="max-w-[246px]">
+          <PrimaryButton href={home} className="max-w-[246px]" {...trackAttrs("home", "page_cta")}>
             {t.home}
           </PrimaryButton>
         </div>
       </main>
       <Dock>
-        <PrimaryButton href={home}>{t.home}</PrimaryButton>
+        <PrimaryButton href={home} {...trackAttrs("home", "dock")}>{t.home}</PrimaryButton>
       </Dock>
+      <TrackView event="page_not_found" />
     </>
   );
 }

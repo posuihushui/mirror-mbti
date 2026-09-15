@@ -71,6 +71,7 @@ npm run dev                   # http://localhost:3000
 - `SESSION_SECRET`：访客 cookie 与 OAuth state 的 HMAC 密钥，生产环境必填。
 - `PAYMENT_PROVIDER`：`mock` 或 `wechat`。`mock` 下界面明确标注"支付演示 · 本次不会扣款"。
 - `PRICE_FEN`：完整报告价格（分），默认 690。
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID`：GA4 衡量 ID（`G-` 开头）。它在 **构建时** 写入客户端代码（Docker 通过 `--build-arg`），留空则不加载 GA。埋点清单、GA 后台配置与验证方法见 [`docs/analytics.md`](docs/analytics.md)。
 - 公开客服邮箱在 `src/lib/site.ts` 的 `site.supportEmail` 配置，当前为 `lakehu0x@gmail.com`；帮助、协议和隐私页共用此值。
 
 ## 部署（自托管 Docker + Postgres）

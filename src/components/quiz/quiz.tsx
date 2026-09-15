@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check } from "@phosphor-icons/react";
 import { cn } from "cn";
@@ -13,6 +13,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ResponsiveSheet } from "@/components/site/responsive-sheet";
 import { QuizVersions } from "@/components/quiz/quiz-versions";
+import { progressMilestone } from "@/lib/analytics/events";
+import { track } from "@/lib/analytics/track";
 import { useQuizProgress, useStorageAvailable, writeLastResultId, writeQuizProgress, type QuizProgress } from "@/lib/client-storage";
 import { href } from "@/lib/i18n/locale";
 import { useLocale } from "@/lib/i18n/locale-provider";
@@ -48,6 +50,11 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
   const [submitting, setSubmitting] = useState(false);
   const [restartOpen, setRestartOpen] = useState(false);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
+  const quiz = { questionnaire_id: questionnaire.id, question_count: count };
+
+  useEffect(() => {
+    if (!storageAvailable) track("quiz_storage_unavailable", { questionnaire_id: questionnaire.id, question_count: count });
+  }, [storageAvailable, questionnaire.id, count]);
 
   const save = (patch: Partial<Pick<QuizProgress, "answers" | "index">>) => {
     writeQuizProgress({ ...progress, ...patch });
@@ -65,6 +72,9 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
 
   const select = (v: number) => {
     save({ answers: { ...answers, [questions[index].id]: v } });
+    const nextAnswered = current === null ? answered + 1 : answered;
+    const milestone = progressMilestone(answered, nextAnswered, count);
+    if (milestone) track("quiz_progress", { ...quiz, progress_percent: milestone, answered_count: nextAnswered });
   };
 
   const back = () => {
@@ -78,8 +88,9 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
       return;
     }
     const missing = questions.findIndex((q) => answers[q.id] === null);
-    if (missing >= 0) { goTo(missing); toast(t.incomplete); return; }
+    if (missing >= 0) { track("quiz_incomplete", { ...quiz, question_number: missing + 1 }); goTo(missing); toast(t.incomplete); return; }
     setSubmitting(true);
+    track("quiz_submit", quiz);
     try {
       const res = await fetch("/api/results", {
         method: "POST",
@@ -87,11 +98,15 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
         body: JSON.stringify({ questionnaireId: questionnaire.id, answers: questions.map((q) => ({ questionId: q.id, value: answers[q.id] })) }),
       });
       const json = (await res.json()) as CreateResultResponse;
-      if (!json.ok) throw new Error(json.error.message);
+      if (!json.ok) throw Object.assign(new Error(json.error.message), { code: json.error.code });
+      track("quiz_complete", quiz);
       writeLastResultId(json.data.id);
       writeQuizProgress(null);
-      router.push(href(locale, `/result/${json.data.id}`));
+      const compare = new URLSearchParams(window.location.search).get("compare");
+      const continuation = compare && /^[A-Za-z0-9_-]{32}$/.test(compare) ? `?compare=${compare}` : "";
+      router.push(href(locale, `/result/${json.data.id}${continuation}`));
     } catch (e) {
+      track("quiz_submit_error", { ...quiz, error_code: (e as { code?: string }).code ?? (e instanceof Error ? e.name : "UNKNOWN") });
       toast(e instanceof Error ? e.message : t.submitFailed);
       setSubmitting(false);
     }
@@ -117,7 +132,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
         <section className="md:max-w-[460px]">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-[12px] text-mist">
             <span><NumberTextMotion initialFrom={t.version(questionnaire.name, previousCount ?? count)}>{t.version(questionnaire.name, count)}</NumberTextMotion></span>
-            <Button variant="link" onClick={onChoose} disabled={submitting} className="min-h-11">{t.switchVersion}</Button>
+            <Button variant="link" onClick={() => { track("quiz_version_switch", { ...quiz, answered_count: answered }); onChoose(); }} disabled={submitting} className="min-h-11">{t.switchVersion}</Button>
           </div>
           {!storageAvailable && <Alert className="mb-5"><AlertTitle>{t.storageTitle}</AlertTitle><AlertDescription>{t.storageBody}</AlertDescription></Alert>}
           <div className="flex items-center justify-between text-[11px] text-[#758287]">
@@ -162,12 +177,12 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
             </div>
           </div>
           <p className="mt-5 text-center text-[11px] text-[#7d898e] md:text-[10px]">{t.noWrong}</p>
-          <Accordion type="single" collapsible className="mt-5">
+          <Accordion type="single" collapsible className="mt-5" onValueChange={(value) => { if (value) track("quiz_review_open", { ...quiz, answered_count: answered }); }}>
             <AccordionItem value="answers"><AccordionTrigger aria-label={t.review(answered, count)}><span><NumberTextMotion>{t.review(answered, count)}</NumberTextMotion></span></AccordionTrigger>
               <AccordionContent>
                 <p className="mb-3 text-[12px] text-mist">{t.reviewHint}</p>
                 <div className="grid grid-cols-6 gap-2 md:grid-cols-8">
-                  {questions.map((q, i) => <Button key={q.id} disabled={submitting} onClick={() => goTo(i)} className="min-h-11 justify-center border border-line text-[12px]" aria-label={t.questionLabel(i + 1, answers[q.id] !== null)} aria-current={index === i ? "step" : undefined}>{i + 1}{answers[q.id] === null ? "" : " ✓"}</Button>)}
+                  {questions.map((q, i) => <Button key={q.id} disabled={submitting} onClick={() => { if (i !== index) track("quiz_review_jump", { ...quiz, question_number: i + 1 }); goTo(i); }} className="min-h-11 justify-center border border-line text-[12px]" aria-label={t.questionLabel(i + 1, answers[q.id] !== null)} aria-current={index === i ? "step" : undefined}>{i + 1}{answers[q.id] === null ? "" : " ✓"}</Button>)}
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -201,7 +216,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
         </nav>
       </Dock>
       <ResponsiveSheet open={restartOpen} onOpenChange={setRestartOpen} title={t.restartTitle} description={t.restartDescription}>
-        <PrimaryButton className="mt-6" onClick={() => { writeQuizProgress(emptyProgress(questionnaire.id)); setRestartOpen(false); }}>{t.restartConfirm}</PrimaryButton>
+        <PrimaryButton className="mt-6" onClick={() => { track("quiz_restart", { ...quiz, answered_count: answered }); writeQuizProgress(emptyProgress(questionnaire.id)); setRestartOpen(false); }}>{t.restartConfirm}</PrimaryButton>
         <Button variant="link" className="mt-3 min-h-11" onClick={() => setRestartOpen(false)}>{t.restartKeep}</Button>
       </ResponsiveSheet>
     </>

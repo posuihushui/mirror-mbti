@@ -1,0 +1,22 @@
+/* The underlying markup is always the complete, printable final state. */
+.reveal { opacity: 1; transform: none; }
+.candidate[data-checked="true"] { border-color: #c49473; background-color: #edf2f3; }
+@keyframes share-enter { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes share-check { from { opacity: .35; transform: scale(.7); } to { opacity: 1; transform: none; } }
+@keyframes share-change { from { opacity: .5; } to { opacity: 1; } }
+@keyframes share-copy { from { opacity: .5; transform: scale(.85); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .candidate { transition: background-color 160ms, border-color 160ms; }
+  .check { animation: share-check 160ms ease-out; }
+  .changed { animation: share-change 160ms ease-out; }
+  .copied { animation: share-copy 160ms ease-out; }
+  .status { animation: share-change 160ms ease-out; }
+  .success { animation: share-change 200ms ease-out; }
+}
+.card[data-share-motion="done"] [data-share-reveal] { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal *, .candidate, .check, .changed, .copied, .status, .success { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+}
+@media print {
+  .reveal, .reveal *, .candidate, .check, .changed, .copied, .status, .success { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+}

@@ -3,6 +3,7 @@
 import { Copy } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics/track";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { siteMessages } from "@/lib/i18n/messages/site";
 
@@ -12,8 +13,10 @@ export function OrderReceipt({ orderId }: { orderId: string }) {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(orderId);
+      track("copy_to_clipboard", { copy_target: "order_id", outcome: "copied" });
       toast(t.copied);
     } catch {
+      track("copy_to_clipboard", { copy_target: "order_id", outcome: "failed" });
       toast(t.copyFailed);
     }
   };

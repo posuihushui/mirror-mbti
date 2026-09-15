@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
+import { TrackView } from "@/components/analytics/track-view";
 import { AppHeader } from "@/components/site/app-header";
 import { ReportBody, type ReportData } from "@/components/report/report-body";
 import { SampleNotice } from "@/components/report/sample-notice";
 import { SampleCta } from "@/components/result/sample-cta";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
+import { trackAttrs } from "@/lib/analytics/events";
 import { paymentModeFor, priceLabelFor } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
@@ -63,13 +64,14 @@ export default async function ReportPage({ params }: Params) {
       <ReportBody
         data={data}
         banner={<>{data.sample && <SampleNotice />}<p className="mx-[25px] my-5 text-[12px] leading-[1.9] text-mist md:mx-0">{t.banner(getQuestionnaire(result.questionnaireId)?.name ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p></>}
-        footer={data.sample ? <SampleCta priceLabel={price} /> : <nav aria-label={t.navLabel} className="mx-[25px] flex flex-wrap gap-6 text-[12px] md:mx-0"><Link href={href(locale, "/my/report")} prefetch={false} className="text-link">{t.allRecords}</Link><Link href={href(locale, "/help")} className="text-link">{t.help}</Link></nav>}
+        footer={data.sample ? <SampleCta priceLabel={price} /> : undefined}
       />
       {data.sample && (
         <Dock>
-          <PrimaryButton href={href(locale, "/quiz")}>{t.start}</PrimaryButton>
+          <PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "dock")}>{t.start}</PrimaryButton>
         </Dock>
       )}
+      <TrackView event="report_view" params={{ questionnaire_id: result.questionnaireId, question_count: result.questionCount, is_sample: data.sample }} />
     </>
   );
 }

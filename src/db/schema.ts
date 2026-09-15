@@ -1,4 +1,6 @@
-import { bigint, boolean, char, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, char, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid, varchar, uniqueIndex } from "drizzle-orm/pg-core";
+import type { PublicShareSnapshot } from "@/lib/share-types";
+import type { CompareSnapshot, CompareContent } from "@/lib/compare-types";
 import { LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type ResponseItem } from "@/lib/questionnaires";
 
 export const paymentProviderEnum = pgEnum("payment_provider", ["mock", "wechat", "crypto"]);
@@ -102,3 +104,85 @@ export type OrderRow = typeof orders.$inferSelect;
 export type OrderStatus = OrderRow["status"];
 export type PaymentChannel = OrderRow["channel"];
 export type PaymentProviderName = OrderRow["provider"];
+
+/** Immutable, explicitly published data. The token never grants ownership. */
+export const resultShares = pgTable("result_shares", {
+  id: uuid("id").primaryKey(),
+  token: varchar("token", { length: 32 }).notNull().unique(),
+  visitorId: uuid("visitor_id").notNull().references(() => visitors.id),
+  resultId: text("result_id").notNull().references(() => results.id),
+  requestId: uuid("request_id").notNull(),
+  requestHash: char("request_hash", { length: 64 }).notNull(),
+  locale: varchar("locale", { length: 2 }).notNull(),
+  contentVersion: text("content_version").notNull(),
+  snapshot: jsonb("snapshot").$type<PublicShareSnapshot>().notNull(),
+  selectedIds: text("selected_ids").array().notNull(),
+  showType: boolean("show_type").notNull(),
+  showDimensions: boolean("show_dimensions").notNull(),
+  consentVersion: text("consent_version").notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  ...timestamps,
+}, (t) => [uniqueIndex("shares_owner_request_idx").on(t.visitorId, t.requestId), index("shares_owner_created_idx").on(t.visitorId, t.createdAt, t.id)]);
+
+export const shareRateLimits = pgTable("share_rate_limits", {
+  bucketKey: char("bucket_key", { length: 64 }).primaryKey(),
+  attempts: integer("attempts").default(1).notNull(),
+  windowStartedAt: timestamp("window_started_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const referralAttributions = pgTable("referral_attributions", {
+  visitorId: uuid("visitor_id").primaryKey().references(() => visitors.id),
+  shareId: uuid("share_id").notNull().references(() => resultShares.id),
+  firstTouchAt: timestamp("first_touch_at", { withTimezone: true }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  quizStartedAt: timestamp("quiz_started_at", { withTimezone: true }),
+  firstResultId: text("first_result_id").unique().references(() => results.id),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+}, (t) => [index("attributions_share_completed_idx").on(t.shareId, t.completedAt)]);
+
+export const comparisonInvitations = pgTable("comparison_invitations", {
+  id: uuid("id").primaryKey(),
+  token: varchar("token", { length: 32 }).notNull().unique(),
+  shareId: uuid("share_id").notNull().references(() => resultShares.id),
+  visitorId: uuid("visitor_id").notNull().references(() => visitors.id),
+  resultId: text("result_id").notNull().references(() => results.id),
+  locale: varchar("locale", { length: 2 }).notNull(),
+  publicSnapshot: jsonb("public_snapshot").$type<CompareSnapshot>().notNull(),
+  contentVersion: text("content_version").notNull(),
+  consentVersion: text("consent_version").notNull(),
+  requestId: uuid("request_id").notNull(),
+  requestHash: char("request_hash", { length: 64 }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  ...timestamps,
+}, (t) => [uniqueIndex("comparison_invitation_request_idx").on(t.visitorId, t.requestId), index("comparison_invitation_share_idx").on(t.shareId)]);
+
+export const comparisons = pgTable("comparisons", {
+  id: uuid("id").primaryKey(),
+  invitationId: uuid("invitation_id").notNull().references(() => comparisonInvitations.id),
+  hostVisitorId: uuid("host_visitor_id").notNull().references(() => visitors.id),
+  guestVisitorId: uuid("guest_visitor_id").notNull().references(() => visitors.id),
+  guestResultId: text("guest_result_id").notNull().references(() => results.id),
+  hostSnapshot: jsonb("host_snapshot").$type<CompareSnapshot>().notNull(),
+  guestSnapshot: jsonb("guest_snapshot").$type<CompareSnapshot>().notNull(),
+  contentVersion: text("content_version").notNull(),
+  locale: varchar("locale", { length: 2 }).notNull(),
+  outputSnapshot: jsonb("output_snapshot").$type<CompareContent>().notNull(),
+  guestConsentVersion: text("guest_consent_version").notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  revokedBy: uuid("revoked_by").references(() => visitors.id),
+  ...timestamps,
+}, (t) => [uniqueIndex("comparison_invitation_guest_idx").on(t.invitationId, t.guestVisitorId), index("comparison_host_created_idx").on(t.hostVisitorId, t.createdAt), index("comparison_guest_created_idx").on(t.guestVisitorId, t.createdAt)]);
+
+export const shareEvents = pgTable("share_events", {
+  id: uuid("id").primaryKey(),
+  eventName: text("event_name").notNull(),
+  shareId: uuid("share_id").references(() => resultShares.id),
+  pairId: uuid("pair_id").references(() => comparisons.id),
+  actorVisitorId: uuid("actor_visitor_id").notNull().references(() => visitors.id),
+  locale: varchar("locale", { length: 2 }).notNull(),
+  occurredAt: timestamp("occurred_at", { withTimezone: true }).defaultNow().notNull(),
+  dedupeKey: text("dedupe_key").notNull().unique(),
+  channel: text("channel").notNull(),
+  surface: text("surface").notNull(),
+}, (t) => [index("share_events_kind_time_idx").on(t.eventName, t.occurredAt), index("share_events_resource_actor_time_idx").on(t.shareId, t.actorVisitorId, t.occurredAt)]);

@@ -7,6 +7,7 @@ import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
+import { trackAttrs } from "@/lib/analytics/events";
 import { appUrl } from "@/lib/env";
 import { href, htmlLang } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
@@ -125,7 +126,7 @@ export default async function TypePage({ params }: Params) {
           <p className="mt-3 text-[13px] leading-[2] text-mist">{t.communicationText(context.communication)}</p>
           <h3 className="mt-6 text-[18px]">{t.neighborsHeading}</h3>
           <p className="mt-3 text-[12px] leading-[2] text-mist">{t.neighborsText}</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">{context.neighbors.map((neighbor) => <Link key={neighbor.type} href={href(locale, `/types/${neighbor.type}`)} className="text-link min-h-11">{t.crumb(neighbor.type, typeMeta(neighbor.type, locale).name)} · {neighbor.dimension.split("").join(" / ")}</Link>)}</div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">{context.neighbors.map((neighbor) => <Link key={neighbor.type} href={href(locale, `/types/${neighbor.type}`)} className="text-link min-h-11" {...trackAttrs("view_type", "type_context")}>{t.crumb(neighbor.type, typeMeta(neighbor.type, locale).name)} · {neighbor.dimension.split("").join(" / ")}</Link>)}</div>
         </section>
         <section className="mx-4 bg-night-deep px-[27px] py-8 text-[#eff3f4] md:mx-0 md:flex md:items-center md:justify-between md:gap-10 md:p-10 xl:px-[60px] xl:py-14">
           <div>
@@ -134,18 +135,18 @@ export default async function TypePage({ params }: Params) {
           </div>
           <div className="mt-[30px] flex flex-col gap-4 md:mt-0 md:w-[300px]">
             <div className="hidden md:block">
-              <PrimaryButton href={href(locale, "/quiz")} light>
+              <PrimaryButton href={href(locale, "/quiz")} light {...trackAttrs("start_quiz", "page_cta")}>
                 {t.start}
               </PrimaryButton>
             </div>
-            <Link href={href(locale, "/types")} className="text-link text-[12px] text-[#d8e0e2]">
+            <Link href={href(locale, "/types")} className="text-link text-[12px] text-[#d8e0e2]" {...trackAttrs("view_types", "page_cta")}>
               {t.allTypes} <ArrowUpRight size={15} />
             </Link>
           </div>
         </section>
       </main>
       <Dock>
-        <PrimaryButton href={href(locale, "/quiz")}>{t.start}</PrimaryButton>
+        <PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "dock")}>{t.start}</PrimaryButton>
       </Dock>
       <JsonLd data={jsonLd} />
     </>

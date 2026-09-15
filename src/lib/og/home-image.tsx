@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { BrandLogo } from "@/components/brand/brand-logo";
+import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
 import type { Locale } from "@/lib/i18n/locale";
 import { OG_FONT_FAMILY, ogFonts, portraitDataUrl } from "@/lib/og/fonts";
 
@@ -24,13 +24,13 @@ const copy = {
 
 export async function homeOgImage(locale: Locale) {
   const t = copy[locale];
-  const [fonts, portrait] = await Promise.all([ogFonts(), portraitDataUrl()]);
+  const [fonts, portrait] = await Promise.all([ogFonts(), portraitDataUrl(locale)]);
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", background: "#edf2f3", color: "#171b1c", fontFamily: OG_FONT_FAMILY }}>
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: "72px 0 72px 84px", width: 660 }}>
           {/* Satori requires native SVG elements. */}
-          {BrandLogo({ width: 280 })}
+          {BrandLogo({ width: brandLogoWidth(locale, 280), locale })}
           <div style={{ marginTop: 56, fontSize: 14, letterSpacing: 2, color: "#627176" }}>{t.eyebrow}</div>
           <div style={{ marginTop: 22, fontSize: t.titleSize, lineHeight: 1.25, letterSpacing: -3, fontWeight: 500, display: "flex", flexDirection: "column" }}>
             {t.title.map((part) => (

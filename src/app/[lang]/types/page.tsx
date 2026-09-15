@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/site/app-header";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { JsonLd } from "@/components/seo/json-ld";
+import { trackAttrs } from "@/lib/analytics/events";
 import { appUrl } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
@@ -54,7 +55,7 @@ export default async function TypesPage() {
             const { name, line } = typeMeta(type, locale);
             return (
               <li key={type} className="bg-paper">
-                <Link href={href(locale, `/types/${type}`)} className="group flex h-full flex-col gap-3 px-4 py-6 md:px-6 md:py-8">
+                <Link href={href(locale, `/types/${type}`)} className="group flex h-full flex-col gap-3 px-4 py-6 md:px-6 md:py-8" {...trackAttrs("view_type", "type_grid")}>
                   <span className="text-[34px] leading-none font-medium tracking-[-0.055em] md:text-[40px]">{type}</span>
                   <span className="text-[12px] tracking-[0.08em] text-[#5c6a70]">{name}</span>
                   <span className="text-[11px] leading-[1.9] text-[#7d898e] whitespace-pre-line">{line}</span>
@@ -67,13 +68,13 @@ export default async function TypesPage() {
           })}
         </ul>
         <div className="mt-10 hidden md:block">
-          <PrimaryButton href={href(locale, "/quiz")} className="max-w-[246px]">
+          <PrimaryButton href={href(locale, "/quiz")} className="max-w-[246px]" {...trackAttrs("start_quiz", "page_cta")}>
             {t.start}
           </PrimaryButton>
         </div>
       </main>
       <Dock>
-        <PrimaryButton href={href(locale, "/quiz")}>{t.start}</PrimaryButton>
+        <PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "dock")}>{t.start}</PrimaryButton>
       </Dock>
       <JsonLd data={jsonLd} />
     </>

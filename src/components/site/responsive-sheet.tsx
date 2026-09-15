@@ -12,13 +12,14 @@ type Props = {
   title: string;
   description: string;
   children: ReactNode;
+  closeLabel?: string;
 };
 
 /**
  * Desktop (>720px): centered `.web-modal` dialog. Phone: `.bottom-sheet` drawer with a drag handle.
  * The server snapshot is "phone", so the first client render never flashes the wrong surface.
  */
-export function ResponsiveSheet({ open, onOpenChange, title, description, children }: Props) {
+export function ResponsiveSheet({ open, onOpenChange, title, description, children, closeLabel = "关闭" }: Props) {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
 
   if (isDesktop) {
@@ -32,7 +33,7 @@ export function ResponsiveSheet({ open, onOpenChange, title, description, childr
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            aria-label="关闭"
+            aria-label={closeLabel}
             className="absolute top-[21px] right-[18px] flex size-8 items-center justify-center text-[#6a7b81]"
           >
             <X size={20} />
@@ -53,7 +54,7 @@ export function ResponsiveSheet({ open, onOpenChange, title, description, childr
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          aria-label="关闭"
+          aria-label={closeLabel}
           className="absolute top-[27px] right-[14px] flex size-8 items-center justify-center text-[#6a7b81]"
         >
           <X size={20} />

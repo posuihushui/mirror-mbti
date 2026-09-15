@@ -81,7 +81,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     test("desktop modal stays centered and releases its overlay when closed", async ({ page }, testInfo) => {
       test.skip(testInfo.project.name === "mobile", "Phone sheets keep Vaul's native gesture motion.");
       await page.goto("/");
-      const trigger = page.getByRole("button", { name: "了解测试", exact: true });
+      const trigger = page.getByRole("button", { name: "关于这次探索", exact: true });
       for (let cycle = 0; cycle < 2; cycle++) {
         await trigger.click();
         const dialog = page.locator('[data-slot="dialog-content"]');

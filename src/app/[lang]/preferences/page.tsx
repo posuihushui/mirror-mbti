@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppHeader } from "@/components/site/app-header";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { JsonLd } from "@/components/seo/json-ld";
+import { trackAttrs } from "@/lib/analytics/events";
 import { appUrl } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
@@ -31,7 +32,7 @@ export default async function PreferencesPage() {
         <p className="mt-3 text-[13px] leading-[2]">{t.question(d.question)}</p>
       </section>)}
       {preferenceNotesFor(locale).map((note) => <section key={note.title} className="mt-7 border-t border-line pt-6"><h2 className="text-[20px]">{note.title}</h2><p className="mt-4 text-[13px] leading-[2] text-mist">{note.body}</p></section>)}
-      <div className="mt-8 flex flex-col gap-5"><PrimaryButton href={href(locale, "/quiz")}>{t.start}</PrimaryButton><Link href={href(locale, "/types")} className="text-link">{t.types}</Link></div>
+      <div className="mt-8 flex flex-col gap-5"><PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "page_cta")}>{t.start}</PrimaryButton><Link href={href(locale, "/types")} className="text-link" {...trackAttrs("view_types", "page_cta")}>{t.types}</Link></div>
     </main>
     <JsonLd data={breadcrumbJsonLd(appUrl(), [[siteCopy(locale).name, href(locale, "/")], [t.metaTitle, href(locale, "/preferences")]])} /></>;
 }

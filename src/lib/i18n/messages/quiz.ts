@@ -15,10 +15,6 @@ const zh = {
     resume: (count: number, name: string) => `继续 ${count} 题${name}`,
     start: (count: number, name: string) => `开始 ${count} 题${name}`,
     footnote: (price: string) => `各版本进度分别保存，可暂停、检查已答题或重新开始。预计用时为初步估计，跨版本分数不宜直接比较。测试与概览免费，完整报告 ¥${price} / 次。`,
-    navLabel: "测试帮助",
-    about: "测试说明",
-    preferences: "了解四维偏好",
-    help: "续答与订单帮助",
   },
   runner: {
     incomplete: "请先补全未回答的题目",
@@ -69,10 +65,6 @@ const en: typeof zh = {
     resume: (count: number, name: string) => `Continue ${count}-item ${name}`,
     start: (count: number, name: string) => `Start ${count}-item ${name}`,
     footnote: (price: string) => `Progress is saved per version, so you can pause, review answers or start over. Times are rough estimates, and scores across versions aren’t directly comparable. The test and overview are free; the full report is $${price} once.`,
-    navLabel: "Test help",
-    about: "About the test",
-    preferences: "The four preferences",
-    help: "Resume & order help",
   },
   runner: {
     incomplete: "Please answer the remaining questions first",

@@ -19,6 +19,11 @@ test.describe("English site", () => {
     expect(res.status()).toBe(200);
     const html = await res.text();
     expect(html).toContain('<html lang="en"');
+    // The English lockup reads "mirror | look within": wider artwork at the same glyph scale.
+    expect(html).toContain('viewBox="0 0 232 40"');
+    const zhHome = await (await request.get("/")).text();
+    expect(zhHome).toContain('viewBox="0 0 194 40"');
+    expect(zhHome).not.toContain('viewBox="0 0 232 40"');
     expect(html).toContain('hrefLang="zh-CN"');
     expect(html).toContain('hrefLang="en"');
 

@@ -1,6 +1,7 @@
 import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import type { Locale } from "@/lib/i18n/locale";
 
 type OgFont = { name: string; data: ArrayBuffer; weight: 400 | 500 | 700; style: "normal" };
 
@@ -39,9 +40,10 @@ export async function ogFonts(): Promise<OgFont[]> {
 
 export const OG_FONT_FAMILY = 'Manrope, "Noto Sans SC", sans-serif';
 
-export async function portraitDataUrl(): Promise<string | null> {
+/** The home portrait for a locale; the Chinese home has its own (see `app/[lang]/page.tsx`). */
+export async function portraitDataUrl(locale: Locale): Promise<string | null> {
   try {
-    const buf = await readFile(path.join(process.cwd(), "src", "assets", "portrait.jpg"));
+    const buf = await readFile(path.join(process.cwd(), "src", "assets", locale === "zh" ? "portrait-zh.jpg" : "portrait.jpg"));
     return `data:image/jpeg;base64,${buf.toString("base64")}`;
   } catch {
     return null;

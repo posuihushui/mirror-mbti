@@ -6,6 +6,8 @@ import { cn } from "cn";
 import { toast } from "sonner";
 import { createWalletClient, custom, erc20Abi, getAddress, UserRejectedRequestError } from "viem";
 import { Button } from "@/components/ui/button";
+import { paymentTypeOf, reportCommerce } from "@/lib/analytics/commerce";
+import { track } from "@/lib/analytics/track";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cryptoMessages as t } from "@/lib/i18n/messages/crypto";
 import { centsToTokenUnits } from "@/lib/payments/crypto/amounts";
@@ -26,10 +28,13 @@ async function api<T>(input: string, init?: RequestInit): Promise<T> {
   return json.data;
 }
 
+/** Wallet names come from EIP-6963 announcements; GA keeps parameter values short. */
+const walletName = (wallet: DiscoveredWallet) => wallet.info.name.slice(0, 40);
+
 type Props = {
   resultId: string;
   networks: CryptoNetwork[];
-  onPaid: (orderId: string) => void;
+  onPaid: (order: OrderView) => void;
   onAlreadyUnlocked: () => void;
 };
 
@@ -47,6 +52,7 @@ export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }:
   const [expired, setExpired] = useState(false);
   const pollRef = useRef<number | null>(null);
   const unmounted = useRef(false);
+  const expiredOrders = useRef(new Set<string>());
 
   useEffect(() => {
     unmounted.current = false;
@@ -56,15 +62,20 @@ export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }:
     };
   }, []);
 
-  const poll = (orderId: string) => {
+  const poll = (orderId: string, orderNetwork: CryptoNetwork) => {
     if (pollRef.current) window.clearTimeout(pollRef.current);
     const tick = async () => {
       if (unmounted.current) return;
       try {
         const order = await api<OrderView>(`/api/orders/${orderId}`);
-        if (order.status === "paid") return onPaid(order.id);
+        if (order.status === "paid") return onPaid(order);
         // Expired crypto orders are still checked server-side for a day, so keep polling.
-        setExpired(order.status !== "created");
+        const closed = order.status !== "created";
+        if (closed && !expiredOrders.current.has(order.id)) {
+          expiredOrders.current.add(order.id);
+          track("crypto_order_expired", { network: orderNetwork });
+        }
+        setExpired(closed);
       } catch {
         /* transient: keep polling */
       }
@@ -75,23 +86,26 @@ export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }:
 
   const choose = async (next: CryptoNetwork) => {
     if (creating) return;
+    if (next !== network) track("crypto_network_select", { network: next });
     setNetwork(next);
     setToken(0);
     setExpired(false);
     const existing = orders[next];
     if (existing) {
-      poll(existing.id);
+      poll(existing.id, next);
       return;
     }
     setCreating(true);
     try {
       const order = await api<OrderView>("/api/orders", { method: "POST", body: JSON.stringify({ resultId, network: next }) });
       if (unmounted.current) return;
+      track("add_payment_info", { ...reportCommerce(order.currency, order.amountFen), payment_mode: order.provider, payment_type: paymentTypeOf(order) });
       setOrders((previous) => ({ ...previous, [next]: order }));
-      poll(order.id);
+      poll(order.id, next);
     } catch (e) {
       const err = e as Error & { code?: string };
       if (err.code === "ALREADY_UNLOCKED") return onAlreadyUnlocked();
+      track("payment_error", { payment_mode: "crypto", error_code: err.code ?? err.name });
       toast(err.message || t.createFailed);
       setNetwork(null);
     } finally {
@@ -101,6 +115,12 @@ export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }:
 
   const order = network ? orders[network] : undefined;
   const payload = order?.payload;
+
+  const selectToken = (index: number) => {
+    const symbol = payload && "tokens" in payload ? payload.tokens[index]?.symbol : undefined;
+    if (network && symbol && index !== token) track("crypto_token_select", { network, token_symbol: symbol });
+    setToken(index);
+  };
 
   return (
     <div className="mt-[18px] md:mt-[25px]">
@@ -127,9 +147,9 @@ export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }:
           {t.creating}
         </p>
       )}
-      {payload?.kind === "solana" && <SolanaPanel payload={payload} token={token} onToken={setToken} compact={compact} />}
+      {payload?.kind === "solana" && <SolanaPanel payload={payload} token={token} onToken={selectToken} compact={compact} />}
       {payload?.kind === "ethereum" && order && (
-        <EthereumPanel key={order.id} order={order} payload={payload} token={token} onToken={setToken} onOrder={(next) => setOrders((previous) => ({ ...previous, ethereum: next }))} />
+        <EthereumPanel key={order.id} order={order} payload={payload} token={token} onToken={selectToken} onOrder={(next) => setOrders((previous) => ({ ...previous, ethereum: next }))} />
       )}
       {order && (
         <>
@@ -160,12 +180,14 @@ function TokenToggle({ symbols, value, onChange }: { symbols: string[]; value: n
   );
 }
 
-function CopyField({ value, label }: { value: string; label?: string }) {
+function CopyField({ value, label, target }: { value: string; label?: string; target: "order_id" | "recipient_address" }) {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(value);
+      track("copy_to_clipboard", { copy_target: target, outcome: "copied" });
       toast(t.copied);
     } catch {
+      track("copy_to_clipboard", { copy_target: target, outcome: "failed" });
       toast(t.copyFailed);
     }
   };
@@ -193,7 +215,7 @@ function SolanaPanel({ payload, token, onToken, compact }: { payload: SolanaPayl
           <p className="text-center text-[10px] text-[#7e8d93]">{t.solana.scan}</p>
         </div>
       )}
-      <a href={current.url} className="pill mt-4 min-h-[54px]">
+      <a href={current.url} className="pill mt-4 min-h-[54px]" onClick={() => track("crypto_wallet_open", { network: "solana", token_symbol: current.symbol })}>
         {t.solana.open}
         <ArrowSquareOut size={18} />
       </a>
@@ -211,9 +233,12 @@ function EthereumPanel({ order, payload, token, onToken, onOrder }: { order: Ord
   const current = payload.tokens[token] ?? payload.tokens[0];
   const busy = step !== "idle";
 
-  const failed = (e: unknown) => {
+  const failed = (e: unknown, stage: { connect: DiscoveredWallet } | "pay") => {
     setStep("idle");
     const rejected = e instanceof UserRejectedRequestError || (e as { code?: number }).code === 4001;
+    const outcome = rejected ? "rejected" : "failed";
+    if (stage === "pay") track("crypto_transfer_submit", { token_symbol: current.symbol, outcome });
+    else track("crypto_wallet_connect", { wallet_name: walletName(stage.connect), outcome });
     toast(rejected ? t.ethereum.rejected : (e as { code?: string }).code ? (e as Error).message : t.ethereum.failed);
   };
 
@@ -228,6 +253,7 @@ function EthereumPanel({ order, payload, token, onToken, onOrder }: { order: Ord
         toast(t.ethereum.wrongChain);
       }
       if (payload.payer && address.toLowerCase() !== payload.payer) {
+        track("crypto_wallet_connect", { wallet_name: walletName(next), outcome: "wrong_wallet" });
         toast(t.ethereum.otherWallet);
         setStep("idle");
         return;
@@ -235,15 +261,17 @@ function EthereumPanel({ order, payload, token, onToken, onOrder }: { order: Ord
       setWallet(next);
       setAccount(address);
       if (payload.payer) {
+        track("crypto_wallet_connect", { wallet_name: walletName(next), outcome: "connected" });
         setStep("idle");
         return;
       }
       setStep("signing");
       const signature = await client.signMessage({ account: address, message: payload.challenge });
       onOrder(await api<OrderView>(`/api/orders/${order.id}/payer`, { method: "POST", body: JSON.stringify({ address, signature }) }));
+      track("crypto_wallet_connect", { wallet_name: walletName(next), outcome: "signed" });
       setStep("idle");
     } catch (e) {
-      failed(e);
+      failed(e, { connect: next });
     }
   };
 
@@ -261,9 +289,10 @@ function EthereumPanel({ order, payload, token, onToken, onOrder }: { order: Ord
         args: [getAddress(payload.recipient), centsToTokenUnits(order.amountFen, current.decimals)],
       });
       setTxHash(hash);
+      track("crypto_transfer_submit", { token_symbol: current.symbol, outcome: "sent" });
       setStep("idle");
     } catch (e) {
-      failed(e);
+      failed(e, "pay");
     }
   };
 
@@ -315,7 +344,7 @@ function EthereumPanel({ order, payload, token, onToken, onOrder }: { order: Ord
             </p>
           )}
           <p className="mt-4 text-[11px] leading-[1.9] text-mist">{t.ethereum.manual(payload.amount, current.symbol)}</p>
-          <CopyField value={payload.recipient} />
+          <CopyField value={payload.recipient} target="recipient_address" />
         </div>
       )}
     </div>
@@ -339,14 +368,14 @@ function WalletLinks({ orderId }: { orderId: string }) {
       <p className="text-[12px] leading-[1.9] text-mist">{t.ethereum.noWallet}</p>
       <div className="mt-2 flex flex-col">
         {links.map(([name, link]) => (
-          <a key={name} href={link} className="text-link min-h-11 text-[13px]">
+          <a key={name} href={link} className="text-link min-h-11 text-[13px]" onClick={() => track("crypto_wallet_link", { wallet_name: name })}>
             {name}
             <ArrowSquareOut size={15} />
           </a>
         ))}
       </div>
       <p className="mt-3 text-[11px] leading-[1.9] text-mist">{t.ethereum.handoff}</p>
-      <CopyField value={orderId} label={t.ethereum.orderNumber} />
+      <CopyField value={orderId} label={t.ethereum.orderNumber} target="order_id" />
     </div>
   );
 }

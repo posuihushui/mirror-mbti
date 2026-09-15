@@ -70,7 +70,16 @@ test.describe("report history and order recovery", () => {
 
     await page.evaluate(() => localStorage.clear());
     await page.goto("/");
-    const myReports = page.getByRole("link", { name: /我的报告/ }).filter({ visible: true }).first();
+    // Phones keep 我的报告 inside the header's 更多 menu; open it once the button is hydrated.
+    const header = page.getByRole("navigation", { name: "主导航" }).filter({ visible: true });
+    const more = header.getByRole("button", { name: "更多", exact: true });
+    const myReports = header.getByRole("link", { name: /我的报告/ }).first();
+    if (await more.isVisible()) {
+      await expect(async () => {
+        if ((await more.getAttribute("aria-expanded")) !== "true") await more.click();
+        await expect(myReports).toBeVisible({ timeout: 1000 });
+      }).toPass();
+    }
     await expect(myReports).toHaveAttribute("href", "/my/report");
     await myReports.click();
     await expect(page).toHaveURL(/\/my\/report$/);

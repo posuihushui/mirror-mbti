@@ -29,7 +29,14 @@ const nextConfig: NextConfig = {
     globalNotFound: true,
   },
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      ...["/s/:path*", "/t/:path*", "/compare/:path*", "/my/shares/:path*", "/en/s/:path*", "/en/t/:path*", "/en/compare/:path*", "/en/my/shares/:path*", "/zh/s/:path*", "/zh/t/:path*", "/zh/compare/:path*", "/zh/my/shares/:path*"].map((source) => ({ source, headers: [
+        { key: "Referrer-Policy", value: "no-referrer" },
+        { key: "Cache-Control", value: "private, no-store" },
+        { key: "X-Robots-Tag", value: "noindex, nofollow" },
+      ] })),
+    ];
   },
 };
 

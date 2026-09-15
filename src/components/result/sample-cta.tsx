@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { PrimaryButton } from "@/components/site/primary-button";
+import { trackAttrs } from "@/lib/analytics/events";
 import { href } from "@/lib/i18n/locale";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { getLocale } from "@/lib/i18n/server";
@@ -43,12 +44,12 @@ export async function SampleCta({ priceLabel, secondary }: Props) {
           ))}
         </div>
         <div className="mt-[30px] hidden md:block">
-          <PrimaryButton href={href(locale, "/quiz")} light>
+          <PrimaryButton href={href(locale, "/quiz")} light {...trackAttrs("start_quiz", "sample_cta")}>
             {t.start}
           </PrimaryButton>
         </div>
         {secondary && (
-          <Link href={secondary.href} className="text-link mt-[18px] text-[12px] text-[#d8e0e2]">
+          <Link href={secondary.href} className="text-link mt-[18px] text-[12px] text-[#d8e0e2]" {...trackAttrs("read_sample_report", "sample_cta")}>
             {secondary.label}
             <ArrowUpRight size={15} />
           </Link>

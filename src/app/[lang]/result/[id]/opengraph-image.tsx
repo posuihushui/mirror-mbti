@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { connection } from "next/server";
-import { BrandLogo } from "@/components/brand/brand-logo";
+import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
 import type { Locale } from "@/lib/i18n/locale";
 import { OG_FONT_FAMILY, ogFonts } from "@/lib/og/fonts";
 import { OgRadar } from "@/lib/og/radar";
@@ -30,7 +30,7 @@ export default async function ResultOgImage({ params }: { params: Promise<{ lang
       <div style={{ width: "100%", height: "100%", display: "flex", background: "#edf2f3", color: "#171b1c", fontFamily: OG_FONT_FAMILY, padding: "64px 84px" }}>
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: 640 }}>
           {/* Satori requires native SVG elements. */}
-          {BrandLogo({ width: 240 })}
+          {BrandLogo({ width: brandLogoWidth(locale, 240), locale })}
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 14, letterSpacing: 3, color: "#738087" }}>{sample ? copy[locale].sample : copy[locale].own}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 24, marginTop: 20 }}>

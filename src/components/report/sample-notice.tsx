@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { trackAttrs } from "@/lib/analytics/events";
 import { href } from "@/lib/i18n/locale";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { getLocale } from "@/lib/i18n/server";
@@ -16,7 +17,7 @@ export async function SampleNotice() {
           {t.body}
         </p>
       </div>
-      <Link href={href(locale, "/quiz")} className="text-link shrink-0 text-[12px] whitespace-nowrap">
+      <Link href={href(locale, "/quiz")} className="text-link shrink-0 text-[12px] whitespace-nowrap" {...trackAttrs("start_quiz", "sample_notice")}>
         {t.start}
         <ArrowUpRight size={15} />
       </Link>

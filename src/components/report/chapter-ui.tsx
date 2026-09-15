@@ -4,6 +4,8 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react";
 import { cn } from "cn";
+import { trackAttrs } from "@/lib/analytics/events";
+import { track } from "@/lib/analytics/track";
 import { href } from "@/lib/i18n/locale";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { reportMessages } from "@/lib/i18n/messages/report";
@@ -30,6 +32,12 @@ export function ChapterPanel({ index, children }: { index: number; children: Rea
   );
 }
 
+/** Switches chapter; a view is recorded only when the reader lands on a different one. */
+function openChapter(index: number, current: number, method: "tab" | "sidebar" | "next") {
+  setChapter(index);
+  if (index !== current) track("report_chapter_view", { chapter_number: index + 1, nav_method: method });
+}
+
 /** Desktop sidebar chapter list. */
 export function ChapterSidebarNav() {
   const chapter = useChapter();
@@ -40,7 +48,7 @@ export function ChapterSidebarNav() {
         <button
           key={label}
           type="button"
-          onClick={() => setChapter(i)}
+          onClick={() => openChapter(i, chapter, "sidebar")}
           aria-current={chapter === i ? "true" : undefined}
           className={cn("chapter-tab-motion flex min-h-[54px] items-center gap-4 border-b border-line text-left text-[12px]", chapter === i && "font-semibold")}
         >
@@ -71,7 +79,7 @@ export function ChapterTabs() {
           role="tab"
           aria-selected={chapter === i}
           aria-controls={chapterPanelId(i)}
-          onClick={() => setChapter(i)}
+          onClick={() => openChapter(i, chapter, "tab")}
           className={cn("chapter-tab-motion py-[9px] text-[10px] leading-[1.8] whitespace-nowrap text-[#7f949c]", chapter === i && "text-[#e1c4aa]")}
         >
           {label}
@@ -91,12 +99,12 @@ export function ChapterFooterNav({ sample = false }: { sample?: boolean }) {
   return (
     <div className="mt-[38px] border-t border-night-line pt-[21px] text-right">
       {last ? (
-        <Link href={href(locale, sample ? "/quiz" : "/")} className="text-link text-[11px] text-[#e0e7ea]">
+        <Link href={href(locale, sample ? "/quiz" : "/")} className="text-link text-[11px] text-[#e0e7ea]" {...trackAttrs(sample ? "start_quiz" : "home", "report_closing")}>
           {sample ? t.closingSample : t.closing}
           <ArrowUpRight size={17} />
         </Link>
       ) : (
-        <button type="button" onClick={() => setChapter(chapter + 1)} className="text-link text-[11px] text-[#e0e7ea]">
+        <button type="button" onClick={() => openChapter(chapter + 1, chapter, "next")} className="text-link text-[11px] text-[#e0e7ea]">
           {t.next(labels[chapter + 1])}
           <ArrowRight size={17} />
         </button>
@@ -124,7 +132,10 @@ export function StrengthSwitch({ strengths, blindspots }: { strengths: ReactNode
             type="button"
             role="tab"
             aria-selected={strength === value}
-            onClick={() => setStrength(value)}
+            onClick={() => {
+              if (strength !== value) track("report_tab_switch", { tab: value ? "strengths" : "blindspots" });
+              setStrength(value);
+            }}
             className={cn(
               "strength-tab-motion relative min-h-[37px] min-w-0 flex-1 rounded-[50px] text-[11px] text-[#9aaab0] md:text-[12px]",
               strength === value && "text-[#222a2d]",

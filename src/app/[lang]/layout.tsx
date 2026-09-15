@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { lang } from "next/root-params";
 import { Toaster } from "@/components/ui/sonner";
+import { PageViews } from "@/components/analytics/page-views";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteOverlays } from "@/components/site/site-overlays";
 import { priceLabelFor } from "@/lib/env";
@@ -97,6 +98,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
         <LocaleProvider locale={locale}>
           {children}
           <Suspense fallback={null}>
+            <PageViews />
             <SiteOverlays priceLabel={priceLabelFor(locale)} />
           </Suspense>
           <Toaster />

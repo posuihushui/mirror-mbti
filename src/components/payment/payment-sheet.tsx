@@ -9,6 +9,9 @@ import { ResponsiveSheet } from "@/components/site/responsive-sheet";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { Button } from "@/components/ui/button";
 import { OrderReceipt } from "@/components/payment/order-receipt";
+import { currencyFor, paymentTypeOf, priceLabelToMinor, reportCommerce } from "@/lib/analytics/commerce";
+import { trackAttrs } from "@/lib/analytics/events";
+import { track, trackPurchase } from "@/lib/analytics/track";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { href } from "@/lib/i18n/locale";
 import { useLocale } from "@/lib/i18n/locale-provider";
@@ -89,6 +92,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
   const [orderId, setOrderId] = useState<string | null>(null);
   const cancelledRef = useRef(false);
   const pollRef = useRef<number | null>(null);
+  const checkoutTracked = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -96,6 +100,13 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
       if (pollRef.current) window.clearTimeout(pollRef.current);
     };
   }, []);
+
+  // Every opening of the sheet is a checkout, whether from the unlock button or a `?unlock=1` link.
+  useEffect(() => {
+    if (checkoutTracked.current) return;
+    checkoutTracked.current = true;
+    track("begin_checkout", { ...reportCommerce(currencyFor(locale), priceLabelToMinor(priceLabel)), payment_mode: mode });
+  }, [locale, priceLabel, mode]);
 
   function stopPolling() {
     if (pollRef.current) {
@@ -110,14 +121,24 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
     onUnlocked();
   };
 
+  const purchased = (order: OrderView) => {
+    void trackPurchase(order);
+    succeed();
+  };
+
+  const failed = (errorCode: string) => {
+    track("payment_error", { payment_mode: mode, error_code: errorCode });
+    setState("cancelled");
+  };
+
   const pollUntilPaid = (orderId: string) => {
     const tick = async () => {
       if (cancelledRef.current) return;
       try {
         const order = await api<OrderView>(`/api/orders/${orderId}`);
-        if (order.status === "paid") return succeed();
+        if (order.status === "paid") return purchased(order);
         if (order.status === "expired" || order.status === "cancelled" || order.status === "failed") {
-          setState("cancelled");
+          failed(`ORDER_${order.status.toUpperCase()}`);
           return;
         }
       } catch {
@@ -133,8 +154,8 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
     const remaining = MIN_PROCESSING_MS - (Date.now() - startedAt);
     if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));
     if (cancelledRef.current) return;
-    if (paid.status === "paid") succeed();
-    else setState("cancelled");
+    if (paid.status === "paid") purchased(paid);
+    else failed(`ORDER_${paid.status.toUpperCase()}`);
   };
 
   const runWeChat = (order: OrderView, payload: PaymentPayload) => {
@@ -142,12 +163,15 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
       const bridge = window.WeixinJSBridge;
       if (!bridge) {
         toast(t.openInWeChat);
-        setState("cancelled");
+        failed("NO_WEIXIN_BRIDGE");
         return;
       }
       bridge.invoke("getBrandWCPayRequest", payload.params, (res) => {
         if (res.err_msg === "get_brand_wcpay_request:ok") pollUntilPaid(order.id);
-        else setState("cancelled");
+        else if (res.err_msg === "get_brand_wcpay_request:cancel") {
+          track("payment_cancel", { payment_mode: mode, stage: "wechat_jsapi" });
+          setState("cancelled");
+        } else failed("JSAPI_FAIL");
       });
       return;
     }
@@ -157,10 +181,11 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
       return;
     }
     if (payload.kind === "h5") {
+      track("payment_redirect", { payment_mode: mode, target: "wechat_h5" });
       window.location.href = payload.mwebUrl;
       return;
     }
-    setState("cancelled");
+    failed("UNSUPPORTED_PAYLOAD");
   };
 
   const pay = async () => {
@@ -172,12 +197,14 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
       const order = await api<OrderView>("/api/orders", { method: "POST", body: JSON.stringify({ resultId }) });
       if (cancelledRef.current) return;
       setOrderId(order.id);
+      track("add_payment_info", { ...reportCommerce(order.currency, order.amountFen), payment_mode: order.provider, payment_type: paymentTypeOf(order) });
       if (order.provider === "mock") await runMock(order, startedAt);
       else if (order.payload) runWeChat(order, order.payload);
-      else setState("cancelled");
+      else failed("NO_PAYLOAD");
     } catch (e) {
       const err = e as Error & { code?: string };
       if (err.code === "OPENID_REQUIRED") {
+        track("payment_redirect", { payment_mode: mode, target: "wechat_oauth" });
         const back = `${window.location.pathname}?unlock=1`;
         // The route handler 302s to open.weixin.qq.com, so this must be a full navigation.
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination
@@ -188,12 +215,14 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
         succeed();
         return;
       }
+      track("payment_error", { payment_mode: mode, error_code: err.code ?? err.name });
       toast(err.message || t.payFailed);
       setState("ready");
     }
   };
 
   const cancel = () => {
+    track("payment_cancel", { payment_mode: mode, stage: state === "processing" ? "processing" : "before_order" });
     if (state === "processing") {
       cancelledRef.current = true;
       stopPolling();
@@ -216,11 +245,11 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
           <p className="eyebrow text-[9px] tracking-[0.16em] text-[#8a9a9c]">READY FOR YOU</p>
           <h3 className="mt-[25px] mb-[18px] text-[26px] leading-[1.5] font-normal whitespace-pre-line">{t.readyHeading}</h3>
           <p className="text-[11px] text-[#7e8b91]">{mode === "mock" ? t.demoSuccess : t.paidSuccess}</p>
-          <PrimaryButton className="mt-[35px]" onClick={onRead}>
+          <PrimaryButton className="mt-[35px]" onClick={onRead} {...trackAttrs("read_report", "payment_success")}>
             {t.startReading}
           </PrimaryButton>
           {orderId && <div className="mt-6 border-t border-line pt-5"><OrderReceipt orderId={orderId} /></div>}
-          <Link href={href(locale, "/my/report")} prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center">{t.allRecords}</Link>
+          <Link href={href(locale, "/my/report")} prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center" {...trackAttrs("my_report", "payment_success")}>{t.allRecords}</Link>
         </div>
       ) : (
         <div>
@@ -246,9 +275,9 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
             <CryptoPayment
               resultId={resultId}
               networks={networks}
-              onPaid={(id) => {
-                setOrderId(id);
-                succeed();
+              onPaid={(order) => {
+                setOrderId(order.id);
+                purchased(order);
               }}
               onAlreadyUnlocked={succeed}
             />
@@ -298,7 +327,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
           </button>
           <p className="mt-[6px] text-center text-[9px] text-[#92a1a6]">{t.oneTime}</p>
           <p className="mt-3 text-[12px] leading-[1.9] text-mist">{t.keepOrder}</p>
-          <Link href={href(locale, "/help")} className="text-link mt-2 min-h-11">{t.help}</Link>
+          <Link href={href(locale, "/help")} className="text-link mt-2 min-h-11" {...trackAttrs("view_help", "payment_sheet")}>{t.help}</Link>
         </div>
       )}
     </>

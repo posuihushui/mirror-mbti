@@ -3,18 +3,20 @@ import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
+import type { TrackAttrs } from "@/lib/analytics/events";
 
 type ButtonProps = Omit<ComponentProps<typeof Button>, "variant" | "children" | "asChild">;
 
-type Props = ButtonProps & {
-  children: ReactNode;
-  light?: boolean;
-  /** Render as a `<Link>`; usable from Server Components. */
-  href?: string;
-  prefetch?: boolean;
-};
+type Props = ButtonProps &
+  Partial<TrackAttrs> & {
+    children: ReactNode;
+    light?: boolean;
+    /** Render as a `<Link>`; usable from Server Components. */
+    href?: string;
+    prefetch?: boolean;
+  };
 
-/** `.primary` pill with the trailing arrow. */
+/** `.primary` pill with the trailing arrow. Spread `trackAttrs(...)` to count clicks as `cta_click`. */
 export function PrimaryButton({ children, light = false, href, prefetch, className, ...props }: Props) {
   const variant = light ? "pillLight" : "pill";
   const content = (
@@ -26,7 +28,7 @@ export function PrimaryButton({ children, light = false, href, prefetch, classNa
   if (href) {
     return (
       <Button variant={variant} className={cn(className)} asChild>
-        <Link href={href} prefetch={prefetch} aria-label={props["aria-label"]}>
+        <Link href={href} prefetch={prefetch} aria-label={props["aria-label"]} data-track={props["data-track"]} data-track-location={props["data-track-location"]}>
           {content}
         </Link>
       </Button>

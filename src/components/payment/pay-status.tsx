@@ -1,14 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { OrderReceipt } from "@/components/payment/order-receipt";
+import { trackAttrs } from "@/lib/analytics/events";
+import { track, trackPurchase } from "@/lib/analytics/track";
 import { href } from "@/lib/i18n/locale";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { paymentMessages } from "@/lib/i18n/messages/payment";
 import type { OrderView } from "@/lib/payments/types";
+
+/** An order paid this recently is the buyer returning from WeChat H5, not a later visit to an old order. */
+const RECENT_PAYMENT_MS = 30 * 60 * 1000;
 
 /** Order recovery page body: polls while pending, then routes to the report. */
 export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLabel: string }) {
@@ -17,6 +22,21 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
   const messages = paymentMessages[locale];
   const t = messages.status;
   const [order, setOrder] = useState(initial);
+  const initialStatus = useRef(initial.status);
+  const viewed = useRef(false);
+
+  useEffect(() => {
+    if (viewed.current) return;
+    viewed.current = true;
+    track("pay_status_view", { payment_mode: initial.provider, order_status: initial.status });
+  }, [initial.provider, initial.status]);
+
+  useEffect(() => {
+    if (order.status !== "paid") return;
+    const watched = initialStatus.current === "created";
+    const recent = order.paidAt !== null && Date.now() - Date.parse(order.paidAt) < RECENT_PAYMENT_MS;
+    if (watched || recent) void trackPurchase(order);
+  }, [order]);
 
   useEffect(() => {
     if (order.status !== "created") return;
@@ -64,9 +84,9 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
       )}
       <div className="mt-8">
         {order.status === "paid" ? (
-          <PrimaryButton onClick={() => router.push(href(locale, `/report/${order.resultId}`))}>{t.readFull}</PrimaryButton>
+          <PrimaryButton onClick={() => router.push(href(locale, `/report/${order.resultId}`))} {...trackAttrs("read_report", "pay_status")}>{t.readFull}</PrimaryButton>
         ) : (
-          <PrimaryButton href={href(locale, `/result/${order.resultId}${pending ? "" : "?unlock=1"}`)} light={pending}>
+          <PrimaryButton href={href(locale, `/result/${order.resultId}${pending ? "" : "?unlock=1"}`)} light={pending} {...trackAttrs(pending ? "back_to_result" : "retry_payment", "pay_status")}>
             {pending ? t.backToResult : t.retry}
           </PrimaryButton>
         )}
@@ -75,8 +95,8 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
         {t.note}
       </p>
       <div className="mt-6 border-t border-line pt-5"><OrderReceipt orderId={order.id} /></div>
-      <Link href={href(locale, "/my/report")} prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center">{t.allRecords}</Link>
-      <Link href={href(locale, "/help#contact")} className="text-link mt-3 flex min-h-11">{t.help}</Link>
+      <Link href={href(locale, "/my/report")} prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center" {...trackAttrs("my_report", "pay_status")}>{t.allRecords}</Link>
+      <Link href={href(locale, "/help#contact")} className="text-link mt-3 flex min-h-11" {...trackAttrs("view_help", "pay_status")}>{t.help}</Link>
     </div>
   );
 }

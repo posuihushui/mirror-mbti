@@ -1,0 +1,27 @@
+
+Running 14 tests using 4 workers
+
+(node:20285) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20283) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20286) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   4 [desktop] › tests/e2e/share.spec.ts:26:37 › share public capability privacy, ownership, retry, PNG and revoke zh (1.7s)
+  ✓   2 [mobile] › tests/e2e/share.spec.ts:26:37 › share public capability privacy, ownership, retry, PNG and revoke zh (1.8s)
+  ✓   1 [desktop] › tests/e2e/share-edges.spec.ts:6:49 › guide generated image, copy, all-balanced privacy and GA zh (2.3s)
+  ✓   5 [desktop] › tests/e2e/share.spec.ts:26:37 › share public capability privacy, ownership, retry, PNG and revoke en (1.5s)
+  ✓   3 [mobile] › tests/e2e/share-edges.spec.ts:6:49 › guide generated image, copy, all-balanced privacy and GA zh (3.5s)
+  ✓   6 [mobile] › tests/e2e/share.spec.ts:26:37 › share public capability privacy, ownership, retry, PNG and revoke en (1.9s)
+  ✓   7 [desktop] › tests/e2e/share-edges.spec.ts:6:49 › guide generated image, copy, all-balanced privacy and GA en (2.7s)
+  ✓   8 [desktop] › tests/e2e/share.spec.ts:84:5 › composer handles rapid selection, failed image and clipboard without losing published share (1.9s)
+  ✓  10 [mobile] › tests/e2e/share.spec.ts:84:5 › composer handles rapid selection, failed image and clipboard without losing published share (2.4s)
+  ✓  11 [desktop] › tests/e2e/share-edges.spec.ts:45:5 › creation can finish after closing; owner management recovers it once (1.7s)
+  ✓  12 [desktop] › tests/e2e/share-edges.spec.ts:57:5 › no signed cookie cannot authorize a write (6ms)
+  ✓   9 [mobile] › tests/e2e/share-edges.spec.ts:6:49 › guide generated image, copy, all-balanced privacy and GA en (3.4s)
+  ✓  13 [mobile] › tests/e2e/share-edges.spec.ts:45:5 › creation can finish after closing; owner management recovers it once (2.3s)
+  ✓  14 [mobile] › tests/e2e/share-edges.spec.ts:57:5 › no signed cookie cannot authorize a write (8ms)
+
+  14 passed (9.9s)

@@ -5,6 +5,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { PaymentSheet } from "@/components/payment/payment-sheet";
+import { trackAttrs } from "@/lib/analytics/events";
+import { track } from "@/lib/analytics/track";
 import { writeLastResultId } from "@/lib/client-storage";
 import { href } from "@/lib/i18n/locale";
 import { useLocale } from "@/lib/i18n/locale-provider";
@@ -54,28 +56,30 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
       router.replace(`${pathname}?unlock=1`, { scroll: false });
       return;
     }
+    track("checkout_close", { payment_mode: mode, completed: unlockedNow });
     router.replace(pathname, { scroll: false });
     // The server still holds the old `unlocked` prop after a successful payment; refresh it once the sheet closes.
     if (unlockedNow && !unlocked) router.refresh();
   };
 
   const dockClass = slot === "dock" ? "min-h-[51px] px-[17px] text-[12px]" : undefined;
+  const trackLocation = slot === "panel" ? "result_panel" : "dock";
   let button: React.ReactNode;
   if (isUnlocked) {
     button = (
-      <PrimaryButton href={readHref} light={slot === "panel"} className={dockClass}>
+      <PrimaryButton href={readHref} light={slot === "panel"} className={dockClass} {...trackAttrs("read_report", trackLocation)}>
         {slot === "panel" ? t.readFull : t.read}
       </PrimaryButton>
     );
   } else if (canPay) {
     button = (
-      <PrimaryButton onClick={() => setOpen(true)} light={slot === "panel"} className={dockClass}>
+      <PrimaryButton onClick={() => setOpen(true)} light={slot === "panel"} className={dockClass} {...trackAttrs("unlock_report", trackLocation)}>
         {t.unlock}
       </PrimaryButton>
     );
   } else {
     button = (
-      <PrimaryButton href={href(locale, "/quiz")} light={slot === "panel"} className={dockClass}>
+      <PrimaryButton href={href(locale, "/quiz")} light={slot === "panel"} className={dockClass} {...trackAttrs("start_quiz", trackLocation)}>
         {t.startMine}
       </PrimaryButton>
     );

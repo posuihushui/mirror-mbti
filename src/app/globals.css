@@ -217,7 +217,8 @@
 .number-current::before, .number-previous::before { content: attr(data-digit); }
 .number-previous { display: none; }
 
-[data-slot="dropdown-menu-trigger"][data-state="open"] .language-caret { transform: rotate(180deg); }
+[data-slot="dropdown-menu-trigger"][data-state="open"] .language-caret,
+.more-menu [aria-expanded="true"] .more-menu-caret { transform: rotate(180deg); }
 
 /* Motion enhances the existing, visible server HTML. Only the portrait and copy
    move; fixed docks and primary actions stay outside animated containers. */
@@ -348,7 +349,8 @@
     animation: dialog-exit 180ms ease-in forwards;
   }
 
-  [data-slot="dropdown-menu-content"][data-state="open"] {
+  [data-slot="dropdown-menu-content"][data-state="open"],
+  .more-menu-panel:not([hidden]) {
     animation: menu-enter var(--motion-duration-feedback) var(--motion-ease-out) backwards;
   }
 
@@ -356,7 +358,8 @@
     animation: detail-fade-out 120ms ease-in forwards;
   }
 
-  .language-caret {
+  .language-caret,
+  .more-menu-caret {
     transition: transform var(--motion-duration-feedback) var(--motion-ease-out);
   }
 }

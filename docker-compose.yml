@@ -22,6 +22,7 @@ services:
       target: builder
       args:
         APP_URL: ${APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID:-}
     command: ["npm", "run", "db:migrate"]
     environment:
       DATABASE_URL: postgres://mirror:mirror@db:5432/mirror
@@ -34,6 +35,7 @@ services:
       context: .
       args:
         APP_URL: ${APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID:-}
     env_file:
       - path: .env
         required: false

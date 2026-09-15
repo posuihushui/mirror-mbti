@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { AppHeader } from "@/components/site/app-header";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { JsonLd } from "@/components/seo/json-ld";
+import { trackAttrs } from "@/lib/analytics/events";
 import { priceLabelFor } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
@@ -51,18 +51,17 @@ export default async function AboutPage() {
             </div>
           ))}
         </dl>
-        <nav className="mt-6 flex flex-wrap gap-5 text-[12px]" aria-label={t.navLabel}><Link href={href(locale, "/preferences")} className="text-link">{t.preferences}</Link><Link href={href(locale, "/help")} className="text-link">{t.help}</Link></nav>
         <p className="mt-6 text-[10px] leading-[1.8] text-[#829094]">
           {t.disclaimer}
         </p>
         <div className="mt-6 hidden md:block">
-          <PrimaryButton href={href(locale, "/quiz")} className="max-w-[246px]">
+          <PrimaryButton href={href(locale, "/quiz")} className="max-w-[246px]" {...trackAttrs("start_quiz", "page_cta")}>
             {t.start}
           </PrimaryButton>
         </div>
       </main>
       <Dock>
-        <PrimaryButton href={href(locale, "/quiz")}>{t.start}</PrimaryButton>
+        <PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "dock")}>{t.start}</PrimaryButton>
       </Dock>
       <JsonLd data={faqJsonLd} />
       <span className="sr-only">{siteCopy(locale).name}</span>

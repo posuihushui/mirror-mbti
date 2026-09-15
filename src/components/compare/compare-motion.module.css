@@ -1,0 +1,6 @@
+.shell { opacity: 1; transform: none; }
+.panels { display: grid; grid-template-columns: minmax(0,1fr); gap: 20px; }
+.dot { width: 8px; height: 8px; border-radius: 999px; background: #c49473; justify-self: center; }
+@media (min-width: 721px) { .panels { grid-template-columns: minmax(0,1fr) 8px minmax(0,1fr); align-items: center; } }
+@media (prefers-reduced-motion: reduce) { .shell, .shell * { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; } }
+@media print { .shell, .shell * { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; } }

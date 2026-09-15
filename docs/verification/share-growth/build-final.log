@@ -1,0 +1,160 @@
+
+> mirror-mbti@0.1.0 build
+> next build
+
+▲ Next.js 16.3.4 (Turbopack)
+- Environments: .env
+✓ Running next.config.ts took 18ms
+- Cache Components enabled
+- Experiments (use with caution):
+  ✓ globalNotFound
+  ✓ inlineCss
+  · optimizePackageImports
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1507ms
+  Running TypeScript ...
+  Finished TypeScript in 3.3s ...
+  Collecting page data using 9 workers ...
+  Generating static pages using 9 workers (0/116) ...
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+  Generating static pages using 9 workers (29/116) 
+  Generating static pages using 9 workers (58/116) 
+  Generating static pages using 9 workers (87/116) 
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+✓ Generating static pages using 9 workers (116/116) in 1535ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /_not-found
+├   /[lang]
+│ ├ ◐ /[lang]
+│ ├ ○ /zh
+│ └ ○ /en
+├   /[lang]/about
+│ ├ ◐ /[lang]/about
+│ ├ ○ /zh/about
+│ └ ○ /en/about
+├   /[lang]/compare/[id]
+│ ├ ◐ /[lang]/compare/[id]
+│ ├ ◐ /zh/compare/[id]
+│ └ ◐ /en/compare/[id]
+├   /[lang]/help
+│ ├ ◐ /[lang]/help
+│ ├ ○ /zh/help
+│ └ ○ /en/help
+├   /[lang]/llms-full.txt
+│ └ ● /en/llms-full.txt
+├   /[lang]/llms.txt
+│ └ ● /en/llms.txt
+├   /[lang]/my/report
+│ ├ ◐ /[lang]/my/report
+│ ├ ◐ /zh/my/report
+│ └ ◐ /en/my/report
+├   /[lang]/my/shares
+│ ├ ◐ /[lang]/my/shares
+│ ├ ◐ /zh/my/shares
+│ └ ◐ /en/my/shares
+├ ƒ /[lang]/opengraph-image
+├   /[lang]/pay/[orderId]
+│ ├ ◐ /[lang]/pay/[orderId]
+│ ├ ◐ /zh/pay/[orderId]
+│ └ ◐ /en/pay/[orderId]
+├   /[lang]/preferences
+│ ├ ◐ /[lang]/preferences
+│ ├ ○ /zh/preferences
+│ └ ○ /en/preferences
+├   /[lang]/privacy
+│ ├ ◐ /[lang]/privacy
+│ ├ ○ /zh/privacy
+│ └ ○ /en/privacy
+├   /[lang]/quiz
+│ ├ ◐ /[lang]/quiz
+│ ├ ○ /zh/quiz
+│ └ ○ /en/quiz
+├   /[lang]/report/[id]
+│ ├ ◐ /[lang]/report/[id]
+│ ├ ◐ /zh/report/[id]
+│ ├ ○ /zh/report/sample
+│ └ ◐ [+2 more paths]
+├   /[lang]/result/[id]
+│ ├ ◐ /[lang]/result/[id]
+│ ├ ◐ /zh/result/[id]
+│ ├ ○ /zh/result/sample
+│ └ ◐ [+2 more paths]
+├ ƒ /[lang]/result/[id]/opengraph-image
+├   /[lang]/s/[token]
+│ ├ ◐ /[lang]/s/[token]
+│ ├ ◐ /zh/s/[token]
+│ └ ◐ /en/s/[token]
+├ ƒ /[lang]/s/[token]/image
+├ ƒ /[lang]/s/[token]/opengraph-image
+├   /[lang]/t/[token]
+│ ├ ◐ /[lang]/t/[token]
+│ ├ ◐ /zh/t/[token]
+│ └ ◐ /en/t/[token]
+├   /[lang]/t/[token]/join
+│ ├ ◐ /[lang]/t/[token]/join
+│ ├ ◐ /zh/t/[token]/join
+│ └ ◐ /en/t/[token]/join
+├   /[lang]/terms
+│ ├ ◐ /[lang]/terms
+│ ├ ○ /zh/terms
+│ └ ○ /en/terms
+├   /[lang]/types
+│ ├ ◐ /[lang]/types
+│ ├ ○ /zh/types
+│ └ ○ /en/types
+├   /[lang]/types/[type]
+│ ├ ◐ /[lang]/types/[type]
+│ ├ ◐ /zh/types/[type]
+│ ├ ○ /zh/types/INFJ
+│ └ ◐ [+32 more paths]
+├ ƒ /[lang]/types/[type]/opengraph-image
+├ ƒ /api/comparison-invitations
+├ ƒ /api/comparison-invitations/[id]
+├ ƒ /api/comparison-invitations/options
+├ ƒ /api/comparisons
+├ ƒ /api/comparisons/[id]
+├ ƒ /api/health
+├ ƒ /api/orders
+├ ƒ /api/orders/[id]
+├ ƒ /api/orders/[id]/mock-pay
+├ ƒ /api/orders/[id]/payer
+├ ƒ /api/payments/wechat/notify
+├ ƒ /api/reports/recover
+├ ƒ /api/results
+├ ƒ /api/results/[id]
+├ ƒ /api/results/[id]/answers
+├ ƒ /api/results/[id]/share-options
+├ ƒ /api/share-events
+├ ƒ /api/shares
+├ ƒ /api/shares/[id]
+├ ƒ /api/wechat/jsconfig
+├ ƒ /api/wechat/oauth
+├ ƒ /api/wechat/oauth/callback
+├ ○ /apple-icon
+├ ○ /icon
+├ ○ /llms-full.txt
+├ ○ /llms.txt
+├ ○ /manifest.webmanifest
+├ ƒ /opengraph-image
+├ ○ /robots.txt
+└ ○ /sitemap.xml
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)             prerendered as static content
+●  (SSG)                prerendered as static HTML (uses generateStaticParams)
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+ƒ  (Dynamic)            server-rendered on demand
+
+
+> mirror-mbti@0.1.0 postbuild
+> node scripts/prepare-standalone.mjs
+
+standalone ready: .next/standalone (static + public copied)

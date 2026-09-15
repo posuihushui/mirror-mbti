@@ -1,6 +1,8 @@
 import "server-only";
 import { and, desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { claimFirstReferral } from "@/lib/share-analytics";
+import { lockVisitor } from "@/lib/share-request";
 import { newResultId } from "@/lib/ids";
 import { calculate, sampleProfile, type Profile } from "@/lib/personality";
 import { getQuestionnaire, LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type QuestionnaireId } from "@/lib/questionnaires";
@@ -39,7 +41,11 @@ export async function createResult(visitorId: string, answers: number[], userAge
   const questionnaire = getQuestionnaire(questionnaireId)!;
   const version = { questionnaireId, questionCount: questionnaire.count, scoringVersion: SCORING_VERSION, reportVersion: REPORT_VERSION };
   const id = newResultId();
-  await db().insert(schema.results).values({
+  await db().transaction(async (tx) => {
+    await lockVisitor(tx, visitorId);
+    const [previous] = await tx.select({ id: schema.results.id }).from(schema.results).where(eq(schema.results.visitorId, visitorId)).limit(1);
+    const createdAt = new Date();
+    await tx.insert(schema.results).values({
     id,
     visitorId,
     answers,
@@ -48,6 +54,9 @@ export async function createResult(visitorId: string, answers: number[], userAge
     type: profile.type,
     values: profile.values,
     balanced: profile.balanced,
+    createdAt,
+    });
+    if (!previous) await claimFirstReferral(tx, visitorId, id, createdAt);
   });
   return { id, profile, sample: false, owner: true, unlocked: false, createdAt: new Date(), ...version };
 }

@@ -11,6 +11,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # APP_URL is baked into prerendered pages (canonical / OG / sitemap), so pass it at build time.
 ARG APP_URL=http://localhost:3000
 ENV APP_URL=$APP_URL
+# NEXT_PUBLIC_* values are inlined into client code at build time; leave empty to ship without GA.
+ARG NEXT_PUBLIC_GA_MEASUREMENT_ID=
+ENV NEXT_PUBLIC_GA_MEASUREMENT_ID=$NEXT_PUBLIC_GA_MEASUREMENT_ID
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

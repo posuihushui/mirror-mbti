@@ -3,6 +3,7 @@
 import { CaretDown, Check, GlobeSimple } from "@phosphor-icons/react";
 import { cn } from "cn";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { track } from "@/lib/analytics/track";
 import { htmlLang, localeNames, type Locale } from "@/lib/i18n/locale";
 
 /** `href` is resolved by `AppHeader` on the server; the current language has none. */
@@ -17,7 +18,6 @@ export function LanguageMenu({
   options,
   label,
   compact = false,
-  top = false,
   className,
 }: {
   current: Locale;
@@ -25,17 +25,19 @@ export function LanguageMenu({
   label: string;
   /** Phone header: short code, no globe. */
   compact?: boolean;
-  /** Align with a neighbouring text link whose label sits at the top of its 44px box (phone home header). */
-  top?: boolean;
   className?: string;
 }) {
   const name = localeNames[current];
   return (
-    <DropdownMenu modal={false}>
+    <DropdownMenu
+      modal={false}
+      onOpenChange={(open) => {
+        if (open) track("language_menu_open", { cta_location: compact ? "header_mobile" : "header_nav" });
+      }}
+    >
       <DropdownMenuTrigger
         className={cn(
-          "flex min-h-11 text-[12px] text-[#5d696d] outline-none hover:text-ink focus-visible:text-ink data-[state=open]:text-ink",
-          top ? "items-start" : "items-center",
+          "flex min-h-11 items-center text-[12px] text-[#5d696d] outline-none hover:text-ink focus-visible:text-ink data-[state=open]:text-ink",
           className,
         )}
       >
@@ -50,7 +52,7 @@ export function LanguageMenu({
         {options.map((option) =>
           option.href ? (
             <DropdownMenuItem key={option.locale} asChild>
-              <a href={option.href} hrefLang={htmlLang[option.locale]} lang={htmlLang[option.locale]}>
+              <a href={option.href} hrefLang={htmlLang[option.locale]} lang={htmlLang[option.locale]} onClick={() => track("language_switch", { language_to: option.locale })}>
                 {localeNames[option.locale].name}
               </a>
             </DropdownMenuItem>

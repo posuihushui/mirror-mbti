@@ -3,11 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import portrait from "@/assets/portrait.jpg";
+import portraitZh from "@/assets/portrait-zh.jpg";
 import { AppHeader } from "@/components/site/app-header";
 import { Dock } from "@/components/site/dock";
 import { OverlayButton } from "@/components/site/overlay-button";
 import { StartButton } from "@/components/site/start-button";
 import { JsonLd } from "@/components/seo/json-ld";
+import { trackAttrs } from "@/lib/analytics/events";
 import { appUrl, priceLabelFor } from "@/lib/env";
 import { href, htmlLang, type Locale } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
@@ -51,7 +53,7 @@ export default async function HomePage() {
         <section className="relative block h-svh min-h-[720px] bg-[#e8eff1] md:grid md:bg-transparent md:h-[calc(100dvh-228px)] md:max-h-[790px] md:min-h-[630px] md:grid-cols-[1.12fr_1fr] md:gap-5 2xl:grid-cols-[1.1fr_1fr]">
           <div className="absolute inset-x-0 top-[220px] bottom-0 overflow-hidden md:relative md:col-start-2 md:row-start-1 md:mt-7 md:inset-auto">
             <Image
-              src={portrait}
+              src={locale === "zh" ? portraitZh : portrait}
               alt={t.portraitAlt}
               fill
               priority
@@ -60,13 +62,17 @@ export default async function HomePage() {
               placeholder="blur"
               className="home-portrait-motion object-cover object-[48%_35%] md:object-[50%_50%]"
             />
-            <div className="absolute right-[30px] bottom-[27px] left-[30px] hidden items-center justify-between gap-[10px] text-[10px] tracking-[0.06em] text-[#c9d2d5] md:flex">
+            {/* Desktop captions sit on the photo; a short ink fade keeps them legible without dimming the portrait above. */}
+            <div aria-hidden className="absolute inset-x-0 bottom-0 hidden h-[160px] bg-[linear-gradient(to_top,#1217188c,#1217186b_30px,#12171826_90px,#12171800)] md:block" />
+            <div className="absolute right-[30px] bottom-[27px] left-[30px] hidden items-center justify-between gap-[10px] text-[10px] tracking-[0.06em] text-paper md:flex">
               <span className="text-[9px] tracking-[0.14em]">THE WORLD WITHIN.</span>
               <span>{t.closer}</span>
             </div>
           </div>
 
-          <div className="relative z-1 px-[27px] pt-[98px] md:col-start-1 md:row-start-1 md:self-center md:px-0 md:pt-5 md:pb-[45px]">
+          {/* Phones: the copy overlaps the portrait on short screens. A paper scrim hides the photo's top edge (220px),
+              eases to 82% under the last line and fades out over 120px so the portrait rises out of the page. */}
+          <div className="relative z-1 px-[27px] pt-[98px] before:absolute before:inset-x-0 before:top-0 before:-bottom-[120px] before:-z-1 before:bg-[linear-gradient(to_bottom,#e8eff1_220px,#e8eff1d1_calc(100%-120px),#e8eff19e_calc(100%-96px),#e8eff15c_calc(100%-68px),#e8eff124_calc(100%-36px),#e8eff100)] md:col-start-1 md:row-start-1 md:self-center md:px-0 md:pt-5 md:pb-[45px] md:before:hidden">
             <p className="eyebrow text-[8px] tracking-[0.17em] text-[#627176] md:text-[10px] md:tracking-[0.14em] md:text-ink">
               {t.eyebrow}
             </p>
@@ -94,8 +100,8 @@ export default async function HomePage() {
               ))}
             </div>
             <div className="mt-[41px] hidden grid-cols-[210px_1fr] items-center gap-x-4 gap-y-[13px] md:grid xl:grid-cols-[246px_1fr] xl:gap-x-7 xl:gap-y-3">
-              <StartButton className="min-h-[58px]" />
-              <Link href={href(locale, "/result/sample")} className="text-link">
+              <StartButton className="min-h-[58px]" trackLocation="hero" />
+              <Link href={href(locale, "/result/sample")} className="text-link" {...trackAttrs("view_sample_result", "hero")}>
                 {t.sampleLink} <ArrowUpRight size={16} />
               </Link>
               <p className="col-span-full mt-[2px] text-[10px] text-[#707c80]">{t.priceLine(price)}</p>
@@ -111,20 +117,15 @@ export default async function HomePage() {
               <b className="mr-[10px] font-normal text-[#8d9a9f]">0{i + 1}</b> {s}
             </div>
           ))}
-          <OverlayButton overlay="about" className="flex items-center gap-4 text-[11px]">
+          <OverlayButton overlay="about" className="flex items-center gap-4 text-[11px]" {...trackAttrs("open_about", "steps_bar")}>
             {t.aboutLink} <ArrowUpRight size={15} />
           </OverlayButton>
         </section>
-        <nav aria-label={t.exploreLabel} className="mb-[125px] flex flex-wrap gap-x-7 gap-y-4 border-t border-line px-[27px] py-7 text-[12px] md:mb-0 md:px-0">
-          <Link href={href(locale, "/preferences")} className="text-link">{t.preferences}</Link>
-          <Link href={href(locale, "/types")} className="text-link">{t.types}</Link>
-          <Link href={href(locale, "/about")} className="text-link">{t.about}</Link>
-          <Link href={href(locale, "/help")} className="text-link">{t.help}</Link>
-        </nav>
       </main>
 
-      <Dock variant="home">
-        <StartButton className="border-[3px] border-[#3e4343]" />
+      {/* The dock's price and sample link sit on the photo; a paper fade that deepens behind the button keeps them legible on any portrait. */}
+      <Dock variant="home" className="before:absolute before:inset-0 before:-z-1 before:bg-[linear-gradient(to_bottom,#e8eff100,#e8eff140_30px,#e8eff199_60px,#e8eff1d9_86px,#e8eff1eb)]">
+        <StartButton className="border-[3px] border-[#3e4343]" trackLocation="dock" />
         <div className="flex items-center justify-between px-[3px] pt-[11px] text-[8px] text-[#b7c4c7]">
           <span className="text-[9px] text-[#52656e]">{t.dockPrice(price)}</span>
           <PrimaryLink locale={locale} label={t.dockSample} />
@@ -137,7 +138,7 @@ export default async function HomePage() {
 
 function PrimaryLink({ locale, label }: { locale: Locale; label: string }) {
   return (
-    <Link href={href(locale, "/result/sample")} className="flex items-center gap-[3px] py-[2px] text-[9px] text-[#d6e1e5]">
+    <Link href={href(locale, "/result/sample")} className="flex items-center gap-[3px] py-[2px] text-[9px] text-[#52656e]" {...trackAttrs("view_sample_result", "dock")}>
       {label}
       <ArrowUpRight size={12} />
     </Link>

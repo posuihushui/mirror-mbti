@@ -34,6 +34,7 @@ const schema = z.object({
   WECHAT_PAY_PUBLIC_KEY_ID: z.string().optional(),
   WECHAT_PAY_PUBLIC_KEY: z.string().optional(),
   WECHAT_PAY_NOTIFY_URL: z.string().optional(),
+  WECHAT_SHARE_ENABLED: z.enum(["true", "false"]).default("false"),
   WECHAT_MP_APPID: z.string().optional(),
   WECHAT_MP_SECRET: z.string().optional(),
 });
