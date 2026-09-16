@@ -242,7 +242,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
       {state === "success" ? (
         <div className="pt-[22px] pb-[15px] text-center md:pt-[35px]">
           <Check size={44} weight="light" className="mx-auto mb-[22px] text-[#748777]" />
-          <p className="eyebrow text-[9px] tracking-[0.16em] text-[#8a9a9c]">READY FOR YOU</p>
+          <p className="eyebrow text-[9px] tracking-[0.16em] text-[#8a9a9c]">{t.readyEyebrow}</p>
           <h3 className="mt-[25px] mb-[18px] text-[26px] leading-[1.5] font-normal whitespace-pre-line">{t.readyHeading}</h3>
           <p className="text-[11px] text-[#7e8b91]">{mode === "mock" ? t.demoSuccess : t.paidSuccess}</p>
           <PrimaryButton className="mt-[35px]" onClick={onRead} {...trackAttrs("read_report", "payment_success")}>

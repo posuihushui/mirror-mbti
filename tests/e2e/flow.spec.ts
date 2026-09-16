@@ -22,10 +22,10 @@ test.describe("core flow", () => {
 
   test("sample result and sample report are reachable", async ({ page }) => {
     await page.goto("/result/sample");
-    await expect(page.getByText("SAMPLE REPORT · 示例报告")).toBeVisible();
+    await expect(page.getByText("示例报告", { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("img", { name: /内向偏好 79%/ }).first()).toBeVisible();
     await page.goto("/report/sample");
-    await expect(page.getByText("CHAPTER 01")).toBeVisible();
+    await expect(page.getByText("第一章")).toBeVisible();
   });
 
   test("quiz gates next until an answer is chosen and persists progress across reload", async ({ page }) => {
@@ -47,7 +47,7 @@ test.describe("core flow", () => {
     await page.goto("/quiz");
     await answerAll(page);
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
-    await expect(page.getByText("YOUR PERSONALITY · 你的性格画像")).toBeVisible();
+    await expect(page.getByText("你的人格倾向", { exact: true })).toBeVisible();
     await expect(page.getByText(/^100/).first()).toBeVisible();
     await expect(page.getByText("ESTJ总经理", { exact: true })).toBeVisible();
 
@@ -62,12 +62,12 @@ test.describe("core flow", () => {
     await expect(page.getByText("演示解锁成功，本次未产生扣款。")).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /开始阅读报告/ }).click();
     await page.waitForURL(/\/report\//);
-    await expect(page.getByText("CHAPTER 01")).toBeVisible();
+    await expect(page.getByText("第一章")).toBeVisible();
     await expect(page.locator('[role="tabpanel"]')).toHaveCount(4);
-    await expect(page.getByText("SAMPLE REPORT · 示例报告")).toHaveCount(0);
+    await expect(page.getByText("示例报告", { exact: true })).toHaveCount(0);
 
     await page.getByRole("button", { name: /下一章/ }).click();
-    await expect(page.getByText("CHAPTER 02")).toBeVisible();
+    await expect(page.getByText("第二章")).toBeVisible();
     await page.getByRole("tab", { name: "容易忽略的" }).click();
     await expect(page.getByText("精力的边界")).toBeVisible();
 
@@ -79,10 +79,10 @@ test.describe("core flow", () => {
 
   test("the sample closes by inviting the test, not by quoting a price", async ({ page }, testInfo) => {
     await page.goto("/result/sample");
-    await expect(page.getByText("YOUR TURN · 轮到你了")).toBeVisible();
+    await expect(page.getByText("轮到你了", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: /属于你的故事/ })).toBeVisible();
     // nothing is locked here, so no paywall block and no unlock action
-    await expect(page.getByText("THERE IS MORE TO YOU")).toHaveCount(0);
+    await expect(page.getByText("你不止于此")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /解锁完整报告/ })).toHaveCount(0);
     // the price stays as a footnote, and both CTAs lead to the test
     await expect(page.getByText(/免费测试与性格概览 · 完整报告 ¥6\.9 \/ 次/)).toBeVisible();
@@ -99,9 +99,9 @@ test.describe("core flow", () => {
 
   test("the sample report is the real report layout, marked as a sample", async ({ page }) => {
     await page.goto("/report/sample");
-    // marked as a sample
-    await expect(page.getByText("SAMPLE REPORT · 示例报告")).toBeVisible();
-    await expect(page.getByText("示例报告").first()).toBeVisible();
+    // marked as a sample: the notice above the reading, the badge or phone heading row, and the title
+    await expect(page.getByText(/这是一份示例/)).toBeVisible();
+    await expect(page.getByText("示例报告", { exact: true }).first()).toBeVisible();
     await expect(page).toHaveTitle(/示例报告/);
     // same structure as a paid report: four chapter panels behind one chapter switcher
     await expect(page.locator('[role="tabpanel"]')).toHaveCount(4);

@@ -14,7 +14,7 @@ import { href, type Locale } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
 import { hasClearPreference, polesFor, profileMeta, type Letter } from "@/lib/personality";
-import { dimensions, getQuestionnaire, questionnaireLocale } from "@/lib/questionnaires";
+import { dimensions, questionnaireLocale, questionnaireName } from "@/lib/questionnaires";
 import { resultsForVisitor, type ResultHistoryItem } from "@/lib/results";
 import { getVisitorId } from "@/lib/session";
 
@@ -35,7 +35,7 @@ export default async function MyReportPage() {
     <>
       <AppHeader variant="page" title={t.title} backHref={href(locale, "/")} path="/my/report" />
       <main className="mx-auto max-w-[1000px] px-[27px] pt-7 pb-[80px] md:px-10 md:pt-[55px]">
-        <p className="eyebrow text-mist">YOUR EXPLORATIONS</p>
+        <p className="eyebrow text-mist">{t.eyebrow}</p>
         <Link href={href(locale,"/my/shares")} prefetch={false} className="text-link mt-4">{shareMessages[locale].myShares}</Link>
         <div className="mt-[18px] flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
@@ -100,7 +100,7 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
         {createdAt && <time dateTime={createdAt.toISOString()} className="text-[11px] text-mist">{dateFormat.format(createdAt)}</time>}
         <Badge variant={unlocked ? "unlocked" : "tag"}>{unlocked ? t.unlocked(demo) : t.brief}</Badge>
       </div>
-      <p className="mt-3 text-[12px] text-mist">{t.version(getQuestionnaire(result.questionnaireId)?.name ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>
+      <p className="mt-3 text-[12px] text-mist">{t.version(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>
       <div className="mt-5 flex items-baseline gap-3">
         <h2 className="text-[38px] font-medium tracking-[-0.06em] md:text-[44px]">{typeLabel}</h2>
         <span className="text-[12px]">{name}</span>

@@ -45,7 +45,7 @@ export default async function TypesPage() {
     <>
       <AppHeader variant="page" title={t.headerTitle} backHref={href(locale, "/")} path="/types" />
       <main className="mx-auto max-w-[1100px] px-[27px] pt-4 pb-[135px] md:px-10 md:pt-[60px] md:pb-[80px]">
-        <p className="eyebrow text-[#738087]">SIXTEEN WAYS OF BEING</p>
+        <p className="eyebrow text-[#738087]">{t.eyebrow}</p>
         <h1 className="mt-[18px] text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[32px]">{t.heading}</h1>
         <p className="mt-[23px] max-w-[410px] text-[13px] leading-[1.9] text-[#6b777d]">
           {t.intro}

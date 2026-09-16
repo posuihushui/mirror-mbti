@@ -25,7 +25,7 @@ import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
 import { hasClearPreference, profileMeta, typeMeta } from "@/lib/personality";
-import { getQuestionnaire, questionnaireLocale } from "@/lib/questionnaires";
+import { questionnaireLocale, questionnaireName } from "@/lib/questionnaires";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
 import { cryptoNetworks } from "@/lib/payments/crypto/config";
 import { pageMetadata } from "@/lib/seo";
@@ -111,7 +111,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
     <>
       <AppHeader variant="page" title={sample ? t.sampleHeader : t.ownTitle} backHref={href(locale, "/")} path={sample ? "/result/sample" : undefined} />
       <main className="pt-[15px] pb-[110px] md:mx-auto md:max-w-[1150px] md:px-10 md:pt-0 md:pb-0">
-        <p className="mx-[27px] mt-5 text-[12px] text-mist md:mx-0">{t.versionLine(getQuestionnaire(result.questionnaireId)?.name ?? t.legacyVersion, result.questionCount, sample)}</p>
+        <p className="mx-[27px] mt-5 text-[12px] text-mist md:mx-0">{t.versionLine(questionnaireName(result.questionnaireId, locale) ?? t.legacyVersion, result.questionCount, sample)}</p>
         <section className="block md:grid md:grid-cols-2 md:items-center md:gap-10 md:pt-[58px] md:pb-[50px] xl:gap-20">
           <TypeIntro profile={profile} sample={sample} />
           <ResultChart profile={profile} />

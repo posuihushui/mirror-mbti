@@ -130,7 +130,7 @@ export default async function TypePage({ params }: Params) {
         </section>
         <section className="mx-4 bg-night-deep px-[27px] py-8 text-[#eff3f4] md:mx-0 md:flex md:items-center md:justify-between md:gap-10 md:p-10 xl:px-[60px] xl:py-14">
           <div>
-            <p className="eyebrow text-[9px] text-[#99a6a9]">IS THIS YOU?</p>
+            <p className="eyebrow text-[9px] text-[#99a6a9]">{t.ctaEyebrow}</p>
             <h2 className="mt-[25px] text-[29px] leading-[1.55] md:text-[35px]">{t.ctaHeading}</h2>
           </div>
           <div className="mt-[30px] flex flex-col gap-4 md:mt-0 md:w-[300px]">

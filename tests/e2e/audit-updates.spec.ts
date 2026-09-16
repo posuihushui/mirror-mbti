@@ -83,7 +83,7 @@ test.describe("review improvements", () => {
     const report = await page.request.get(`/report/${resultId}`);
     expect(report.status()).toBe(200);
     const html = (await report.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<!--[\s\S]*?-->/g, "");
-    for (const text of ["CHAPTER 01", "CHAPTER 02", "CHAPTER 03", "CHAPTER 04", "第 1 天", "第 7 天", "这次偏向较明显"]) expect(html.includes(text), text).toBe(true);
+    for (const text of ["第一章", "第二章", "第三章", "第四章", "第 1 天", "第 7 天", "这次偏向较明显"]) expect(html.includes(text), text).toBe(true);
     await page.goto(`/report/${resultId}?chapter=4`);
     await expect(page.getByRole("heading", { name: "第 7 天 · 保留一个小调整" })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("paid-action-plan.png"), fullPage: true, animations: "disabled" });

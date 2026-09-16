@@ -17,6 +17,9 @@ const zh = {
     terms: "用户协议",
     language: "语言",
   },
+  sheet: {
+    close: "关闭",
+  },
   overlays: {
     aboutTitle: "关于这次探索",
     aboutDescription: "按照自己的节奏，回答每一道题。",
@@ -86,6 +89,9 @@ const en: typeof zh = {
     privacy: "Privacy policy",
     terms: "Terms of service",
     language: "Language",
+  },
+  sheet: {
+    close: "Close",
   },
   overlays: {
     aboutTitle: "About this exploration",

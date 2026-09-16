@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { connection } from "next/server";
 import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
 import type { Locale } from "@/lib/i18n/locale";
+import { pageMessages } from "@/lib/i18n/messages/pages";
 import { OG_FONT_FAMILY, ogFonts } from "@/lib/og/fonts";
 import { isPersonalityType, polesFor, typeMeta, type Letter } from "@/lib/personality";
 
@@ -24,7 +25,7 @@ export default async function TypeOgImage({ params }: { params: Promise<{ lang: 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           {/* Satori requires native SVG elements. */}
           {BrandLogo({ width: brandLogoWidth(locale, 240), locale })}
-          <div style={{ fontSize: 14, letterSpacing: 3, color: "#738087" }}>{en ? "PERSONALITY TYPE" : "PERSONALITY TYPE · 人格倾向"}</div>
+          <div style={{ fontSize: 14, letterSpacing: 3, color: "#738087" }}>{pageMessages[locale].type.eyebrow}</div>
         </div>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 40 }}>
           <div style={{ fontSize: 220, lineHeight: 1, fontWeight: 500, letterSpacing: -14 }}>{t}</div>

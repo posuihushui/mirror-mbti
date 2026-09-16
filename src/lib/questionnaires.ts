@@ -128,6 +128,14 @@ export function questionnaireLocale(id: string): Locale {
   return getQuestionnaire(id)?.locale ?? "zh";
 }
 
+/** Versions pair up across locales by item count, so a questionnaire read in the other language
+ * (the shared sample, or a record in history) is still named in the reader's own. */
+export function questionnaireName(id: string, locale: Locale): string | undefined {
+  const own = getQuestionnaire(id);
+  if (!own) return undefined;
+  return (questionnaires.find((q) => q.locale === locale && q.count === own.count) ?? own).name;
+}
+
 export type ResponseItem = { questionId: string; value: number };
 export function parseSubmission(input: unknown): { questionnaire: Questionnaire; answers: number[]; responses: ResponseItem[] } | null {
   if (!input || typeof input !== "object" || !("answers" in input) || !Array.isArray(input.answers)) return null;

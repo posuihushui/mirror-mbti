@@ -23,7 +23,7 @@ export default async function PreferencesPage() {
   const t = pageMessages[locale].preferences;
   return <><AppHeader variant="page" title={t.headerTitle} backHref={href(locale, "/")} path="/preferences" />
     <main className="mx-auto max-w-[760px] px-[27px] pt-7 pb-20 md:px-10 md:pt-[55px]">
-      <p className="eyebrow text-mist">UNDERSTAND YOUR PREFERENCES</p>
+      <p className="eyebrow text-mist">{t.eyebrow}</p>
       <h1 className="mt-5 text-[27px] leading-[1.6] md:text-[36px]">{t.heading}</h1>
       <p className="mt-5 text-[13px] leading-[2] text-mist">{t.intro}</p>
       {preferenceDimensionsFor(locale).map((d) => <section key={d.title} className="mt-7 border-t border-line pt-6">

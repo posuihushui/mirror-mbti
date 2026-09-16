@@ -16,7 +16,7 @@ import { buildReportData } from "@/lib/report-content";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
 import { pageMetadata } from "@/lib/seo";
 import { getVisitorId } from "@/lib/session";
-import { getQuestionnaire, questionnaireLocale } from "@/lib/questionnaires";
+import { questionnaireLocale, questionnaireName } from "@/lib/questionnaires";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -63,7 +63,7 @@ export default async function ReportPage({ params }: Params) {
       <AppHeader variant="page" title={data.sample ? t.sampleHeader : t.ownTitle} backHref={href(locale, `/result/${id}`)} path={data.sample ? "/report/sample" : undefined} />
       <ReportBody
         data={data}
-        banner={<>{data.sample && <SampleNotice />}<p className="mx-[25px] my-5 text-[12px] leading-[1.9] text-mist md:mx-0">{t.banner(getQuestionnaire(result.questionnaireId)?.name ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p></>}
+        banner={<>{data.sample && <SampleNotice />}<p className="mx-[25px] my-5 text-[12px] leading-[1.9] text-mist md:mx-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p></>}
         footer={data.sample ? <SampleCta priceLabel={price} /> : undefined}
       />
       {data.sample && (

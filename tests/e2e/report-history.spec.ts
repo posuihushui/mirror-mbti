@@ -116,7 +116,7 @@ test.describe("report history and order recovery", () => {
     expect((await context.cookies()).filter((cookie) => cookie.name === "mid").map((cookie) => cookie.value)).toEqual([ownerCookie.value]);
 
     await page.locator(`a[href="/report/${paid.id}"]`).click();
-    await expect(page.getByText("CHAPTER 01", { exact: true })).toBeVisible();
+    await expect(page.getByText("第一章", { exact: true })).toBeVisible();
     await page.goto(`/report/${unpaid.id}`);
     await expect(page).toHaveURL(new RegExp(`/result/${unpaid.id}\\?unlock=1$`));
     await expect(page.getByText("更完整地，认识自己。", { exact: true })).toBeVisible();
@@ -226,7 +226,7 @@ test.describe("report history and order recovery", () => {
       await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(1);
       await page.goto(`/report/${foreign.id}`);
       await expect(page).toHaveURL(new RegExp(`/result/${foreign.id}$`));
-      await expect(page.getByText("CHAPTER 01", { exact: true })).toHaveCount(0);
+      await expect(page.getByText("第一章", { exact: true })).toHaveCount(0);
     } finally {
       await otherContext.close();
     }

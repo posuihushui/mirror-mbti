@@ -51,7 +51,7 @@ for (const en of [false, true]) {
       await complete32(page, en, invitation.token);
       await page.waitForURL(new RegExp(`${en ? "/en" : ""}/result/[A-Za-z0-9_-]{12}\\?compare=${invitation.token}$`));
       expect(new URL(page.url()).searchParams.get("compare")).toBe(invitation.token);
-      await expect(page.getByText(en ? "YOUR PERSONALITY" : "YOUR PERSONALITY · 你的性格画像", { exact: true })).toBeVisible();
+      await expect(page.getByText(en ? "YOUR PERSONALITY" : "你的人格倾向", { exact: true })).toBeVisible();
       expect(joins).toBe(0);
       expect(eventFailures).toBeGreaterThan(0);
       const continueLink = page.getByRole("link", { name: en ? "Continue the comparison" : "继续双人对照", exact: true });

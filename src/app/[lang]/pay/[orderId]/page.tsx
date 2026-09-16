@@ -33,7 +33,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
     <>
       <AppHeader variant="page" title={t.title} backHref={href(locale, `/result/${order.resultId}`)} />
       <main className="mx-auto max-w-[480px] px-[27px] pt-6 pb-20 md:pt-[60px]">
-        <p className="eyebrow text-[#738087]">ORDER</p>
+        <p className="eyebrow text-[#738087]">{t.eyebrow}</p>
         <h1 className="mt-[18px] text-[27px] leading-[1.6] tracking-[-0.035em]">{t.heading}</h1>
         <PayStatus initial={toOrderView(fresh)} priceLabel={formatPriceFen(fresh.amountFen)} />
       </main>

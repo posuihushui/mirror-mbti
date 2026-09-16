@@ -4,8 +4,8 @@ import type { Locale } from "@/lib/i18n/locale";
 const zh = {
   currency: "¥",
   typeIntro: {
-    sampleEyebrow: "SAMPLE REPORT · 示例报告",
-    ownEyebrow: "YOUR PERSONALITY · 你的性格画像",
+    sampleEyebrow: "示例报告",
+    ownEyebrow: "你的人格倾向",
     badge: (label: string) => `${label}倾向`,
     partialBalanced: "部分维度接近均衡，参考类型不代表四个维度都有明确偏向。",
     unclearNote: "本次暂不生成确定类型，也不提供新的付费解锁。",
@@ -26,6 +26,7 @@ const zh = {
     link: "了解四维偏好与复测",
   },
   unlock: {
+    eyebrow: "你不止于此",
     heading: "四个字母，\n只是故事的开始。",
     sub: "理解自己的优势，也看见那些容易忽略的部分。",
     sampleLink: "先阅读完整示例",
@@ -36,14 +37,14 @@ const zh = {
   },
   sampleCta: {
     meta: [["32/64", "题可选"], ["5–10", "分钟"], ["16", "种人格倾向"]] as [string, string][],
-    eyebrow: "YOUR TURN · 轮到你了",
+    eyebrow: "轮到你了",
     heading: "属于你的故事，\n还未开始。",
     body: "这是一份示例报告。选择 32 题或 64 题版本，免费了解自己的四维偏好；也可以按需解锁同样版式的完整报告。",
     start: "开始认识自己",
     footnote: (price: string) => `免费测试与性格概览 · 完整报告 ¥${price} / 次 · 无订阅、无自动续费`,
   },
   sampleNotice: {
-    eyebrow: "SAMPLE REPORT · 示例报告",
+    eyebrow: "示例报告",
     body: "这是一份示例，用一次 INFJ 的作答生成，展示完整报告的样子。完成测试后，你会读到属于自己的那一份。",
     start: "开始认识自己",
   },
@@ -82,6 +83,7 @@ const en: typeof zh = {
     link: "The four preferences & retesting",
   },
   unlock: {
+    eyebrow: "THERE IS MORE TO YOU",
     heading: "Four letters are\nonly the beginning.",
     sub: "Understand your strengths, and see the parts that are easy to miss.",
     sampleLink: "Read the full sample first",

@@ -49,7 +49,7 @@ export async function ReportBody({ data, banner, footer }: { data: ReportData; b
       {/* Stretch the sidebar cell to the reading row so sticky content stops before the footer. */}
       <aside className="hidden md:block md:self-stretch">
         <div className="md:sticky md:top-[35px] md:pt-[15px]">
-          <p className="eyebrow text-[9px] text-[#758289]">YOUR INNER WORLD</p>
+          <p className="eyebrow text-[9px] text-[#758289]">{t.eyebrow}</p>
           <div className="mt-[26px] text-[64px] font-medium tracking-[-0.06em]">{typeLabel}</div>
           <p className="mt-1 text-[12px] text-[#75828a]">
             {t.reportOf(name, sample)}
@@ -63,7 +63,7 @@ export async function ReportBody({ data, banner, footer }: { data: ReportData; b
             </Badge>
           )}
           <ChapterSidebarNav />
-          <p className="mt-20 text-[9px] tracking-[0.1em] text-[#8b999f] whitespace-pre-line">{"YOU ARE MORE\nTHAN FOUR LETTERS."}</p>
+          <p className="mt-20 text-[9px] tracking-[0.1em] text-[#8b999f] whitespace-pre-line">{t.footnote}</p>
         </div>
       </aside>
 
@@ -77,19 +77,19 @@ export async function ReportBody({ data, banner, footer }: { data: ReportData; b
         <ChapterTabs />
 
         <ChapterPanel index={0}>
-          <ChapterLabel index={0} type={typeLabel} />
+          <ChapterLabel index={0} type={typeLabel} locale={locale} />
           <ChapterOne data={data} locale={locale} heading="h1" />
         </ChapterPanel>
         <ChapterPanel index={1}>
-          <ChapterLabel index={1} type={typeLabel} />
+          <ChapterLabel index={1} type={typeLabel} locale={locale} />
           <ChapterTwo data={data} locale={locale} />
         </ChapterPanel>
         <ChapterPanel index={2}>
-          <ChapterLabel index={2} type={typeLabel} />
+          <ChapterLabel index={2} type={typeLabel} locale={locale} />
           <ChapterThree data={data} locale={locale} />
         </ChapterPanel>
         <ChapterPanel index={3}>
-          <ChapterLabel index={3} type={typeLabel} />
+          <ChapterLabel index={3} type={typeLabel} locale={locale} />
           <ChapterFour data={data} locale={locale} />
         </ChapterPanel>
 
@@ -179,7 +179,7 @@ function ChapterFour({ data, locale }: ChapterProps) {
       <p className="mt-3 text-[12px] leading-[2] text-[#a9b7bc]">{t.weekIntro}</p>
       <InsightList items={data.actionPlan} />
       <div className="my-[33px] bg-[#243034] p-[25px]">
-        <p className="eyebrow text-[9px] text-[#b1bfc4]">A SMALL STEP THIS WEEK</p>
+        <p className="eyebrow text-[9px] text-[#b1bfc4]">{t.stepEyebrow}</p>
         <p className="mt-5 text-[20px] leading-[1.7] font-normal whitespace-pre-line md:text-[21px]">{t.stepHeading}</p>
         <p className="mt-[15px] text-[11px] text-[#a9b7bc] whitespace-pre-line">{t.stepQuestions}</p>
       </div>
@@ -188,10 +188,10 @@ function ChapterFour({ data, locale }: ChapterProps) {
   );
 }
 
-function ChapterLabel({ index, type }: { index: number; type: string }) {
+function ChapterLabel({ index, type, locale }: { index: number; type: string; locale: Locale }) {
   return (
     <div className="mb-[23px] flex justify-between text-[9px] tracking-[0.12em] text-[#95a5a9] md:mb-[31px]">
-      <span>CHAPTER 0{index + 1}</span>
+      <span>{reportMessages[locale].nav.chapter(index)}</span>
       <span>{type}</span>
     </div>
   );

@@ -11,7 +11,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const copy = {
-  zh: { sample: "SAMPLE REPORT · 示例报告", own: "PERSONALITY · 性格画像", footer: "认识自己是一段持续的旅程。这份画像用于自我探索，不定义你。" },
+  zh: { sample: "示例报告", own: "性格画像", footer: "认识自己是一段持续的旅程。这份画像用于自我探索，不定义你。" },
   en: { sample: "SAMPLE REPORT", own: "PERSONALITY", footer: "Knowing yourself is an ongoing journey. This profile doesn’t define you." },
 };
 

@@ -65,7 +65,7 @@ export default async function HomePage() {
             {/* Desktop captions sit on the photo; a short ink fade keeps them legible without dimming the portrait above. */}
             <div aria-hidden className="absolute inset-x-0 bottom-0 hidden h-[160px] bg-[linear-gradient(to_top,#1217188c,#1217186b_30px,#12171826_90px,#12171800)] md:block" />
             <div className="absolute right-[30px] bottom-[27px] left-[30px] hidden items-center justify-between gap-[10px] text-[10px] tracking-[0.06em] text-paper md:flex">
-              <span className="text-[9px] tracking-[0.14em]">THE WORLD WITHIN.</span>
+              <span className="text-[9px] tracking-[0.14em]">{t.caption}</span>
               <span>{t.closer}</span>
             </div>
           </div>
@@ -111,7 +111,7 @@ export default async function HomePage() {
         </section>
 
         <section className="mt-[30px] hidden items-center justify-between gap-5 border-t border-line py-[27px] text-[11px] md:flex">
-          <span className="text-[9px] tracking-[0.1em] text-[#849195]">SELF-DISCOVERY, AT YOUR PACE.</span>
+          <span className="text-[9px] tracking-[0.1em] text-[#849195]">{t.stepsLabel}</span>
           {t.steps.map((s, i) => (
             <div key={s}>
               <b className="mr-[10px] font-normal text-[#8d9a9f]">0{i + 1}</b> {s}

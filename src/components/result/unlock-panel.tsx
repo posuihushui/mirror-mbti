@@ -16,7 +16,7 @@ export async function UnlockPanel({ priceLabel, action, secureNote }: { priceLab
   return (
     <section className="mx-4 block bg-night-deep px-[27px] py-8 text-[#eff3f4] md:mx-0 md:grid md:grid-cols-2 md:gap-[45px] md:p-10 xl:gap-[90px] xl:px-[60px] xl:py-14">
       <div>
-        <p className="eyebrow text-[9px] text-[#99a6a9]">THERE IS MORE TO YOU</p>
+        <p className="eyebrow text-[9px] text-[#99a6a9]">{t.eyebrow}</p>
         <h2 className="mt-[25px] text-[29px] leading-[1.55] md:text-[35px]">{t.heading}</h2>
         <p className="mt-[27px] text-[11px] text-[#a1afb2] md:text-[12px]">{t.sub}</p>
         <Link href={href(locale, "/report/sample")} className="text-link mt-5 min-h-11 text-[12px] text-[#d8e0e2]" {...trackAttrs("read_sample_report", "unlock_panel")}>{t.sampleLink}</Link>

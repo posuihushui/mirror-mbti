@@ -3,6 +3,8 @@ import type { Locale } from "@/lib/i18n/locale";
 /** Report copy. Chinese strings are the originals, verbatim; `en` must match their shape. */
 const zh = {
   aside: {
+    eyebrow: "你的内在世界",
+    footnote: "你不只是\n四个字母。",
     reportOf: (name: string, sample: boolean) => `${name} · ${sample ? "示例" : "本次"}人格报告`,
     sampleBadge: "示例报告",
     unlocked: (demo: boolean) => `已解锁${demo ? " · 演示" : ""}`,
@@ -25,6 +27,7 @@ const zh = {
   four: {
     heading: "找到适合你的方式，\n让成长具体一点。",
     lead: "与其用人格类型决定职业，不如观察：什么环境能让你稳定发挥，什么习惯值得调整。",
+    stepEyebrow: "本周的一小步",
     weekHeading: "把理解放进一周生活里。",
     weekIntro: "每天只做一个小尝试。以下安排根据本次四维作答选择，不是效果保证；不符合你的部分可以跳过或调整。",
     stepHeading: "记录一次让你感到\n“这很像我”的时刻。",
@@ -33,6 +36,7 @@ const zh = {
   },
   nav: {
     label: "报告章节",
+    chapter: (index: number) => `第${"一二三四"[index]}章`,
     closingSample: "开始属于你的测试",
     closing: "带着新的理解，回到生活",
     next: (label: string) => `下一章 · ${label}`,
@@ -44,6 +48,8 @@ const zh = {
 
 const en: typeof zh = {
   aside: {
+    eyebrow: "YOUR INNER WORLD",
+    footnote: "YOU ARE MORE\nTHAN FOUR LETTERS.",
     reportOf: (name: string, sample: boolean) => `${sample ? "Sample report" : "Your report"} · ${name}`,
     sampleBadge: "Sample report",
     unlocked: (demo: boolean) => `Unlocked${demo ? " · Demo" : ""}`,
@@ -66,6 +72,7 @@ const en: typeof zh = {
   four: {
     heading: "Find the way that suits you,\nand make growth concrete.",
     lead: "Rather than letting a type decide your career, observe which environments help you do steady work and which habits are worth adjusting.",
+    stepEyebrow: "A SMALL STEP THIS WEEK",
     weekHeading: "Bring this understanding into one week.",
     weekIntro: "Try just one small thing each day. These were chosen from your answers on the four dimensions and are not a guarantee of results; skip or adjust anything that doesn’t fit.",
     stepHeading: "Note one moment that made you think,\n“That’s so me.”",
@@ -74,6 +81,7 @@ const en: typeof zh = {
   },
   nav: {
     label: "Report chapters",
+    chapter: (index: number) => `CHAPTER 0${index + 1}`,
     closingSample: "Start your own test",
     closing: "Take this understanding back into life",
     next: (label: string) => `Next chapter · ${label}`,

@@ -5,6 +5,8 @@ import { X } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerBody, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { DESKTOP_QUERY, useMediaQuery } from "@/hooks/use-media-query";
+import { useLocale } from "@/lib/i18n/locale-provider";
+import { siteMessages } from "@/lib/i18n/messages/site";
 
 type Props = {
   open: boolean;
@@ -19,8 +21,10 @@ type Props = {
  * Desktop (>720px): centered `.web-modal` dialog. Phone: `.bottom-sheet` drawer with a drag handle.
  * The server snapshot is "phone", so the first client render never flashes the wrong surface.
  */
-export function ResponsiveSheet({ open, onOpenChange, title, description, children, closeLabel = "关闭" }: Props) {
+export function ResponsiveSheet({ open, onOpenChange, title, description, children, closeLabel }: Props) {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  const locale = useLocale();
+  const label = closeLabel ?? siteMessages[locale].sheet.close;
 
   if (isDesktop) {
     return (
@@ -33,7 +37,7 @@ export function ResponsiveSheet({ open, onOpenChange, title, description, childr
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            aria-label={closeLabel}
+            aria-label={label}
             className="absolute top-[21px] right-[18px] flex size-8 items-center justify-center text-[#6a7b81]"
           >
             <X size={20} />
@@ -54,7 +58,7 @@ export function ResponsiveSheet({ open, onOpenChange, title, description, childr
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          aria-label={closeLabel}
+          aria-label={label}
           className="absolute top-[27px] right-[14px] flex size-8 items-center justify-center text-[#6a7b81]"
         >
           <X size={20} />

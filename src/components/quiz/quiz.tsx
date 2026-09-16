@@ -119,7 +119,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
     <>
       <main className="block max-w-[510px] px-[26px] pt-4 pb-[135px] md:mx-auto md:grid md:max-w-[1140px] md:grid-cols-2 md:gap-[70px] md:px-10 md:pt-[60px] md:pb-[55px] xl:gap-[125px]">
         <aside className="hidden md:block md:pt-5">
-          <p className="eyebrow">DISCOVER YOUR TYPE</p>
+          <p className="eyebrow">{t.asideEyebrow}</p>
           <h1 className="mt-[35px] text-[45px] leading-[1.5]">{t.asideHeading}</h1>
           <p className="mt-[26px] text-[13px] text-[#6d797e] whitespace-pre-line">{t.asideText}</p>
           <div className="mt-[75px] flex items-baseline">
