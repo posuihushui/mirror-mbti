@@ -3,8 +3,8 @@ import type { PublicShareSnapshot } from "@/lib/share-types";
 import type { CompareSnapshot, CompareContent } from "@/lib/compare-types";
 import { LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type ResponseItem } from "@/lib/questionnaires";
 
-export const paymentProviderEnum = pgEnum("payment_provider", ["mock", "wechat", "crypto"]);
-export const paymentChannelEnum = pgEnum("payment_channel", ["mock", "jsapi", "native", "h5", "ethereum", "solana"]);
+export const paymentProviderEnum = pgEnum("payment_provider", ["mock", "wechat", "crypto", "waffo"]);
+export const paymentChannelEnum = pgEnum("payment_channel", ["mock", "jsapi", "native", "h5", "ethereum", "solana", "card"]);
 export const orderStatusEnum = pgEnum("order_status", ["created", "paid", "cancelled", "failed", "expired", "refunded"]);
 
 const timestamps = {

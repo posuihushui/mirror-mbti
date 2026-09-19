@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowUpRight, Check, CircleNotch, WechatLogo } from "@phosphor-icons/react";
+import { ArrowUpRight, Check, CircleNotch, CreditCard, WechatLogo } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { ResponsiveSheet } from "@/components/site/responsive-sheet";
 import { PrimaryButton } from "@/components/site/primary-button";
@@ -158,6 +158,12 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
     else failed(`ORDER_${paid.status.toUpperCase()}`);
   };
 
+  /** Hosted card checkout: the buyer finishes at Waffo and returns to `/pay/[orderId]`. */
+  const runCard = (payload: Extract<PaymentPayload, { kind: "redirect" }>) => {
+    track("payment_redirect", { payment_mode: mode, target: "waffo_checkout" });
+    window.location.href = payload.url;
+  };
+
   const runWeChat = (order: OrderView, payload: PaymentPayload) => {
     if (payload.kind === "jsapi") {
       const bridge = window.WeixinJSBridge;
@@ -199,6 +205,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
       setOrderId(order.id);
       track("add_payment_info", { ...reportCommerce(order.currency, order.amountFen), payment_mode: order.provider, payment_type: paymentTypeOf(order) });
       if (order.provider === "mock") await runMock(order, startedAt);
+      else if (order.payload?.kind === "redirect") runCard(order.payload);
       else if (order.payload) runWeChat(order, order.payload);
       else failed("NO_PAYLOAD");
     } catch (e) {
@@ -283,12 +290,12 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
             />
           ) : (
             <>
-              {locale === "zh" && (
+              {(locale === "zh" || mode === "waffo") && (
                 <div className="mt-[18px] flex items-center gap-3 rounded-[3px] border border-[#cdd9dc] px-[15px] py-4 md:mt-[25px]">
-                  <WechatLogo size={25} weight="fill" className="text-[#299c63]" />
+                  {mode === "waffo" ? <CreditCard size={25} weight="light" /> : <WechatLogo size={25} weight="fill" className="text-[#299c63]" />}
                   <span className="text-[13px] font-medium">
-                    {methodTitle}
-                    <small className="mt-[5px] block text-[9px] font-normal text-[#7e8d93]">{methodSub}</small>
+                    {mode === "waffo" ? t.methodCard : methodTitle}
+                    <small className="mt-[5px] block text-[9px] font-normal text-[#7e8d93]">{mode === "waffo" ? t.methodCardSub : methodSub}</small>
                   </span>
                   <Check size={17} className="ml-auto" />
                 </div>
@@ -300,7 +307,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
                 </div>
               )}
               <p className="mt-[18px] mb-3 text-center text-[10px] text-[#8c775f] md:mt-6">
-                {mode === "mock" ? t.demoNote : t.secureNote}
+                {mode === "mock" ? t.demoNote : mode === "waffo" ? t.cardSecureNote : t.secureNote}
               </p>
               {state === "cancelled" && (
                 <p role="status" className="my-[10px] text-[11px] text-[#997c60]">
@@ -315,7 +322,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
                   </>
                 ) : (
                   <>
-                    {mode === "mock" ? t.demoPay(priceLabel) : t.pay(priceLabel)}
+                    {mode === "mock" ? t.demoPay(priceLabel) : mode === "waffo" ? t.payCard(priceLabel) : t.pay(priceLabel)}
                     <ArrowUpRight size={18} />
                   </>
                 )}
@@ -326,6 +333,11 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
             {t.notNow}
           </button>
           <p className="mt-[6px] text-center text-[9px] text-[#92a1a6]">{t.oneTime}</p>
+          {mode === "waffo" && (
+            <p className="mt-3 text-[12px] leading-[1.9] text-mist">
+              {t.cardTaxNote} {t.cardRefundNote}
+            </p>
+          )}
           <p className="mt-3 text-[12px] leading-[1.9] text-mist">{t.keepOrder}</p>
           <Link href={href(locale, "/help")} className="text-link mt-2 min-h-11" {...trackAttrs("view_help", "payment_sheet")}>{t.help}</Link>
         </div>

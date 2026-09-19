@@ -10,7 +10,7 @@ import { siteMessages } from "@/lib/i18n/messages/site";
 import { closeOverlay, useOverlay } from "@/lib/overlay-store";
 
 /** Site-wide "了解测试" and "我的报告（空）" sheets. Mounted once in the root layout. */
-export function SiteOverlays({ priceLabel }: { priceLabel: string }) {
+export function SiteOverlays() {
   const overlay = useOverlay();
   const pathname = usePathname();
   const t = siteMessages[useLocale()].overlays;
@@ -27,7 +27,7 @@ export function SiteOverlays({ priceLabel }: { priceLabel: string }) {
         title={t.aboutTitle}
         description={t.aboutDescription}
       >
-        <AboutContent priceLabel={priceLabel} onStart={closeOverlay} />
+        <AboutContent onStart={closeOverlay} />
       </ResponsiveSheet>
       <ResponsiveSheet
         open={overlay === "empty"}

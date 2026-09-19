@@ -83,7 +83,8 @@ test.describe("English site", () => {
 
     await expect(page.getByText("YOUR PERSONALITY", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Unlock the full report" }).filter({ visible: true }).first().click();
-    await page.getByRole("button", { name: /Demo payment \$1/ }).click();
+    // The price comes from PRICE_USD_CENTS, so match the label rather than one amount.
+    await page.getByRole("button", { name: /^Demo payment \$\d/ }).click();
     await page.getByRole("button", { name: "Start reading" }).click();
     await page.waitForURL(new RegExp(`/en/report/${id}`));
     await expect(page.getByText("CHAPTER 01")).toBeVisible();

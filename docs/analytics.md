@@ -144,12 +144,12 @@
 | `purchase` | 首次观察到订单已支付 | 电商参数、`payment_mode` `payment_type` `transaction_id` |
 | `payment_cancel` | 点击「暂不支付」，或在微信收银台内取消 | `payment_mode` `stage`（before_order / processing / wechat_jsapi） |
 | `payment_error` | 创建订单失败、订单关闭或过期、微信支付调起失败 | `payment_mode` `error_code` |
-| `payment_redirect` | 跳转微信网页授权或 H5 收银台 | `payment_mode` `target`（wechat_oauth / wechat_h5） |
+| `payment_redirect` | 跳转微信网页授权、H5 收银台，或 Waffo 银行卡收银台 | `payment_mode` `target`（wechat_oauth / wechat_h5 / waffo_checkout） |
 | `checkout_close` | 关闭支付弹层 | `payment_mode` `completed` |
 | `pay_status_view` | 订单页 `/pay/[orderId]` | `payment_mode` `order_status` |
 | `copy_to_clipboard` | 复制订单号或收款地址 | `copy_target` `outcome` |
 
-- `payment_type`：`mock`、`wechat_jsapi`、`wechat_h5`、`wechat_native`、`crypto_ethereum`、`crypto_solana`。
+- `payment_type`：`mock`、`wechat_jsapi`、`wechat_h5`、`wechat_native`、`crypto_ethereum`、`crypto_solana`、`waffo_card`。
 - `error_code`：接口错误码（如 `UNCLEAR_RESULT`、`ORDER_FAILED`）；订单状态 `ORDER_EXPIRED` / `ORDER_CANCELLED` / `ORDER_FAILED`；`NO_WEIXIN_BRIDGE`、`JSAPI_FAIL`、`NO_PAYLOAD`、`UNSUPPORTED_PAYLOAD`；网络异常时为错误名（如 `TypeError`）。
 - `/pay/[orderId]` 只在本页观察到订单由待支付变为已支付，或支付时间在 30 分钟以内（H5 支付回跳）时发送 `purchase`，避免日后回访旧订单被重复计入。
 

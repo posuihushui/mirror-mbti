@@ -131,7 +131,7 @@ export type AnalyticsEvents = {
   purchase: Checkout & { payment_type: string; transaction_id?: string };
   payment_cancel: { payment_mode: PaymentMode; stage: "before_order" | "processing" | "wechat_jsapi" };
   payment_error: { payment_mode: PaymentMode; error_code: string };
-  payment_redirect: { payment_mode: PaymentMode; target: "wechat_oauth" | "wechat_h5" };
+  payment_redirect: { payment_mode: PaymentMode; target: "wechat_oauth" | "wechat_h5" | "waffo_checkout" };
   checkout_close: { payment_mode: PaymentMode; completed: boolean };
   pay_status_view: { payment_mode: PaymentMode; order_status: string };
   copy_to_clipboard: { copy_target: "order_id" | "recipient_address"; outcome: "copied" | "failed" };

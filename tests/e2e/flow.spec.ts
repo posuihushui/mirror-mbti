@@ -13,11 +13,14 @@ async function answerAll(page: Page) {
 }
 
 test.describe("core flow", () => {
-  test("home renders with the primary CTA and price", async ({ page }) => {
+  test("home renders with the primary CTA and never quotes an amount", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("向内看见");
     await expect(page.getByRole("link", { name: /开始人格测试/ }).first()).toBeVisible();
-    await expect(page.getByText(/完整报告 ¥6\.9/).filter({ visible: true }).first()).toBeVisible();
+    // Desktop shows "免费测试与性格概览"; the phone dock shows just "免费测试".
+    await expect(page.getByText(/免费测试/).filter({ visible: true }).first()).toBeVisible();
+    // Nothing before the test may quote a price or hint that anything is sold.
+    expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
   });
 
   test("sample result and sample report are reachable", async ({ page }) => {
@@ -84,8 +87,9 @@ test.describe("core flow", () => {
     // nothing is locked here, so no paywall block and no unlock action
     await expect(page.getByText("你不止于此")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /解锁完整报告/ })).toHaveCount(0);
-    // the price stays as a footnote, and both CTAs lead to the test
-    await expect(page.getByText(/免费测试与性格概览 · 完整报告 ¥6\.9 \/ 次/)).toBeVisible();
+    // no price and no hint that anything is sold, and both CTAs lead to the test
+    await expect(page.getByText(/免费测试与性格概览/)).toBeVisible();
+    expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
     for (const cta of await page.getByRole("link", { name: /开始认识自己/ }).all()) {
       await expect(cta).toHaveAttribute("href", "/quiz");
     }

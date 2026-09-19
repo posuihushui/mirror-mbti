@@ -7,7 +7,7 @@ import { href, type Locale } from "@/lib/i18n/locale";
 import { isValidOrderId, newOrderId } from "@/lib/ids";
 import { hasClearPreference, typeMeta } from "@/lib/personality";
 import { getCryptoProvider, getPaymentProvider } from "@/lib/payments";
-import type { CryptoNetwork, OrderView, PaymentPayload } from "@/lib/payments/types";
+import type { CryptoNetwork, OrderView, PaymentPayload, PaymentProvider } from "@/lib/payments/types";
 import { questionnaireLocale } from "@/lib/questionnaires";
 import { getResult, markResultUnlocked } from "@/lib/results";
 import { pickWeChatChannel } from "@/lib/ua";
@@ -15,11 +15,13 @@ import { pickWeChatChannel } from "@/lib/ua";
 export const ORDER_TTL_MS = 15 * 60 * 1000;
 /** On-chain payments take longer to send and confirm than WeChat Pay. */
 export const CRYPTO_ORDER_TTL_MS = 30 * 60 * 1000;
-/** A crypto transfer that lands after its order expired still unlocks the report within this window. */
-export const CRYPTO_LATE_WINDOW_MS = 24 * 60 * 60 * 1000;
-/** Status polls arrive every couple of seconds; chain reads per order are spaced out. */
-const CRYPTO_CHECK_INTERVAL_MS = 5000;
-const lastChainCheck = new Map<string, number>();
+/** Hosted card checkout: the buyer leaves the site, fills in billing details and comes back. */
+export const CARD_ORDER_TTL_MS = 30 * 60 * 1000;
+/** A payment that lands after its order expired still unlocks the report within this window. */
+export const LATE_PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000;
+/** Status polls arrive every couple of seconds; reads against a chain or a gateway are spaced out. */
+const REMOTE_CHECK_INTERVAL_MS = 5000;
+const lastRemoteCheck = new Map<string, number>();
 
 const orderMessages = {
   zh: {
@@ -78,6 +80,12 @@ export function toOrderView(order: OrderRow): OrderView {
   };
 }
 
+function orderTtlMs(mode: PaymentProvider["mode"]): number {
+  if (mode === "crypto") return CRYPTO_ORDER_TTL_MS;
+  if (mode === "waffo") return CARD_ORDER_TTL_MS;
+  return ORDER_TTL_MS;
+}
+
 export async function createOrder(input: { visitorId: string; resultId: string; userAgent: string | null; clientIp: string; openid?: string | null; locale?: Locale; network?: CryptoNetwork }) {
   const result = await getResult(input.resultId, input.visitorId);
   if (!result || result.sample) throw new OrderError(404, "RESULT_NOT_FOUND", orderMessages[input.locale ?? "zh"].notFound);
@@ -94,6 +102,8 @@ export async function createOrder(input: { visitorId: string; resultId: string; 
     const { networks } = await getCryptoProvider();
     if (!input.network || !networks.includes(input.network)) throw new OrderError(400, "NETWORK_REQUIRED", t.network);
     channel = input.network;
+  } else if (provider.mode === "waffo") {
+    channel = "card";
   } else {
     channel = provider.mode === "mock" ? "mock" : pickWeChatChannel(input.userAgent);
   }
@@ -112,7 +122,7 @@ export async function createOrder(input: { visitorId: string; resultId: string; 
       provider: provider.mode,
       channel,
       status: "created",
-      expiresAt: new Date(now.getTime() + (provider.mode === "crypto" ? CRYPTO_ORDER_TTL_MS : ORDER_TTL_MS)),
+      expiresAt: new Date(now.getTime() + orderTtlMs(provider.mode)),
     })
     .returning();
 
@@ -155,7 +165,8 @@ export async function getOrderByIdUnchecked(id: string): Promise<OrderRow | null
 
 /**
  * Transitions `created` → `paid` exactly once and unlocks the result. Safe to call repeatedly.
- * Crypto orders may also move from `expired`: the transfer is already on-chain and cannot be undone.
+ * Crypto and card orders may also move from `expired`: the buyer has already been charged and we
+ * cannot undo an on-chain transfer or refund a card payment.
  */
 export async function markOrderPaid(orderId: string, txnId: string | null, paidAt = new Date(), options: { allowExpired?: boolean } = {}): Promise<OrderRow | null> {
   const from: OrderRow["status"][] = options.allowExpired ? ["created", "expired"] : ["created"];
@@ -179,28 +190,31 @@ export async function setOrderStatus(orderId: string, status: OrderRow["status"]
 
 /**
  * Re-checks a pending order with its provider (active query fallback when the callback is late).
- * Crypto orders have no callback: the chain is read here, before expiring the order, and expired
- * crypto orders keep being checked for a day so a late transfer still unlocks the report.
+ * Crypto orders have no callback at all: the chain is read here. Both crypto and card orders are
+ * checked before expiring and for a day afterwards, so a payment that lands late still unlocks the
+ * report — the buyer has been charged either way.
  */
 export async function refreshOrder(order: OrderRow): Promise<OrderRow> {
   const crypto = order.provider === "crypto";
+  const remote = crypto || order.provider === "waffo";
   const now = Date.now();
   const expired = order.expiresAt.getTime() < now;
-  const late = crypto && order.status === "expired" && now - order.expiresAt.getTime() < CRYPTO_LATE_WINDOW_MS;
+  const late = remote && order.status === "expired" && now - order.expiresAt.getTime() < LATE_PAYMENT_WINDOW_MS;
   if (order.status !== "created" && !late) return order;
-  if (expired && !crypto) return (await setOrderStatus(order.id, "expired")) ?? order;
+  if (expired && !remote) return (await setOrderStatus(order.id, "expired")) ?? order;
   if (now - order.createdAt.getTime() < 3000) return order;
   // Query the provider that created the order, and only while that language still uses it.
   if (paymentModeFor(orderLocale(order)) !== order.provider) return order;
-  if (crypto) {
-    if (now - (lastChainCheck.get(order.id) ?? 0) < CRYPTO_CHECK_INTERVAL_MS) return order;
-    if (lastChainCheck.size > 5000) lastChainCheck.clear();
-    lastChainCheck.set(order.id, now);
+  // Crypto reads the chain and Waffo calls the gateway on every poll, so both are rate-limited per order.
+  if (remote) {
+    if (now - (lastRemoteCheck.get(order.id) ?? 0) < REMOTE_CHECK_INTERVAL_MS) return order;
+    if (lastRemoteCheck.size > 5000) lastRemoteCheck.clear();
+    lastRemoteCheck.set(order.id, now);
   }
   const provider = await getPaymentProvider(order.provider);
   try {
     const q = await provider.queryPayment(order);
-    if (q.status === "paid" && !q.candidates) return (await markOrderPaid(order.id, q.txnId ?? null, q.paidAt)) ?? order;
+    if (q.status === "paid" && !q.candidates) return (await markOrderPaid(order.id, q.txnId ?? null, q.paidAt, { allowExpired: remote })) ?? order;
     for (const candidate of q.candidates ?? []) {
       if (await claimPaymentEvent({ orderId: order.id, provider: order.provider, eventId: candidate.eventId, raw: candidate.raw })) {
         return (await markOrderPaid(order.id, candidate.txnId, new Date(), { allowExpired: crypto })) ?? order;

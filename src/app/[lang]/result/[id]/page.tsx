@@ -20,7 +20,7 @@ import { PrimaryButton } from "@/components/site/primary-button";
 import { TrackView } from "@/components/analytics/track-view";
 import { currencyFor, reportCommerce } from "@/lib/analytics/commerce";
 import { trackAttrs } from "@/lib/analytics/events";
-import { appUrl, paymentModeFor, priceLabelFor, priceMinorFor } from "@/lib/env";
+import { paymentModeFor, priceLabelFor, priceMinorFor } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
@@ -76,7 +76,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
   const clear = hasClearPreference(profile);
   const price = priceLabelFor(locale);
   const mode = paymentModeFor(locale);
-  const secureNote = mode === "mock" ? t.secureMock : t.secureLive;
+  const secureNote = mode === "mock" ? t.secureMock : mode === "waffo" ? t.secureCard : t.secureLive;
 
   const actionProps = {
     resultId: result.id,
@@ -97,13 +97,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
         name: t.productName,
         description: t.productDescription,
         brand: { "@type": "Brand", name: siteCopy(locale).name },
-        offers: {
-          "@type": "Offer",
-          price: price,
-          priceCurrency: t.currencyCode,
-          availability: "https://schema.org/InStock",
-          url: `${appUrl()}${href(locale, "/result/sample")}`,
-        },
+        // No `offers`: the sample is free to read and nothing on the page is for sale.
       }
     : null;
 
@@ -121,7 +115,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
         {!sample && result.owner && compare && invitation && <section className="mx-[27px] mb-8 border-t border-line pt-6 md:mx-0"><h2 className="text-[22px]">{compareMessages[locale].title}</h2><p className="mt-3 text-[12px] leading-[2] text-mist">{compareMessages[locale].guestConsentDetail}</p><Link prefetch={false} href={href(invitation.locale,`/t/${compare}/join?result=${id}`)} className="pill mt-5 inline-flex">{compareMessages[locale].continue}</Link></section>}
         {sample ? (
           /* Nothing is locked on the sample, so it closes by inviting the test, not by quoting a price. */
-          <SampleCta priceLabel={price} secondary={{ href: href(locale, `/report/${SAMPLE_RESULT_ID}`), label: t.readSample }} />
+          <SampleCta secondary={{ href: href(locale, `/report/${SAMPLE_RESULT_ID}`), label: t.readSample }} />
         ) : clear ? (
           <UnlockPanel
             priceLabel={price}
