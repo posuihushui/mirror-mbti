@@ -7,16 +7,15 @@ import { resultMessages } from "@/lib/i18n/messages/result";
 import { getLocale } from "@/lib/i18n/server";
 
 type Props = {
-  priceLabel: string;
   /** Optional secondary link, e.g. from the sample result page into the sample report. `href` is already localized. */
   secondary?: { href: string; label: string };
 };
 
 /**
  * Closing block of the public sample. Everything here is already free to read, so the
- * invitation is to take the test — the price stays a footnote, not a headline.
+ * invitation is to take the test; the price is not quoted here at all (owner decision, 2026-09-17).
  */
-export async function SampleCta({ priceLabel, secondary }: Props) {
+export async function SampleCta({ secondary }: Props) {
   const locale = await getLocale();
   const t = resultMessages[locale].sampleCta;
 
@@ -55,7 +54,7 @@ export async function SampleCta({ priceLabel, secondary }: Props) {
           </Link>
         )}
         <p className="mt-[22px] text-[9px] leading-[1.9] text-[#86999f] md:mt-[15px] md:text-[10px]">
-          {t.footnote(priceLabel)}
+          {t.footnote}
         </p>
       </div>
     </section>

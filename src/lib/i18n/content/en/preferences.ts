@@ -33,7 +33,7 @@ export const enPreferenceDimensions = [
 export const enPreferenceNotes = [
   {
     title: "How to read results near 50%",
-    body: "50% means your answers on both sides of that dimension balanced out this time — it does not prove equal ability on both sides. The site treats a higher-side score of 50–60% as “close to balanced”; that is a product display rule, not a validated statistical confidence interval. When all four dimensions fall in this range, no definite type is given and no new paid unlock is offered.",
+    body: "50% means your answers on both sides of that dimension balanced out this time — it does not prove equal ability on both sides. The site treats a higher-side score of 50–60% as “close to balanced”; that is a product display rule, not a validated statistical confidence interval. When all four dimensions fall in this range, no definite type is given.",
   },
   {
     title: "When you retake, first look at what changed.",

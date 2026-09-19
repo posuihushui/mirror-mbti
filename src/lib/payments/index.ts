@@ -6,6 +6,7 @@ import type { PaymentProvider } from "./types";
 
 let wechat: PaymentProvider | null = null;
 let crypto: CryptoProvider | null = null;
+let waffo: PaymentProvider | null = null;
 
 /**
  * The provider for a payment mode. Orders pass the mode of their own language (or the provider
@@ -20,6 +21,13 @@ export async function getPaymentProvider(mode: PaymentProvider["mode"] = env().P
     return wechat;
   }
   if (mode === "crypto") return getCryptoProvider();
+  if (mode === "waffo") {
+    if (!waffo) {
+      const { createWaffoProvider } = await import("./waffo");
+      waffo = createWaffoProvider();
+    }
+    return waffo;
+  }
   return mockProvider;
 }
 

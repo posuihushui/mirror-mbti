@@ -8,7 +8,7 @@ import { SampleCta } from "@/components/result/sample-cta";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { trackAttrs } from "@/lib/analytics/events";
-import { paymentModeFor, priceLabelFor } from "@/lib/env";
+import { paymentModeFor } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
@@ -56,7 +56,6 @@ export default async function ReportPage({ params }: Params) {
 
   const data: ReportData = buildReportData(result.profile, { sample: result.sample, demo: paymentModeFor(locale) === "mock", locale });
 
-  const price = priceLabelFor(locale);
 
   return (
     <>
@@ -64,7 +63,7 @@ export default async function ReportPage({ params }: Params) {
       <ReportBody
         data={data}
         banner={<>{data.sample && <SampleNotice />}<p className="mx-[25px] my-5 text-[12px] leading-[1.9] text-mist md:mx-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p></>}
-        footer={data.sample ? <SampleCta priceLabel={price} /> : undefined}
+        footer={data.sample ? <SampleCta /> : undefined}
       />
       {data.sample && (
         <Dock>

@@ -7,7 +7,7 @@ import { pageMetadata } from "@/lib/seo";
 
 const copy = {
   zh: { title: "用户协议", description: "使用观己 mirror 与购买完整人格报告的条款。", updated: "2026-09-11" },
-  en: { title: "Terms of service", description: "The terms for using mirror and buying a full personality report.", updated: "2026-09-14" },
+  en: { title: "Terms of service", description: "The terms for using mirror and buying a full personality report.", updated: "2026-09-17" },
 };
 
 export async function generateMetadata(): Promise<Metadata> {

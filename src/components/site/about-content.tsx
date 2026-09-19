@@ -12,11 +12,11 @@ import { siteMessages } from "@/lib/i18n/messages/site";
 import { faqsFor } from "@/lib/site";
 
 /** `.about-content`: intro line, FAQ accordion (first item open), CTA. */
-export function AboutContent({ priceLabel, onStart }: { priceLabel: string; onStart?: () => void }) {
+export function AboutContent({ onStart }: { onStart?: () => void }) {
   const router = useRouter();
   const locale = useLocale();
   const t = siteMessages[locale].about;
-  const items = faqsFor(locale, priceLabel);
+  const items = faqsFor(locale);
   return (
     <div>
       <p className="my-[27px] text-[14px] leading-[2] text-[#78878e] whitespace-pre-line">

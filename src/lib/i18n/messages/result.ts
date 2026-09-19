@@ -39,9 +39,9 @@ const zh = {
     meta: [["32/64", "题可选"], ["5–10", "分钟"], ["16", "种人格倾向"]] as [string, string][],
     eyebrow: "轮到你了",
     heading: "属于你的故事，\n还未开始。",
-    body: "这是一份示例报告。选择 32 题或 64 题版本，免费了解自己的四维偏好；也可以按需解锁同样版式的完整报告。",
+    body: "这是一份示例报告。选择 32 题或 64 题版本，免费了解自己的四维偏好。",
     start: "开始认识自己",
-    footnote: (price: string) => `免费测试与性格概览 · 完整报告 ¥${price} / 次 · 无订阅、无自动续费`,
+    footnote: "免费测试与性格概览",
   },
   sampleNotice: {
     eyebrow: "示例报告",
@@ -96,9 +96,9 @@ const en: typeof zh = {
     meta: [["32/64", "items"], ["5–10", "minutes"], ["16", "types"]],
     eyebrow: "YOUR TURN",
     heading: "Your story\nhasn’t started yet.",
-    body: "This is a sample report. Choose the 32- or 64-item version to explore your four preferences for free, and unlock a full report in the same layout if you like.",
+    body: "This is a sample report. Choose the 32- or 64-item version to explore your four preferences for free.",
     start: "Start exploring",
-    footnote: (price: string) => `Free test and overview · Full report $${price} once · No subscription, no auto-renewal`,
+    footnote: "Free test and overview",
   },
   sampleNotice: {
     eyebrow: "SAMPLE REPORT",

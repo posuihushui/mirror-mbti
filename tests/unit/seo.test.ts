@@ -5,7 +5,7 @@ import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { faqs, site } from "@/lib/site";
 import { typeContext } from "@/lib/type-context";
 
-const ctx = { baseUrl: "https://mirror.example", priceLabel: "6.9" };
+const ctx = { baseUrl: "https://mirror.example" };
 
 describe("pageMetadata", () => {
   it("keeps share defaults that shallow metadata merging would otherwise drop", () => {
@@ -49,20 +49,22 @@ describe("typeContext definition", () => {
 });
 
 describe("llms files", () => {
-  it("llms.txt links every public section, all 16 types and the price", () => {
+  it("llms.txt links every public section and all 16 types, without quoting a price", () => {
     const text = llmsText(ctx);
     expect(text.startsWith(`# ${site.name}\n\n> `)).toBe(true);
     for (const path of ["/quiz", "/result/sample", "/report/sample", "/preferences", "/about", "/types", "/help", "/llms-full.txt"]) {
       expect(text).toContain(`](${ctx.baseUrl}${path})`);
     }
     for (const type of TYPES) expect(text).toContain(`[${type} ${names[type][0]}](${ctx.baseUrl}/types/${type})`);
-    expect(text).toContain("¥6.9");
+    expect(text).toContain("测试、人格类型与简短概览免费。");
+    // Nothing before the test may quote a price or hint at one.
+    expect(text).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
     expect(text).toContain("并非官方 MBTI 量表");
     expect(text).not.toMatch(/\/(my|pay|api)\//);
   });
   it("llms-full.txt carries the FAQ and every type definition", () => {
     const text = llmsFullText(ctx);
-    for (const [q, a] of faqs(ctx.priceLabel)) expect(text).toContain(`### ${q}\n\n${a}`);
+    for (const [q, a] of faqs()) expect(text).toContain(`### ${q}\n\n${a}`);
     for (const type of TYPES) expect(text).toContain(typeContext(type).definition);
   });
 });

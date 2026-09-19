@@ -27,14 +27,14 @@ import { NumberMotion, NumberTextMotion } from "@/components/site/number-motion"
 type CreateResultResponse = { ok: true; data: { id: string } } | { ok: false; error: { code: string; message: string } };
 
 /** The questionnaire island: answers and position persist in localStorage; scoring happens on the server. */
-export function Quiz({ priceLabel }: { priceLabel: string }) {
+export function Quiz() {
   const progress = useQuizProgress();
   const locale = useLocale();
   const [choosing, setChoosing] = useState(false);
   const [previousCount, setPreviousCount] = useState<number>();
   // A draft from the other language's questionnaire is kept, but this page starts from its own versions.
   const own = progress && getQuestionnaire(progress.questionnaireId)?.locale === locale ? progress : null;
-  if (!own || choosing) return <QuizVersions priceLabel={priceLabel} onChoose={() => setChoosing(false)} />;
+  if (!own || choosing) return <QuizVersions onChoose={() => setChoosing(false)} />;
   return <QuizRunner key={own.questionnaireId} progress={own} previousCount={previousCount} onChoose={() => { setPreviousCount(getQuestionnaire(own.questionnaireId)!.count); setChoosing(true); }} />;
 }
 

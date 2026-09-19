@@ -10,7 +10,7 @@ import { OverlayButton } from "@/components/site/overlay-button";
 import { StartButton } from "@/components/site/start-button";
 import { JsonLd } from "@/components/seo/json-ld";
 import { trackAttrs } from "@/lib/analytics/events";
-import { appUrl, priceLabelFor } from "@/lib/env";
+import { appUrl } from "@/lib/env";
 import { href, htmlLang, type Locale } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
@@ -27,9 +27,8 @@ export default async function HomePage() {
   const locale = await getLocale();
   const t = pageMessages[locale].home;
   const copy = siteCopy(locale);
-  const price = priceLabelFor(locale);
   const url = appUrl();
-  // Mirrors only facts visible on this page: free test + overview, paid full report.
+  // Mirrors only facts visible on this page: the test and the overview are free, and nothing here is sold.
   const appJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -41,10 +40,7 @@ export default async function HomePage() {
     operatingSystem: "Web",
     isAccessibleForFree: true,
     publisher: { "@id": organizationId(url) },
-    offers: [
-      { "@type": "Offer", name: t.freeOffer, price: "0", priceCurrency: pageMessages[locale].result.currencyCode },
-      { "@type": "Offer", name: t.reportOffer, price, priceCurrency: pageMessages[locale].result.currencyCode, url: `${url}${href(locale, "/result/sample")}` },
-    ],
+    offers: [{ "@type": "Offer", name: t.freeOffer, price: "0", priceCurrency: pageMessages[locale].result.currencyCode }],
   };
   return (
     <>
@@ -104,7 +100,7 @@ export default async function HomePage() {
               <Link href={href(locale, "/result/sample")} className="text-link" {...trackAttrs("view_sample_result", "hero")}>
                 {t.sampleLink} <ArrowUpRight size={16} />
               </Link>
-              <p className="col-span-full mt-[2px] text-[10px] text-[#707c80]">{t.priceLine(price)}</p>
+              <p className="col-span-full mt-[2px] text-[10px] text-[#707c80]">{t.freeLine}</p>
             </div>
           </div>
           <p className="absolute bottom-[7px] left-0 hidden text-[10px] tracking-[0.04em] text-[#899498] md:block">{t.bottomLine}</p>
@@ -127,7 +123,7 @@ export default async function HomePage() {
       <Dock variant="home" className="before:absolute before:inset-0 before:-z-1 before:bg-[linear-gradient(to_bottom,#e8eff100,#e8eff140_30px,#e8eff199_60px,#e8eff1d9_86px,#e8eff1eb)]">
         <StartButton className="border-[3px] border-[#3e4343]" trackLocation="dock" />
         <div className="flex items-center justify-between px-[3px] pt-[11px] text-[8px] text-[#b7c4c7]">
-          <span className="text-[9px] text-[#52656e]">{t.dockPrice(price)}</span>
+          <span className="text-[9px] text-[#52656e]">{t.dockFree}</span>
           <PrimaryLink locale={locale} label={t.dockSample} />
         </div>
       </Dock>

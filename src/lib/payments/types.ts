@@ -10,6 +10,8 @@ export type PaymentPayload =
   | { kind: "jsapi"; params: { appId: string; timeStamp: string; nonceStr: string; package: string; signType: "RSA"; paySign: string } }
   | { kind: "native"; codeUrl: string; qrSvg: string }
   | { kind: "h5"; mwebUrl: string }
+  /** Hosted checkout (Waffo Pancake): the buyer leaves for `url` and returns to the pay page. */
+  | { kind: "redirect"; url: string; expiresAt: string }
   /** Solana Pay transfer requests, one per accepted token, sharing the order's reference key. */
   | { kind: "solana"; recipient: string; reference: string; amount: string; tokens: (CryptoToken & { url: string; qrSvg: string })[] }
   /** Ethereum: the payer signs `challenge` first; then any accepted-token transfer from that wallet counts. */
@@ -34,7 +36,7 @@ export type PaymentCandidate = { eventId: string; txnId: string; raw: Record<str
 export type QueryPaymentResult = { status: "paid" | "pending" | "closed"; txnId?: string; paidAt?: Date; candidates?: PaymentCandidate[] };
 
 export interface PaymentProvider {
-  readonly mode: "mock" | "wechat" | "crypto";
+  readonly mode: "mock" | "wechat" | "crypto" | "waffo";
   createPayment(order: OrderRow, ctx: CreatePaymentContext): Promise<PaymentPayload>;
   queryPayment(order: OrderRow): Promise<QueryPaymentResult>;
   closePayment?(order: OrderRow): Promise<void>;

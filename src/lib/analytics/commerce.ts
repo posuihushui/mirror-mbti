@@ -24,7 +24,7 @@ export function reportCommerce(currency: string, minor: number): ReportCommerce 
   return { currency, value, items: [{ item_id: "full_report", item_name: "Full report", item_category: "report", price: value, quantity: 1 }] };
 }
 
-/** `mock`, `wechat_jsapi` / `wechat_h5` / `wechat_native`, `crypto_ethereum` / `crypto_solana`. */
+/** `mock`, `wechat_jsapi` / `wechat_h5` / `wechat_native`, `crypto_ethereum` / `crypto_solana`, `waffo_card`. */
 export function paymentTypeOf(order: Pick<OrderView, "provider" | "channel">): string {
   return order.provider === "mock" ? "mock" : `${order.provider}_${order.channel}`;
 }

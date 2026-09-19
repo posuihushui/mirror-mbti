@@ -1,13 +1,187 @@
 {
-  "id": "d05f44ef-4354-455b-a61f-2621eaffe3d6",
-  "prevId": "3a4875ff-a998-484f-979c-d4b7add76b1c",
+  "id": "6eb435da-1621-498b-b205-09a8fad8cec4",
+  "prevId": "d05f44ef-4354-455b-a61f-2621eaffe3d6",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.comparison_continuations": {
+      "name": "comparison_continuations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "visitor_id": {
+          "name": "visitor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invitation_id": {
+          "name": "invitation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result_id": {
+          "name": "result_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "continuations_owner_invitation_result_idx": {
+          "name": "continuations_owner_invitation_result_idx",
+          "columns": [
+            {
+              "expression": "visitor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "result_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "continuations_owner_result_idx": {
+          "name": "continuations_owner_result_idx",
+          "columns": [
+            {
+              "expression": "visitor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "result_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "continuations_expiry_idx": {
+          "name": "continuations_expiry_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "comparison_continuations_visitor_id_visitors_id_fk": {
+          "name": "comparison_continuations_visitor_id_visitors_id_fk",
+          "tableFrom": "comparison_continuations",
+          "tableTo": "visitors",
+          "columnsFrom": [
+            "visitor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comparison_continuations_invitation_id_comparison_invitations_id_fk": {
+          "name": "comparison_continuations_invitation_id_comparison_invitations_id_fk",
+          "tableFrom": "comparison_continuations",
+          "tableTo": "comparison_invitations",
+          "columnsFrom": [
+            "invitation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comparison_continuations_result_id_results_id_fk": {
+          "name": "comparison_continuations_result_id_results_id_fk",
+          "tableFrom": "comparison_continuations",
+          "tableTo": "results",
+          "columnsFrom": [
+            "result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.comparison_invitations": {
       "name": "comparison_invitations",
       "schema": "",
       "columns": {
+        "access_policy": {
+          "name": "access_policy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'paid-pair-v2'"
+        },
         "id": {
           "name": "id",
           "type": "uuid",
@@ -24,7 +198,7 @@
           "name": "share_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "visitor_id": {
           "name": "visitor_id",
@@ -130,6 +304,27 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "comparison_invitation_result_idx": {
+          "name": "comparison_invitation_result_idx",
+          "columns": [
+            {
+              "expression": "result_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -184,13 +379,25 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "invitation_access_policy": {
+          "name": "invitation_access_policy",
+          "value": "\"comparison_invitations\".\"access_policy\" in ('legacy-free-v1', 'paid-pair-v2')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.comparisons": {
       "name": "comparisons",
       "schema": "",
       "columns": {
+        "access_policy": {
+          "name": "access_policy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'paid-pair-v2'"
+        },
         "id": {
           "name": "id",
           "type": "uuid",
@@ -412,7 +619,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "comparison_access_policy": {
+          "name": "comparison_access_policy",
+          "value": "\"comparisons\".\"access_policy\" in ('legacy-free-v1', 'paid-pair-v2')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.orders": {
@@ -747,6 +959,12 @@
       "name": "referral_attributions",
       "schema": "",
       "columns": {
+        "invitation_id": {
+          "name": "invitation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "visitor_id": {
           "name": "visitor_id",
           "type": "uuid",
@@ -757,7 +975,7 @@
           "name": "share_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "first_touch_at": {
           "name": "first_touch_at",
@@ -811,9 +1029,43 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "attributions_invitation_completed_idx": {
+          "name": "attributions_invitation_completed_idx",
+          "columns": [
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "completed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
+        "referral_attributions_invitation_id_comparison_invitations_id_fk": {
+          "name": "referral_attributions_invitation_id_comparison_invitations_id_fk",
+          "tableFrom": "referral_attributions",
+          "tableTo": "comparison_invitations",
+          "columnsFrom": [
+            "invitation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "referral_attributions_visitor_id_visitors_id_fk": {
           "name": "referral_attributions_visitor_id_visitors_id_fk",
           "tableFrom": "referral_attributions",
@@ -865,7 +1117,12 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "attributions_one_source": {
+          "name": "attributions_one_source",
+          "value": "num_nonnulls(\"referral_attributions\".\"share_id\", \"referral_attributions\".\"invitation_id\") = 1"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.result_shares": {
@@ -1198,6 +1455,31 @@
       "name": "share_events",
       "schema": "",
       "columns": {
+        "invitation_id": {
+          "name": "invitation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_result_id": {
+          "name": "owner_result_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "eligibility_at_event": {
+          "name": "eligibility_at_event",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rule_version": {
+          "name": "rule_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'first-touch-v1'"
+        },
         "id": {
           "name": "id",
           "type": "uuid",
@@ -1308,9 +1590,77 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "share_events_invitation_time_idx": {
+          "name": "share_events_invitation_time_idx",
+          "columns": [
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "share_events_owner_result_time_idx": {
+          "name": "share_events_owner_result_time_idx",
+          "columns": [
+            {
+              "expression": "owner_result_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
+        "share_events_invitation_id_comparison_invitations_id_fk": {
+          "name": "share_events_invitation_id_comparison_invitations_id_fk",
+          "tableFrom": "share_events",
+          "tableTo": "comparison_invitations",
+          "columnsFrom": [
+            "invitation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "share_events_owner_result_id_results_id_fk": {
+          "name": "share_events_owner_result_id_results_id_fk",
+          "tableFrom": "share_events",
+          "tableTo": "results",
+          "columnsFrom": [
+            "owner_result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "share_events_share_id_result_shares_id_fk": {
           "name": "share_events_share_id_result_shares_id_fk",
           "tableFrom": "share_events",
@@ -1362,7 +1712,16 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "share_events_one_source": {
+          "name": "share_events_one_source",
+          "value": "num_nonnulls(\"share_events\".\"share_id\", \"share_events\".\"invitation_id\") <= 1"
+        },
+        "share_events_eligibility": {
+          "name": "share_events_eligibility",
+          "value": "\"share_events\".\"eligibility_at_event\" in ('eligible', 'locked', 'unavailable', 'syncing')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.share_rate_limits": {

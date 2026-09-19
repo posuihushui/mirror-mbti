@@ -7,7 +7,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { PageViews } from "@/components/analytics/page-views";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteOverlays } from "@/components/site/site-overlays";
-import { priceLabelFor } from "@/lib/env";
 import { htmlLang, isPublishedLocale, ogLocale, publishedLocales } from "@/lib/i18n/locale";
 import { LocaleProvider } from "@/lib/i18n/locale-provider";
 import { getLocale } from "@/lib/i18n/server";
@@ -99,7 +98,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
           {children}
           <Suspense fallback={null}>
             <PageViews />
-            <SiteOverlays priceLabel={priceLabelFor(locale)} />
+            <SiteOverlays />
           </Suspense>
           <Toaster />
         </LocaleProvider>

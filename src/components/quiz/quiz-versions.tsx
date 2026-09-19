@@ -10,7 +10,7 @@ import { quizMessages } from "@/lib/i18n/messages/quiz";
 import { emptyProgress } from "@/lib/quiz-progress";
 import { questionnairesFor } from "@/lib/questionnaires";
 
-export function QuizVersions({ onChoose, priceLabel }: { onChoose: () => void; priceLabel: string }) {
+export function QuizVersions({ onChoose }: { onChoose: () => void }) {
   const { drafts } = useQuizDrafts();
   const locale = useLocale();
   const t = quizMessages[locale].versions;
@@ -39,7 +39,7 @@ export function QuizVersions({ onChoose, priceLabel }: { onChoose: () => void; p
           );
         })}
       </div>
-      <p className="mt-8 text-[12px] leading-[2] text-mist">{t.footnote(priceLabel)}</p>
+      <p className="mt-8 text-[12px] leading-[2] text-mist">{t.footnote}</p>
     </main>
   );
 }

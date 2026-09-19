@@ -79,7 +79,7 @@ describe("English content", () => {
       const report = buildReportData(profile, { sample: false, demo: true, locale: "en" });
       expect(JSON.stringify(report)).not.toMatch(CJK);
     }
-    expect(JSON.stringify(faqsFor("en", "1"))).not.toMatch(CJK);
+    expect(JSON.stringify(faqsFor("en"))).not.toMatch(CJK);
   });
 });
 
@@ -92,11 +92,13 @@ describe("English SEO", () => {
     expect(meta.openGraph?.images).toEqual([expect.objectContaining({ url: "/en/opengraph-image" })]);
   });
 
-  it("English llms files link English pages only and quote the dollar price", () => {
-    const ctx = { baseUrl: "https://mirror.example", priceLabel: "1" };
+  it("English llms files link English pages only and never quote an amount", () => {
+    const ctx = { baseUrl: "https://mirror.example" };
     const text = llmsText(ctx, "en");
     expect(text).toContain("](https://mirror.example/en/types/INFJ)");
-    expect(text).toContain("$1");
+    expect(text).toContain("The test, your type and a short overview are free.");
+    // Nothing before the test may quote a price or hint at one.
+    expect(text).not.toMatch(/\$\s?\d|\bpaid\b|\bunlock|\bpricing\b/i);
     expect(text).toContain("](https://mirror.example/llms.txt)");
     expect(text).not.toMatch(/\]\(https:\/\/mirror\.example\/(quiz|types|about)/);
     expect(llmsFullText(ctx, "en")).toContain(typeContext("ENTP", "en").definition);

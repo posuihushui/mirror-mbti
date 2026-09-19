@@ -4,7 +4,6 @@ import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { JsonLd } from "@/components/seo/json-ld";
 import { trackAttrs } from "@/lib/analytics/events";
-import { priceLabelFor } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { siteMessages } from "@/lib/i18n/messages/site";
@@ -22,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AboutPage() {
   const locale = await getLocale();
   const t = pageMessages[locale].about;
-  const items = faqsFor(locale, priceLabelFor(locale));
+  const items = faqsFor(locale);
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
