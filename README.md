@@ -50,6 +50,10 @@ npm run db:migrate            # 应用 ./drizzle 中的迁移
 npm run dev                   # http://localhost:3000
 ```
 
+更新代码后若有新的 `drizzle/*.sql`，启动前再次运行 `npm run db:migrate`。迁移脚本自动按 Next.js 规则读取 `.env*`（默认开发环境，生产环境设置 `NODE_ENV=production`）；显式传入的环境变量优先，已应用的迁移不会重复执行。
+
+分享功能需要 `0004_flippant_brother_voodoo.sql` 创建的表。若结果页正常、生成相处说明书却返回 `503 SHARE_UNAVAILABLE`，先确认应用实际连接的数据库已执行该迁移。
+
 常用命令：
 
 | 命令 | 作用 |

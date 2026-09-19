@@ -1,9 +1,12 @@
 /* Runs pending SQL migrations from ./drizzle. Used by `npm run db:migrate` and the Docker `migrate` service. */
+import { loadEnvConfig } from "@next/env";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 
 async function main() {
+  // Match next dev locally; explicitly supplied environment variables retain priority.
+  loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production");
   const url = process.env.DATABASE_URL;
   if (!url) {
     console.error("DATABASE_URL is not set");
