@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/report/sample", 0.7, "monthly"],
     ["/about", 0.7, "monthly"],
     ["/preferences", 0.7, "monthly"],
+    ["/pairing", 0.7, "monthly"],
     ["/help", 0.6, "monthly"],
     ["/types", 0.8, "monthly"],
     ...TYPES.map((t): [string, number, Frequency] => [`/types/${t}`, 0.7, "monthly"]),

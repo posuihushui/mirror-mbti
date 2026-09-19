@@ -25,9 +25,10 @@ afterAll(async () => {
   // Remove only rows created by this run; never truncate shared fixtures.
   if (visitors.length) {
     await sql`delete from share_events where actor_visitor_id in ${sql(visitors)} or share_id in (select id from result_shares where visitor_id in ${sql(visitors)})`;
+    await sql`delete from comparison_continuations where visitor_id in ${sql(visitors)} or invitation_id in (select id from comparison_invitations where visitor_id in ${sql(visitors)})`;
+    await sql`delete from referral_attributions where visitor_id in ${sql(visitors)} or share_id in (select id from result_shares where visitor_id in ${sql(visitors)}) or invitation_id in (select id from comparison_invitations where visitor_id in ${sql(visitors)})`;
     await sql`delete from comparisons where host_visitor_id in ${sql(visitors)} or guest_visitor_id in ${sql(visitors)}`;
     await sql`delete from comparison_invitations where visitor_id in ${sql(visitors)}`;
-    await sql`delete from referral_attributions where visitor_id in ${sql(visitors)} or share_id in (select id from result_shares where visitor_id in ${sql(visitors)})`;
     await sql`delete from result_shares where visitor_id in ${sql(visitors)}`;
     await sql`delete from orders where visitor_id in ${sql(visitors)}`;
     await sql`delete from results where visitor_id in ${sql(visitors)}`;
@@ -43,10 +44,11 @@ async function resultOwner() {
 }
 async function fixture() {
   const host = await resultOwner(), guest = await resultOwner();
+  await sql`update results set unlocked_at = now() where id in ${sql([host.result.id, guest.result.id])}`;
   const share = await createShare(host.visitor, { resultId: host.result.id, selectedIds: defaultShareSelection(host.result.profile), showType: false, showDimensions: false, consentVersion: "share-public-v1", requestId: randomUUID() });
   const requestId = randomUUID();
-  const invitation = await createComparisonInvitation(host.visitor, { shareId: share.item.id, consentVersion: "compare-host-v1", requestId });
-  const input = { invitationToken: invitation.item.token, resultId: guest.result.id, consentVersion: "compare-guest-v1" as const };
+  const invitation = await createComparisonInvitation(host.visitor, { shareId: share.item.id, consentVersion: "compare-host-v2", requestId });
+  const input = { invitationToken: invitation.item.token, resultId: guest.result.id, consentVersion: "compare-guest-v2" as const };
   return { host, guest, share, invitation, requestId, input };
 }
 async function touch(visitor: string, token: string) {
@@ -58,7 +60,7 @@ describe("isolated share-growth database contracts", () => {
     const f = await fixture();
     expect(f.share.item.snapshot).not.toHaveProperty("dimensions");
     expect(f.invitation.item.snapshot).toHaveProperty("categories");
-    await expect(createComparisonInvitation(f.host.visitor, { shareId: f.share.item.id, consentVersion: "bad" as "compare-host-v1", requestId: randomUUID() })).rejects.toThrow();
+    await expect(createComparisonInvitation(f.host.visitor, { shareId: f.share.item.id, consentVersion: "bad" as "compare-host-v2", requestId: randomUUID() })).rejects.toThrow();
     const joined = await joinComparison(f.guest.visitor, f.input);
     expect(await getOwnedComparison(joined.item.id, f.host.visitor)).not.toBeNull();
     expect(await getOwnedComparison(joined.item.id, f.guest.visitor)).not.toBeNull();
@@ -69,7 +71,7 @@ describe("isolated share-growth database contracts", () => {
   });
   it("serializes duplicate invitation/join requests and never swaps a guest result", async () => {
     const f = await fixture();
-    const invitations = await Promise.all(Array.from({ length: 4 }, () => createComparisonInvitation(f.host.visitor, { shareId: f.share.item.id, consentVersion: "compare-host-v1", requestId: f.requestId })));
+    const invitations = await Promise.all(Array.from({ length: 4 }, () => createComparisonInvitation(f.host.visitor, { shareId: f.share.item.id, consentVersion: "compare-host-v2", requestId: f.requestId })));
     expect(new Set(invitations.map(r => r.item.id)).size).toBe(1);
     const pairs = await Promise.all(Array.from({ length: 5 }, () => joinComparison(f.guest.visitor, f.input)));
     expect(new Set(pairs.map(r => r.item.id)).size).toBe(1);
@@ -79,11 +81,12 @@ describe("isolated share-growth database contracts", () => {
   });
   it("rejects new keys for an active invite and serializes a shared request key across shares", async () => {
     const f = await fixture();
-    await expect(createComparisonInvitation(f.host.visitor, { shareId: f.share.item.id, consentVersion: "compare-host-v1", requestId: randomUUID() })).rejects.toMatchObject({ status: 409, code: "ACTIVE_INVITATION" });
+    await expect(createComparisonInvitation(f.host.visitor, { shareId: f.share.item.id, consentVersion: "compare-host-v2", requestId: randomUUID() })).rejects.toMatchObject({ status: 409, code: "ACTIVE_INVITATION" });
+    await revokeComparisonInvitation(f.invitation.item.id, f.host.visitor);
     const makeShare = () => createShare(f.host.visitor, { resultId: f.host.result.id, selectedIds: defaultShareSelection(f.host.result.profile), showType: false, showDimensions: false, consentVersion: "share-public-v1", requestId: randomUUID() });
     const shares = await Promise.all([makeShare(), makeShare()]);
     const requestId = randomUUID();
-    const created = await Promise.allSettled(shares.map(share => createComparisonInvitation(f.host.visitor, { shareId: share.item.id, consentVersion: "compare-host-v1", requestId })));
+    const created = await Promise.allSettled(shares.map(share => createComparisonInvitation(f.host.visitor, { shareId: share.item.id, consentVersion: "compare-host-v2", requestId })));
     expect(created.filter(row => row.status === "fulfilled")).toHaveLength(1);
     const rejected = created.find(row => row.status === "rejected");
     expect(rejected?.status === "rejected" && rejected.reason).toMatchObject({ status: 409, code: "IDEMPOTENCY_CONFLICT" });

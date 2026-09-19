@@ -1,0 +1,5 @@
+.reveal { opacity: 1; transform: none; }
+.status { animation: settle 160ms ease-out; }
+@keyframes settle { from { opacity: .5; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .status { animation: none; } }
+@media print { .status { animation: none; } .reveal { opacity: 1 !important; transform: none !important; } }

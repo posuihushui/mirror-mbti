@@ -15,7 +15,7 @@
 
 所有事件自动附带：
 
-- `page_type`：`home` `quiz` `result` `result_sample` `report` `report_sample` `pay` `my_report` `types` `type_detail` `preferences` `about` `help` `privacy` `terms` `other`
+- `page_type`：`home` `quiz` `result` `result_sample` `report` `report_sample` `pay` `my_report` `types` `type_detail` `preferences` `about` `help` `privacy` `terms` `share` `invitation` `comparison` `my_shares` `my_pairing` `pairing` `other`
 - `site_language`：`zh` / `en`
 
 用户属性：`wechat_browser`（是否在微信内置浏览器中打开）。
@@ -179,9 +179,10 @@
 | `view_about` `view_help` `view_preferences` `view_types` `view_type` `view_privacy` `view_terms` | 站内内容页链接 |
 | `contact_email` | 帮助页的客服邮箱 |
 | `order_receipt` / `recover_other` | 展开订单号 / 展开「找回其他记录」 |
+| `pairing_info` / `invite_pairing` / `my_pairing` | 双人指南介绍 / 邀请入口 / 我的双人指南；仅通用名称，不附带结果或邀请编号 |
 | `home` | 回到首页（报告结尾、404） |
 
-`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`unclear_result`、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`。
+`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`unclear_result`、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`、`pairing_benefit`、`pairing_center`。
 
 ## 新增埋点
 
@@ -192,6 +193,50 @@
 
 ## 分享与双人提示
 
-`/s/[token]`、`/t/[token]`（含确认页）、`/compare/[id]`及`/my/shares`的页面路径经过占位符替换，去除全部查询参数，覆盖`/en`与内部`/zh`。这些页面不加载gtag；已加载时设置measurement-id对应的`ga-disable`，链接点击捕获阶段即关闭，避免增强型下载/外链/导航自动采集完整能力链接。自有事件只POST到`/api/share-events`，不发GA。
+`/s/[token]`、`/t/[token]`（含确认页）、`/compare/[id]`、`/my/shares`及`/my/pairing`的页面路径经过占位符替换，去除全部查询参数，覆盖`/en`与内部`/zh`。这些页面不加载gtag；已加载时设置measurement-id对应的`ga-disable`，链接点击捕获阶段即关闭，避免增强型下载/外链/导航自动采集完整能力链接。自有事件只POST到`/api/share-events`，不发GA。
 
 分享来源以自有数据库的7日首次触达/首次完成为准。复用现有版本选择按钮的一次`quiz_start`触发点，同时发送不含token的`share_quiz_started`，不新增GA初始化或重复GA事件。复制与保存请求只表示操作，不能称为真实分享成功。聚合与保留期命令见`docs/verification/share-growth.md`。
+
+
+## 付费双人指南：自有数据库事件（paid-pair-v2）
+
+双方各自解锁所选报告的规则已被用户确认。免费单人卡与付费邀请单独统计；不把新旧两种产品的差异解释成付费规则的因果增量。`/pairing` 为公开介绍页，可沿用通用 `cta_click`，不进入带本人结果的购买漏斗。
+
+| 事件 | 客户端提供 | 服务端验证与去重 |
+| --- | --- | --- |
+| `pairing_benefit_viewed` | `resultId`、白名单 surface、随机 eventId | 签名 visitor 必须拥有结果；服务器计算 `eligibility_at_event`，每 visitor/result/UTC 日一次。仅权益区域真正可见时上报。 |
+| `pairing_entry_clicked` | 同上 | 验证归属和权益状态，按事件 ID 去重，记录真实点击。 |
+| `pairing_checkout_opened` | 同上 | 支付弹层实际打开，visitor/result/UTC 日去重；复用既有打开时机，不再发送一次 GA `begin_checkout`。 |
+| `pairing_result_selected` | **不接受客户端上报** | continuation 首次登记后，由服务端在 savepoint 中写入；visitor/invitation/result 去重，保存邀请来源、本人结果与服务器资格。即使续接记录后来清理，事件仍按自身90日规则保留。 |
+| `pairing_resume_clicked` | `continuationId`、surface、eventId | 校验本人、未完成且仍有效的续接，推导 invitationId/resultId 并计算资格。点击不等于同意。 |
+| 邀请创建／配对生成 | 无客户端替代事件 | 使用 `comparison_invitations` / `comparisons` 的持久事实，以唯一记录计数，区分 `paid-pair-v2` / `legacy-free-v1`。 |
+| `comparison_viewed` | pairId、surface、eventId | 仅未撤回且本人参与的指南；新制校验双方各自的结果权益；每 pair/visitor/UTC 日去重。邀请过期不影响既有指南的阅读。 |
+
+`src/lib/pairing-tracking.ts` 的 `emitPairingEvent` / `emitPairingResume` 仅请求本站 `/api/share-events`，失败不阻塞交互。资格字段不由客户端授权或传入。`pairing_result_selected` 不在公开事件 schema 内。新增 surface 白名单包括 `report`、`my_pairing`、`payment_sheet`、`pay_status` 和 `pairing`。
+
+公开有效可见触达仍复用 `share_browser_visible`：`surface=invitation` 时按邀请 token 解析独立的 `invitation_id`，不要求先创建卡片；单人卡写 `share_id`。来源严格互斥，当前7日有效窗口不能被后来来源覆盖，自己看自己不建归因，有已有结果的访客不记为首次测试推荐。新邀请必须仍有效、有 host 权益，若显式关联单人卡则卡片也必须有效。失效旧邀请不接受新来源事件。所有新采集写规则版本 `paid-pair-v2`；过去无法区分的卡片／旧邀请触达不回填猜测。
+
+### 聚合脚本与窗口
+
+```bash
+SHARE_GROWTH_DATABASE_URL=postgres://... npx tsx scripts/report-share-growth.ts --start 2026-09-01 --end 2026-09-17
+SHARE_GROWTH_DATABASE_URL=postgres://... npx tsx scripts/report-share-growth.ts --start 2026-09-01 --end 2026-09-17 --format csv
+```
+
+连接地址必须显式提供，脚本不加载 `.env` 或默认 `DATABASE_URL`；使用只读、可重复读事务。输出只有聚合值，不输出 visitor/result/token/order。UTC `[start,end)` 的 **end 同时是观察截止时间**，未来数据不回填该报告。
+
+- `sources` 分开列出 `single_card` 与 `paid_invitation` 的创建、可见访客、7日首次触达完成。先到来源窗口不双计。
+- `purchase_funnel`：同一 visitor/result 首次 `locked` 权益曝光 → 7日内实际打开支付 → 同一结果7日内真实付款。先在全部保留历史找首次曝光，再按日期筛队列，不能借后续曝光追领转化。
+- `invitation_start_7d`：首次 `eligible` 曝光时没有既存有效新邀请的结果中，7日内发起邀请的比例。
+- `paid_invitation_funnel.completed_14d`：邀请创建14日内至少生成一次指南；超过14日生成另列。触达但未选择结果仅为可见流失，不能直接断言因付费而离开。
+- `invited_result_selection`：按 visitor/invitation/result 选定事实分为已具备资格、需解锁、同步中、无法新购买；仅 `locked` 组统计随后7日同一结果的真实支付。
+- `comparisons` 分新旧 policy；`both_read_7d` 只计生成后7日内双方各有一次有效阅读。迟到的双方阅读另列。
+- 上述转化率的 numerator / denominator 仅来自完整成熟的7／14日队列；`observed_*` 与 `observing_count` 单列，分母为0时 value 为 null。
+- `pairing_revenue` 仅统计成熟的未购权益曝光队列，同一 visitor/result 在7日内付款的订单。`revenue` 保留 P0 首次推荐完成后7日、同一首次结果的收入。两个归因视角可能重合，**不得相加**；所有真实收入都排除 mock，CNY/USD 分币种，paid/refunded 分状态，不充当退款流水。
+- 保留 P0 顶层指标键 `first_completion_card_creation_7d`、`first_touch_completion_7d`、`first_completion_referral_7d`、`share_seed_referral_14d`、`real_payment_7d` 与 `next_generation`，严格限制为单人卡来源。口径版本已升级，观察截止固定为 end；不能与旧脚本按运行时刻观察的数值直接混比。
+
+事件保留90日、归因窗口180日，早于事件保留期的查询被拒绝；历史首次曝光超出保留期时只能给出“保留历史中的首次”，不是终身首次。到期未转化的归因窗口可能被替换，无法还原旧窗口；报告明确披露这些缺口，统计错误不得影响有效测试提交（结果主事务使用 savepoint 隔离可选归因）。
+
+### 清理
+
+`SHARE_GROWTH_DATABASE_URL=... npx tsx scripts/cleanup-share-growth.ts` 默认只读预演，显式 `--apply` 才清理：事件90日、归因窗口结束后180日、续接到期或完成后30日、限流2日。不会删除报告、订单、邀请、指南或恢复记录，不自动计划执行。统计失败不改变付费权益，复制／下载／SDK 配置成功不称为真实分享成功。

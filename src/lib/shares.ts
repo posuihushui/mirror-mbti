@@ -12,7 +12,7 @@ import { lockVisitor } from "@/lib/share-request";
 export type ShareRow = typeof schema.resultShares.$inferSelect;
 export function ownedShareView(row: ShareRow) {
   const url = `${appUrl()}${href(row.locale as Locale, `/s/${row.token}`)}`;
-  return { id: row.id, token: row.token, url, imageUrl: `${url}/image`, snapshot: row.snapshot, createdAt: row.createdAt.toISOString(), revokedAt: row.revokedAt?.toISOString() ?? null };
+  return { id: row.id, resultId: row.resultId, token: row.token, url, imageUrl: `${url}/image`, snapshot: row.snapshot, createdAt: row.createdAt.toISOString(), revokedAt: row.revokedAt?.toISOString() ?? null };
 }
 export async function shareOptions(resultId: string, visitorId: string) {
   const row = await db().query.results.findFirst({ where: and(eq(schema.results.id, resultId), eq(schema.results.visitorId, visitorId)), columns: { type: true, values: true, balanced: true, questionnaireId: true } });

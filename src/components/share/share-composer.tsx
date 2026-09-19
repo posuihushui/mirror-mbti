@@ -10,7 +10,7 @@ import { ShareCard } from "./share-card";
 import { ShareActions } from "./share-actions";
 import styles from "./share-motion.module.css";
 
-export type OwnerShareItem = { id: string; token: string; url: string; imageUrl: string; snapshot: PublicShareSnapshot; createdAt: string; revokedAt: string | null };
+export type OwnerShareItem = { id: string; resultId: string; token: string; url: string; imageUrl: string; snapshot: PublicShareSnapshot; createdAt: string; revokedAt: string | null };
 export type ShareOptions = {
   candidates: ShareCandidate[]; defaultSelectedIds: string[]; recentShares: OwnerShareItem[];
   typeLabel?: string; typeNote?: string; dimensions?: PublicShareSnapshot["dimensions"];

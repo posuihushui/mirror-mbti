@@ -37,6 +37,9 @@ export type CtaId =
   | "contact_email"
   | "order_receipt"
   | "recover_other"
+  | "pairing_info"
+  | "invite_pairing"
+  | "my_pairing"
   | "home";
 
 /** Where the CTA sits. Every event also carries `page_type`, so `dock` on the result page and on home stay apart. */
@@ -60,7 +63,9 @@ export type CtaLocation =
   | "about_overlay"
   | "empty_overlay"
   | "type_grid"
-  | "type_context";
+  | "type_context"
+  | "pairing_benefit"
+  | "pairing_center";
 
 export type TrackAttrs = { "data-track": CtaId; "data-track-location": CtaLocation };
 

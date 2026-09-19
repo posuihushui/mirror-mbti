@@ -6,7 +6,7 @@ import postgres from "postgres";
 async function main() {
   const args = process.argv.slice(2);
   if (args.includes("--help")) {
-    console.log("Set SHARE_GROWTH_DATABASE_URL explicitly. Default dry-run; --apply deletes events older than 90 days, attribution windows inactive for 180 days, and share rate limits older than 2 days. Never deletes results, shares, comparisons, orders or recovery records.");
+    console.log("Set SHARE_GROWTH_DATABASE_URL explicitly. Default dry-run; --apply deletes events older than 90 days, attribution windows inactive for 180 days, continuations expired/completed for 30 days, and share rate limits older than 2 days. Never deletes results, shares, invitations, comparisons, orders or recovery records.");
     return;
   }
   if (args.some((arg) => arg !== "--apply")) throw new Error("Unknown argument; use --help");
@@ -25,14 +25,17 @@ async function main() {
           delete from referral_attributions where greatest(expires_at, completed_at) < now() - interval '180 days' returning 1
         ), limits as (
           delete from share_rate_limits where window_started_at < now() - interval '2 days' returning 1
-        ) select (select count(*)::int from events) as events, (select count(*)::int from attributions) as attributions, (select count(*)::int from limits) as rate_limits`;
+        ), continuations as (
+          delete from comparison_continuations where coalesce(completed_at, expires_at) < now() - interval '30 days' returning 1
+        ) select (select count(*)::int from events) as events, (select count(*)::int from attributions) as attributions, (select count(*)::int from limits) as rate_limits, (select count(*)::int from continuations) as continuations`;
       }
       return tx`select
         (select count(*)::int from share_events where occurred_at < now() - interval '90 days') as events,
         (select count(*)::int from referral_attributions where greatest(expires_at, completed_at) < now() - interval '180 days') as attributions,
-        (select count(*)::int from share_rate_limits where window_started_at < now() - interval '2 days') as rate_limits`;
+        (select count(*)::int from share_rate_limits where window_started_at < now() - interval '2 days') as rate_limits,
+        (select count(*)::int from comparison_continuations where coalesce(completed_at, expires_at) < now() - interval '30 days') as continuations`;
     });
-    console.log(JSON.stringify({ mode: apply ? "applied" : "dry-run", counts: counts[0], retention_days: { events: 90, attributions_after_window_end: 180, rate_limits: 2 }, note: "Business records are retained. Existing results continue to establish returning-user status." }, null, 2));
+    console.log(JSON.stringify({ mode: apply ? "applied" : "dry-run", counts: counts[0], retention_days: { events: 90, attributions_after_window_end: 180, continuations_after_completion_or_expiry: 30, rate_limits: 2 }, note: "Business records and selection events within their own retention are retained. Existing results continue to establish returning-user status." }, null, 2));
   } finally { await sql.end({ timeout: 5 }); }
 }
 main().catch((error: unknown) => {

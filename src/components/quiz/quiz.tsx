@@ -104,6 +104,11 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
       writeQuizProgress(null);
       const compare = new URLSearchParams(window.location.search).get("compare");
       const continuation = compare && /^[A-Za-z0-9_-]{32}$/.test(compare) ? `?compare=${compare}` : "";
+      if (continuation) {
+        // Keep source outside answers/drafts. A failed intent save never turns a valid result into a failed submission.
+        await fetch("/api/comparison-continuations", { method: "POST", headers: { "content-type": "application/json", "X-Mirror-Locale": locale },
+          body: JSON.stringify({ invitationToken: compare, resultId: json.data.id }), signal: AbortSignal.timeout(4000) }).catch(() => undefined);
+      }
       router.push(href(locale, `/result/${json.data.id}${continuation}`));
     } catch (e) {
       track("quiz_submit_error", { ...quiz, error_code: (e as { code?: string }).code ?? (e instanceof Error ? e.name : "UNKNOWN") });

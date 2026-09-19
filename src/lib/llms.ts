@@ -1,3 +1,4 @@
+import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { enSite } from "@/lib/i18n/content/en/site";
 import { href, type Locale } from "@/lib/i18n/locale";
 import { TYPES, typeMeta } from "@/lib/personality";
@@ -25,9 +26,11 @@ const copy = {
       `完整报告四章：${chapterLabelsFor("zh").join("、")}；内容包括${unlockBulletsFor("zh").join("；")}。`,
       `人格模型：${preferenceDimensionsFor("zh").map((d) => d.pair).join("、")}四个维度组合成 16 种倾向。`,
       "边界：原创自我探索问卷，并非官方 MBTI 量表，也未经过心理测量学验证；结果用于自我探索，不用于诊断、招聘筛选或给他人贴标签。",
+      `${pairingMessages.zh.title}：${pairingMessages.zh.summary} ${pairingMessages.zh.feeRule}`,
       `联系：${site.supportEmail}`,
     ],
     pages: [
+      ["/pairing", pairingMessages.zh.title, pairingMessages.zh.summary],
       ["/quiz", "开始测试", "选择 32 题轻量版或 64 题标准版，免费查看人格类型与概览"],
       ["/result/sample", "示例性格画像", "示例数据的四维偏好雷达图与人格概览"],
       ["/report/sample", "完整示例报告", "与付费报告同一版式的四章示例全文，可免费阅读"],
@@ -65,9 +68,11 @@ const copy = {
       `The full report has four chapters: ${chapterLabelsFor("en").join(", ")}. It includes ${unlockBulletsFor("en").map((b) => b.charAt(0).toLowerCase() + b.slice(1)).join("; ")}.`,
       `Model: four dimensions (${preferenceDimensionsFor("en").map((d) => d.pair).join(", ")}) combine into 16 types. Types are shown as four letters with their preference labels, without nicknames.`,
       "Limits: an original self-exploration questionnaire, not the official MBTI® instrument and not psychometrically validated; results are for self-exploration, not diagnosis, hiring or labelling people.",
+      `${pairingMessages.en.title}: ${pairingMessages.en.summary} ${pairingMessages.en.feeRule}`,
       `Contact: ${site.supportEmail}`,
     ],
     pages: [
+      ["/pairing", pairingMessages.en.title, pairingMessages.en.summary],
       ["/quiz", "Take the test", "Choose the 32-item Quick or 64-item Standard version; your type and overview are free"],
       ["/result/sample", "Sample personality profile", "A four-preference radar chart and overview from sample data"],
       ["/report/sample", "Full sample report", "All four chapters in the same layout as the paid report, free to read"],

@@ -50,7 +50,7 @@ export function track<E extends AnalyticsEventName>(name: E, ...args: Args<E>): 
 
 let configuredMeasurementId: string | undefined;
 function protectCapabilityPage() {
-  const sensitive = ["share", "invitation", "comparison", "my_shares"].includes(pageInfo(window.location.pathname).pageType);
+  const sensitive = ["share", "invitation", "comparison", "my_shares", "my_pairing"].includes(pageInfo(window.location.pathname).pageType);
   if (configuredMeasurementId) (window as unknown as Record<string, unknown>)[`ga-disable-${configuredMeasurementId}`] = sensitive;
   return sensitive;
 }
@@ -80,7 +80,7 @@ function trackClick(event: MouseEvent) {
   if (anchor && configuredMeasurementId) {
     try {
       const target = new URL(anchor.href, window.location.href);
-      if (target.origin === window.location.origin && ["share", "invitation", "comparison", "my_shares"].includes(pageInfo(target.pathname).pageType)) {
+      if (target.origin === window.location.origin && ["share", "invitation", "comparison", "my_shares", "my_pairing"].includes(pageInfo(target.pathname).pageType)) {
         (window as unknown as Record<string, unknown>)[`ga-disable-${configuredMeasurementId}`] = true;
       }
     } catch { /* malformed links do not affect navigation */ }

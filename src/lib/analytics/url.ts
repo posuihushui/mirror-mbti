@@ -20,6 +20,8 @@ export type PageType =
   | "invitation"
   | "comparison"
   | "my_shares"
+  | "my_pairing"
+  | "pairing"
   | "other";
 
 const STATIC_PAGES: Record<string, PageType> = {
@@ -30,6 +32,7 @@ const STATIC_PAGES: Record<string, PageType> = {
   help: "help",
   privacy: "privacy",
   terms: "terms",
+  pairing: "pairing",
 };
 
 /** Campaign and share parameters GA attributes traffic with; WeChat shares append `from=`. Everything else is dropped. */
@@ -45,6 +48,7 @@ function classify(path: string): [PageType, string] {
   if (first === "t") return ["invitation", `/t/[token]${segments[2] === "join" ? "/join" : ""}`];
   if (first === "compare") return ["comparison", "/compare/[id]"];
   if (first === "my" && second === "shares") return ["my_shares", "/my/shares"];
+  if (first === "my" && second === "pairing") return ["my_pairing", "/my/pairing"];
   if (segments.length === 1 && STATIC_PAGES[first]) return [STATIC_PAGES[first], `/${first}`];
   if (segments.length === 2) {
     if (first === "result") return second === "sample" ? ["result_sample", "/result/sample"] : ["result", "/result/[id]"];
@@ -72,7 +76,7 @@ export function pageInfo(pathname: string): { locale: Locale; pageType: PageType
 export function sanitizeLocation(href: string): string {
   const url = new URL(href);
   const params = new URLSearchParams();
-  const sensitive = /^(?:\/(?:en|zh))?\/(?:s|t|compare|my\/shares)(?:\/|$)/.test(url.pathname);
+  const sensitive = /^(?:\/(?:en|zh))?\/(?:s|t|compare|my\/(?:shares|pairing))(?:\/|$)/.test(url.pathname);
   for (const key of sensitive ? [] : ATTRIBUTION_PARAMS) {
     const value = url.searchParams.get(key);
     if (value) params.set(key, value.slice(0, 100));

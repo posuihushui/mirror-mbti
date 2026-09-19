@@ -2,7 +2,7 @@ import { compareMessages } from "@/lib/i18n/messages/compare";
 import type { Locale } from "@/lib/i18n/locale";
 import {
   COMPARE_CONTENT_VERSION, COMPARE_DIMENSION_ORDER,
-  type CompareCategories, type CompareDimension, type CompareOutputSnapshot,
+  type CompareCategories, type CompareDimension, type CompareOutputSnapshotV2,
   type CompareRelation, type CompareSnapshot,
 } from "@/lib/compare-types";
 
@@ -17,7 +17,7 @@ export function compareRelation<D extends CompareDimension>(
 /** Pure, deterministic output. Persist this output; do not recalculate historical pairs on read. */
 export function generateCompareContent(
   host: CompareSnapshot, guest: CompareSnapshot, locale: Locale = "zh",
-): CompareOutputSnapshot {
+): CompareOutputSnapshotV2 {
   const copy = compareMessages[locale];
   const relations = COMPARE_DIMENSION_ORDER.map((dimension) => ({
     dimension,
@@ -27,7 +27,8 @@ export function generateCompareContent(
   const opposite = relations.find(({ relation }) => relation === "opposite");
   const balanced = relations.find(({ relation }) => relation === "includes-balanced");
   const commonPole = same && host.categories[same.dimension];
-  const practiceDimension = opposite?.dimension ?? balanced?.dimension;
+  const allBalanced = relations.every(({ dimension }) => host.categories[dimension] === "balanced" && guest.categories[dimension] === "balanced");
+  const practiceDimension = allBalanced ? undefined : opposite?.dimension ?? balanced?.dimension;
   return {
     contentVersion: COMPARE_CONTENT_VERSION,
     locale,
@@ -47,6 +48,7 @@ export function generateCompareContent(
       {
         title: copy.titles[2],
         body: !opposite && balanced ? copy.balancedPracticeBody : copy.practiceBody,
+        openingLine: practiceDimension ? copy.openingLines[practiceDimension] : copy.genericOpeningLine,
         practice: practiceDimension ? copy.practices[practiceDimension] : copy.genericPractice,
       },
     ],

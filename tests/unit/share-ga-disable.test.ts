@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 afterEach(()=>{vi.unstubAllGlobals();vi.resetModules();});
-it.each(["/s/", "/en/s/", "/t/", "/en/t/", "/compare/", "/my/shares/"])("disables configured Google collection before config on %s",async(path)=>{
+it.each(["/s/", "/en/s/", "/t/", "/en/t/", "/compare/", "/my/shares/", "/my/pairing/", "/en/my/pairing/", "/zh/my/pairing/"])("disables configured Google collection before config on %s",async(path)=>{
  const token="aB_9".repeat(8);const append=vi.fn();
  const location=new URL(`https://mirror.example${path}${token}?utm_source=${token}`);
  const win:Record<string,unknown>={location,sessionStorage:{getItem:()=>null}};

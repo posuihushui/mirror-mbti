@@ -11,15 +11,21 @@ export const shareInputSchema = z.object({
   consentVersion: z.literal(SHARE_CONSENT), requestId: z.uuid(),
 }).strict();
 export type ShareInput = z.infer<typeof shareInputSchema>;
-export const invitationInputSchema = z.object({ shareId: z.uuid(), consentVersion: z.literal("compare-host-v1"), requestId: z.uuid() }).strict();
-export const comparisonInputSchema = z.object({ invitationToken: shareTokenSchema, resultId: z.string().regex(/^[A-Za-z0-9_-]{12}$/), consentVersion: z.literal("compare-guest-v1") }).strict();
-const eventBase = { eventId: z.uuid(), surface: z.enum(["result", "quiz", "share_page", "my_shares", "invitation", "pair"]), channel: z.enum(["link", "image", "unknown"]).default("unknown") };
+export const pairingResultIdSchema = z.string().regex(/^[A-Za-z0-9_-]{12}$/);
+export const invitationInputSchema = z.object({ resultId: pairingResultIdSchema.optional(), shareId: z.uuid().optional(), consentVersion: z.enum(["compare-host-v1", "compare-host-v2"]), requestId: z.uuid() }).strict().refine(input => input.resultId || input.shareId);
+export const comparisonInputSchema = z.object({ invitationToken: shareTokenSchema, resultId: pairingResultIdSchema, consentVersion: z.enum(["compare-guest-v1", "compare-guest-v2"]) }).strict();
+export const continuationInputSchema = z.object({ invitationToken: shareTokenSchema, resultId: pairingResultIdSchema }).strict();
+const eventBase = { eventId: z.uuid(), surface: z.enum(["result", "quiz", "share_page", "my_shares", "invitation", "pair", "report", "my_pairing", "payment_sheet", "pay_status", "pairing"]), channel: z.enum(["link", "image", "unknown"]).default("unknown") };
 export const shareEventSchema = z.discriminatedUnion("eventName", [
   z.object({ ...eventBase, eventName: z.literal("share_browser_visible"), shareToken: shareTokenSchema }).strict(),
   z.object({ ...eventBase, eventName: z.literal("share_image_requested"), shareToken: shareTokenSchema }).strict(),
   z.object({ ...eventBase, eventName: z.literal("share_link_copied"), shareToken: shareTokenSchema }).strict(),
   z.object({ ...eventBase, eventName: z.literal("share_quiz_started") }).strict(),
   z.object({ ...eventBase, eventName: z.literal("comparison_viewed"), pairId: z.uuid() }).strict(),
+  z.object({ ...eventBase, eventName: z.literal("pairing_benefit_viewed"), resultId: pairingResultIdSchema }).strict(),
+  z.object({ ...eventBase, eventName: z.literal("pairing_entry_clicked"), resultId: pairingResultIdSchema }).strict(),
+  z.object({ ...eventBase, eventName: z.literal("pairing_checkout_opened"), resultId: pairingResultIdSchema }).strict(),
+  z.object({ ...eventBase, eventName: z.literal("pairing_resume_clicked"), continuationId: z.uuid() }).strict(),
 ]);
 export type ShareEvent = z.infer<typeof shareEventSchema>;
 export class ShareError extends Error {

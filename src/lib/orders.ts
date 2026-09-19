@@ -9,7 +9,8 @@ import { hasClearPreference, typeMeta } from "@/lib/personality";
 import { getCryptoProvider, getPaymentProvider } from "@/lib/payments";
 import type { CryptoNetwork, OrderView, PaymentPayload } from "@/lib/payments/types";
 import { questionnaireLocale } from "@/lib/questionnaires";
-import { getResult, markResultUnlocked } from "@/lib/results";
+import { getResult } from "@/lib/results";
+import { getPairingEligibility, reconcilePaidResult } from "@/lib/pairing-eligibility";
 import { pickWeChatChannel } from "@/lib/ua";
 
 export const ORDER_TTL_MS = 15 * 60 * 1000;
@@ -86,6 +87,7 @@ export async function createOrder(input: { visitorId: string; resultId: string; 
   const t = orderMessages[locale];
   if (!result.owner) throw new OrderError(403, "NOT_OWNER", t.notOwner);
   if (result.unlocked) throw new OrderError(409, "ALREADY_UNLOCKED", t.unlocked);
+  if (await getPairingEligibility(input.resultId, input.visitorId) === "syncing") throw new OrderError(409, "PAIRING_ENTITLEMENT_SYNCING", locale === "zh" ? "付款已确认，正在核对权益，请勿重复购买。" : "Payment is confirmed. Access is being checked. Please do not purchase again.");
   if (!hasClearPreference(result.profile)) throw new OrderError(422, "UNCLEAR_RESULT", t.unclear);
 
   const provider = await getPaymentProvider(paymentModeFor(locale));
@@ -164,8 +166,9 @@ export async function markOrderPaid(orderId: string, txnId: string | null, paidA
     .set({ status: "paid", providerTxnId: txnId, paidAt, updatedAt: new Date() })
     .where(and(eq(schema.orders.id, orderId), inArray(schema.orders.status, from)))
     .returning();
-  if (order) await markResultUnlocked(order.resultId, order.id);
-  return order ?? (await getOrderByIdUnchecked(orderId));
+  const current = order ?? await getOrderByIdUnchecked(orderId);
+  if (current?.status === "paid") await reconcilePaidResult(current.resultId, current.visitorId);
+  return current;
 }
 
 export async function setOrderStatus(orderId: string, status: OrderRow["status"]) {
@@ -183,6 +186,10 @@ export async function setOrderStatus(orderId: string, status: OrderRow["status"]
  * crypto orders keep being checked for a day so a late transfer still unlocks the report.
  */
 export async function refreshOrder(order: OrderRow): Promise<OrderRow> {
+  if (order.status === "paid") {
+    await reconcilePaidResult(order.resultId, order.visitorId);
+    return order;
+  }
   const crypto = order.provider === "crypto";
   const now = Date.now();
   const expired = order.expiresAt.getTime() < now;

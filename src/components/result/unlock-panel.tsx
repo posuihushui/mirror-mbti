@@ -4,9 +4,10 @@ import { BookOpen, ChatsCircle, Compass, LockSimple } from "@phosphor-icons/reac
 import { trackAttrs } from "@/lib/analytics/events";
 import { href } from "@/lib/i18n/locale";
 import { resultMessages } from "@/lib/i18n/messages/result";
+import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { getLocale } from "@/lib/i18n/server";
 
-const icons = [BookOpen, ChatsCircle, Compass];
+const icons = [ChatsCircle, BookOpen, ChatsCircle, Compass];
 
 /** `.unlock-panel`: the black paywall block. `action` is the desktop-only CTA slot. */
 export async function UnlockPanel({ priceLabel, action, secureNote }: { priceLabel: string; action: ReactNode; secureNote: string }) {
@@ -40,6 +41,7 @@ export async function UnlockPanel({ priceLabel, action, secureNote }: { priceLab
           </strong>
           <span className="text-[10px] leading-[1.9] text-[#9eacb0] whitespace-pre-line">{t.priceNote}</span>
         </div>
+        <p className="mb-5 text-xs leading-[1.9] text-[#d8e0e2]">{pairingMessages[locale].feeRule}</p>
         <div className="hidden md:block">{action}</div>
         <p className="mt-4 text-[12px] leading-[1.9] text-[#a1afb2]">{t.after}</p>
         <Link href={href(locale, "/help")} className="text-link mt-3 min-h-11 text-[12px] text-[#d8e0e2]" {...trackAttrs("view_help", "unlock_panel")}>{t.help}</Link>

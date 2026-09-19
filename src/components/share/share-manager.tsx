@@ -9,7 +9,7 @@ import type { OwnerShareItem } from "./share-composer";
 import { ShareCard } from "./share-card";
 import { ShareActions } from "./share-actions";
 import styles from "./share-motion.module.css";
-import { InvitationEntry } from "@/components/compare/invitation-entry";
+import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 
 export function ShareManager({ items, nextCursor, locale }: { items: OwnerShareItem[]; nextCursor: string | null; locale: Locale }) {
   const m = shareMessages[locale];
@@ -61,7 +61,7 @@ export function ShareManager({ items, nextCursor, locale }: { items: OwnerShareI
         <div className="flex flex-wrap justify-between gap-3 text-xs"><time dateTime={item.createdAt}>{new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(item.createdAt))}</time><span className={revoked ? styles.status : undefined}>{revoked ? m.revoked : m.active}</span></div>
         <ShareCard snapshot={item.snapshot} />
         <p className="text-xs leading-relaxed">{m.publicScope}：{m.linesOnly}{item.snapshot.typeLabel ? ` · ${m.referenceType}` : ""}{item.snapshot.dimensions ? ` · ${m.qualitativeDimensions}` : ""}</p>
-        {!revoked && <div className="flex flex-wrap gap-4 print:hidden"><button type="button" className="pill min-h-11" onClick={(event) => { trigger.current = event.currentTarget; setPreview(item); }}>{m.preview} · {m.copy}</button><button type="button" className="text-link min-h-11" disabled={closing} onClick={(event) => { trigger.current = event.currentTarget; setError(""); setConfirm(item); }}>{m.closeShare}</button><InvitationEntry shareId={item.id} locale={locale} /></div>}
+        {!revoked && <div className="flex flex-wrap gap-4 print:hidden"><button type="button" className="pill min-h-11" onClick={(event) => { trigger.current = event.currentTarget; setPreview(item); }}>{m.preview} · {m.copy}</button><button type="button" className="text-link min-h-11" disabled={closing} onClick={(event) => { trigger.current = event.currentTarget; setError(""); setConfirm(item); }}>{m.closeShare}</button><a href={href(locale, `/my/pairing?result=${encodeURIComponent(item.resultId)}&share=${encodeURIComponent(item.id)}`)} className="text-link min-h-11 text-sm">{pairingUiMessages[locale].center}</a></div>}
       </article>;
     })}
     <p role="status" className="text-sm">{!confirm && error}</p>

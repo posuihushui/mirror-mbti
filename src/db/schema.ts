@@ -1,4 +1,5 @@
-import { bigint, boolean, char, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid, varchar, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { bigint, boolean, char, check, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid, varchar, uniqueIndex } from "drizzle-orm/pg-core";
 import type { PublicShareSnapshot } from "@/lib/share-types";
 import type { CompareSnapshot, CompareContent } from "@/lib/compare-types";
 import { LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type ResponseItem } from "@/lib/questionnaires";
@@ -131,19 +132,22 @@ export const shareRateLimits = pgTable("share_rate_limits", {
 });
 
 export const referralAttributions = pgTable("referral_attributions", {
+  invitationId: uuid("invitation_id").references(() => comparisonInvitations.id),
   visitorId: uuid("visitor_id").primaryKey().references(() => visitors.id),
-  shareId: uuid("share_id").notNull().references(() => resultShares.id),
+  shareId: uuid("share_id").references(() => resultShares.id),
   firstTouchAt: timestamp("first_touch_at", { withTimezone: true }).notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   quizStartedAt: timestamp("quiz_started_at", { withTimezone: true }),
   firstResultId: text("first_result_id").unique().references(() => results.id),
   completedAt: timestamp("completed_at", { withTimezone: true }),
-}, (t) => [index("attributions_share_completed_idx").on(t.shareId, t.completedAt)]);
+}, (t) => [index("attributions_share_completed_idx").on(t.shareId, t.completedAt), index("attributions_invitation_completed_idx").on(t.invitationId, t.completedAt), check("attributions_one_source", sql`num_nonnulls(${t.shareId}, ${t.invitationId}) = 1`)]);
 
+export type PairingAccessPolicy = "legacy-free-v1" | "paid-pair-v2";
 export const comparisonInvitations = pgTable("comparison_invitations", {
+  accessPolicy: text("access_policy").$type<PairingAccessPolicy>().default("paid-pair-v2").notNull(),
   id: uuid("id").primaryKey(),
   token: varchar("token", { length: 32 }).notNull().unique(),
-  shareId: uuid("share_id").notNull().references(() => resultShares.id),
+  shareId: uuid("share_id").references(() => resultShares.id),
   visitorId: uuid("visitor_id").notNull().references(() => visitors.id),
   resultId: text("result_id").notNull().references(() => results.id),
   locale: varchar("locale", { length: 2 }).notNull(),
@@ -155,9 +159,10 @@ export const comparisonInvitations = pgTable("comparison_invitations", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   ...timestamps,
-}, (t) => [uniqueIndex("comparison_invitation_request_idx").on(t.visitorId, t.requestId), index("comparison_invitation_share_idx").on(t.shareId)]);
+}, (t) => [uniqueIndex("comparison_invitation_request_idx").on(t.visitorId, t.requestId), index("comparison_invitation_share_idx").on(t.shareId), index("comparison_invitation_result_idx").on(t.resultId, t.createdAt), check("invitation_access_policy", sql`${t.accessPolicy} in ('legacy-free-v1', 'paid-pair-v2')`)]);
 
 export const comparisons = pgTable("comparisons", {
+  accessPolicy: text("access_policy").$type<PairingAccessPolicy>().default("paid-pair-v2").notNull(),
   id: uuid("id").primaryKey(),
   invitationId: uuid("invitation_id").notNull().references(() => comparisonInvitations.id),
   hostVisitorId: uuid("host_visitor_id").notNull().references(() => visitors.id),
@@ -172,9 +177,24 @@ export const comparisons = pgTable("comparisons", {
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   revokedBy: uuid("revoked_by").references(() => visitors.id),
   ...timestamps,
-}, (t) => [uniqueIndex("comparison_invitation_guest_idx").on(t.invitationId, t.guestVisitorId), index("comparison_host_created_idx").on(t.hostVisitorId, t.createdAt), index("comparison_guest_created_idx").on(t.guestVisitorId, t.createdAt)]);
+}, (t) => [uniqueIndex("comparison_invitation_guest_idx").on(t.invitationId, t.guestVisitorId), index("comparison_host_created_idx").on(t.hostVisitorId, t.createdAt), index("comparison_guest_created_idx").on(t.guestVisitorId, t.createdAt), check("comparison_access_policy", sql`${t.accessPolicy} in ('legacy-free-v1', 'paid-pair-v2')`)]);
+
+export const comparisonContinuations = pgTable("comparison_continuations", {
+  id: uuid("id").primaryKey(),
+  visitorId: uuid("visitor_id").notNull().references(() => visitors.id),
+  invitationId: uuid("invitation_id").notNull().references(() => comparisonInvitations.id),
+  resultId: text("result_id").notNull().references(() => results.id),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  ...timestamps,
+}, (t) => [uniqueIndex("continuations_owner_invitation_result_idx").on(t.visitorId, t.invitationId, t.resultId), index("continuations_owner_result_idx").on(t.visitorId, t.resultId), index("continuations_expiry_idx").on(t.expiresAt)]);
 
 export const shareEvents = pgTable("share_events", {
+  invitationId: uuid("invitation_id").references(() => comparisonInvitations.id),
+  ownerResultId: text("owner_result_id").references(() => results.id),
+  eligibilityAtEvent: text("eligibility_at_event").$type<"eligible" | "locked" | "unavailable" | "syncing">(),
+  ruleVersion: text("rule_version").default("first-touch-v1").notNull(),
   id: uuid("id").primaryKey(),
   eventName: text("event_name").notNull(),
   shareId: uuid("share_id").references(() => resultShares.id),
@@ -185,4 +205,4 @@ export const shareEvents = pgTable("share_events", {
   dedupeKey: text("dedupe_key").notNull().unique(),
   channel: text("channel").notNull(),
   surface: text("surface").notNull(),
-}, (t) => [index("share_events_kind_time_idx").on(t.eventName, t.occurredAt), index("share_events_resource_actor_time_idx").on(t.shareId, t.actorVisitorId, t.occurredAt)]);
+}, (t) => [index("share_events_kind_time_idx").on(t.eventName, t.occurredAt), index("share_events_resource_actor_time_idx").on(t.shareId, t.actorVisitorId, t.occurredAt), index("share_events_invitation_time_idx").on(t.invitationId, t.occurredAt), index("share_events_owner_result_time_idx").on(t.ownerResultId, t.occurredAt), check("share_events_one_source", sql`num_nonnulls(${t.shareId}, ${t.invitationId}) <= 1`), check("share_events_eligibility", sql`${t.eligibilityAtEvent} in ('eligible', 'locked', 'unavailable', 'syncing')`)]);
