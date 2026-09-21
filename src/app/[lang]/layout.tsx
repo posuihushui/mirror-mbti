@@ -7,10 +7,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { PageViews } from "@/components/analytics/page-views";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteOverlays } from "@/components/site/site-overlays";
-import { htmlLang, isPublishedLocale, ogLocale, publishedLocales } from "@/lib/i18n/locale";
+import { defaultLocale, href, htmlLang, isPublishedLocale, type Locale, ogLocale, publishedLocales } from "@/lib/i18n/locale";
 import { LocaleProvider } from "@/lib/i18n/locale-provider";
 import { getLocale } from "@/lib/i18n/server";
-import { organizationId, websiteId } from "@/lib/seo";
+import { absoluteUrl, organizationId, websiteId } from "@/lib/seo";
 import { site, siteCopy } from "@/lib/site";
 import "../globals.css";
 
@@ -36,6 +36,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: copy.title, template: `%s · ${copy.name}` },
     description: copy.description,
     applicationName: copy.name,
+    // Overrides the root `manifest.ts` link, which is Chinese; each locale installs as its own app.
+    manifest: href(locale, "/manifest.webmanifest"),
     keywords: keywords[locale],
     openGraph: {
       type: "website",
@@ -59,29 +61,49 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const organizationJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "@id": organizationId(APP_URL),
-  name: site.name,
-  alternateName: [site.brandZh, site.brand],
-  url: APP_URL,
-  logo: `${APP_URL}/assets/brand/icon-512.png`,
-  email: site.supportEmail,
-  contactPoint: { "@type": "ContactPoint", contactType: "customer support", email: site.supportEmail, availableLanguage: ["zh-CN"], url: `${APP_URL}/help` },
-};
+/**
+ * Site-wide structured data, in the language of the page carrying it: an English page that named the
+ * site 观己 mirror and described it in Chinese would tell crawlers `/en` is a Chinese site.
+ * Support is offered in both languages, so `availableLanguage` lists both and the contact link
+ * points at this locale's help page.
+ */
+function organizationJsonLd(locale: Locale) {
+  const copy = siteCopy(locale);
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": organizationId(APP_URL),
+    name: copy.name,
+    // One entity, one homepage: only the name and the support link follow the page's language.
+    ...(locale === defaultLocale ? { alternateName: [site.brandZh, site.brand] } : {}),
+    url: APP_URL,
+    logo: `${APP_URL}/assets/brand/icon-512.png`,
+    email: site.supportEmail,
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: site.supportEmail,
+      availableLanguage: publishedLocales.map((published) => htmlLang[published]),
+      url: absoluteUrl(APP_URL, locale, "/help"),
+    },
+  };
+}
 
-const websiteJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "@id": websiteId(APP_URL),
-  name: site.name,
-  alternateName: [site.brandZh, site.brand],
-  url: APP_URL,
-  inLanguage: publishedLocales.map((locale) => htmlLang[locale]),
-  description: site.description,
-  publisher: { "@id": organizationId(APP_URL) },
-};
+/** One `WebSite` per language version, each with its own id, home URL and single `inLanguage`. */
+function websiteJsonLd(locale: Locale) {
+  const copy = siteCopy(locale);
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": websiteId(APP_URL, locale),
+    name: copy.name,
+    ...(locale === defaultLocale ? { alternateName: [site.brandZh, site.brand] } : {}),
+    url: absoluteUrl(APP_URL, locale, "/"),
+    inLanguage: htmlLang[locale],
+    description: copy.description,
+    publisher: { "@id": organizationId(APP_URL) },
+  };
+}
 
 export function generateStaticParams() {
   return publishedLocales.map((locale) => ({ lang: locale }));
@@ -102,7 +124,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
           </Suspense>
           <Toaster />
         </LocaleProvider>
-        <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
+        <JsonLd data={[organizationJsonLd(locale), websiteJsonLd(locale)]} />
       </body>
     </html>
   );

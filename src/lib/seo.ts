@@ -44,8 +44,17 @@ export function pageMetadata({ locale = defaultLocale, title, description, path,
   };
 }
 
+/** Absolute URL of a page in a locale. The Chinese home stays bare, as every JSON-LD node writes it. */
+export function absoluteUrl(baseUrl: string, locale: Locale, path: string) {
+  const localized = href(locale, path);
+  return localized === "/" ? baseUrl : `${baseUrl}${localized}`;
+}
+
+/** One organization publishes both language versions, so its node keeps a single id. */
 export const organizationId = (baseUrl: string) => `${baseUrl}/#organization`;
-export const websiteId = (baseUrl: string) => `${baseUrl}/#website`;
+/** Each language version is its own `WebSite`: one id per locale, or the two would overwrite each other. */
+export const websiteId = (baseUrl: string, locale: Locale = defaultLocale) =>
+  locale === defaultLocale ? `${baseUrl}/#website` : `${baseUrl}/#website-${locale}`;
 
 export function breadcrumbJsonLd(baseUrl: string, items: [name: string, path: string][]) {
   return {

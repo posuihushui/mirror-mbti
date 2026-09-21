@@ -9,12 +9,15 @@ import { appUrl, env } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { getLocale } from "@/lib/i18n/server";
 import { shareMessages } from "@/lib/i18n/messages/share";
+import { siteCopy } from "@/lib/site";
 type Props = { params: Promise<{token: string}> };
 export async function generateMetadata({params}: Props): Promise<Metadata> {
  const {token}=await params; const share=await getPublicShare(token);
  if (!share) return {title: "mirror", robots: {index:false,follow:false}, openGraph:null, twitter:null};
  const t=shareMessages[share.locale]; const url=appUrl()+href(share.locale, `/s/${token}`);
- return {title:t.title, description:t.publicDescription, alternates:{canonical:url}, robots:{index:false,follow:false}, referrer:"no-referrer", openGraph:{title:t.title,description:t.publicDescription,url,siteName:"mirror",type:"website",locale:share.locale==="en"?"en_US":"zh_CN",images:[{url:`${url}/opengraph-image`,width:1200,height:630,alt:t.imageAlt}]},twitter:{card:"summary_large_image",title:t.title,description:t.publicDescription,images:[`${url}/opengraph-image`]}};
+ // The share decides its own language, so the title is absolute: the layout template would otherwise
+ // append the Chinese site name to an English card opened on an unprefixed URL.
+ return {title:{absolute:`${t.title} · ${siteCopy(share.locale).name}`}, description:t.publicDescription, alternates:{canonical:url}, robots:{index:false,follow:false}, referrer:"no-referrer", openGraph:{title:t.title,description:t.publicDescription,url,siteName:"mirror",type:"website",locale:share.locale==="en"?"en_US":"zh_CN",images:[{url:`${url}/opengraph-image`,width:1200,height:630,alt:t.imageAlt}]},twitter:{card:"summary_large_image",title:t.title,description:t.publicDescription,images:[`${url}/opengraph-image`]}};
 }
 export default async function PublicShare({params}: Props) {
  const {token}=await params; const share=await getPublicShare(token); if (!share) notFound();

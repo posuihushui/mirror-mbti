@@ -96,6 +96,49 @@ test.describe("English site", () => {
     await page.waitForURL(new RegExp(`/en/result/${id}`));
   });
 
+  /** Public English pages, plus the private ones a signed visitor reaches without any data. */
+  const englishPages = ["/en", "/en/quiz", "/en/result/sample", "/en/report/sample", "/en/about", "/en/preferences",
+    "/en/pairing", "/en/help", "/en/types", "/en/types/INFJ", "/en/privacy", "/en/terms",
+    "/en/my/report", "/en/my/shares", "/en/my/pairing"];
+
+  test("no English page carries Chinese, in its copy, its metadata or its structured data", async ({ request }) => {
+    for (const path of englishPages) {
+      const res = await request.get(path);
+      expect(res.status(), path).toBe(200);
+      // Flight payloads escape non-ASCII, so decode before looking: client-island props hide there.
+      const html = (await res.text()).replace(/\\u([0-9a-fA-F]{4})/g, (_, code) => String.fromCharCode(parseInt(code, 16)));
+      expect(html.match(/[\u4e00-\u9fff]/g) ?? [], `${path} must not render Chinese`).toEqual([]);
+    }
+  });
+
+  test("each language installs as its own app, and neither manifest is written in the other language", async ({ request }) => {
+    expect(await (await request.get("/en")).text()).toContain('href="/en/manifest.webmanifest"');
+    expect(await (await request.get("/")).text()).toContain('href="/manifest.webmanifest"');
+
+    const en = await (await request.get("/en/manifest.webmanifest")).json();
+    expect(en).toMatchObject({ name: "mirror", short_name: "mirror", lang: "en", start_url: "/en" });
+    expect(JSON.stringify(en)).not.toMatch(/[\u4e00-\u9fff]/);
+
+    const zh = await (await request.get("/manifest.webmanifest")).json();
+    expect(zh).toMatchObject({ name: "观己 mirror", short_name: "观己", lang: "zh-CN", start_url: "/" });
+  });
+
+  // A 404 is a non-streamed response: the built app returns the shell and resumes the copy on the
+  // client, so assert the rendered page rather than the HTML body.
+  test("an unmatched URL 404s in the language of its prefix", async ({ page, request }) => {
+    for (const path of ["/no-such-page", "/en/no-such-page"]) {
+      expect((await request.get(path)).status(), path).toBe(404);
+    }
+
+    await page.goto("/en/no-such-page");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("This page has no story yet.");
+    await expect(page.getByRole("link", { name: "Back to home" }).first()).toHaveAttribute("href", "/en");
+
+    await page.goto("/no-such-page");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("这一页还没有故事。");
+    await expect(page.getByRole("link", { name: "回到首页" }).first()).toHaveAttribute("href", "/");
+  });
+
   test("API errors follow the language of the calling page", async ({ page }) => {
     await page.goto("/en");
     const res = await page.request.post("/api/orders", {

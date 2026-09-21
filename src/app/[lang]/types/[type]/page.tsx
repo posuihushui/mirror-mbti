@@ -60,7 +60,7 @@ export default async function TypePage({ params }: Params) {
       description: context.definition,
       inLanguage: htmlLang[locale],
       dateModified: contentUpdatedAt,
-      isPartOf: { "@id": websiteId(url) },
+      isPartOf: { "@id": websiteId(url, locale) },
       about: {
         "@type": "DefinedTerm",
         name: type,
