@@ -17,7 +17,7 @@ const cache = path.join(root, ".cache", "fonts");
 await mkdir(cache, { recursive: true });
 
 // Characters that can appear in OG images / icons
-const sources = ["src/lib/personality.ts", "src/lib/site.ts", "src/lib/og/copy.ts", "src/lib/share-content.ts", "src/lib/i18n/messages/share.ts", "src/lib/i18n/messages/compare.ts"];
+const sources = ["src/lib/personality.ts", "src/lib/site.ts", "src/lib/og/copy.ts", "src/lib/share-content.ts", "src/lib/i18n/messages/share.ts", "src/lib/i18n/messages/compare.ts", "src/lib/i18n/messages/pairing.ts", "src/lib/i18n/messages/pairing-ui.ts"];
 let text = "";
 for (const f of sources) {
   try {
