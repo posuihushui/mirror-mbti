@@ -13,12 +13,14 @@ import { compareMessages } from "@/lib/i18n/messages/compare";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { appUrl } from "@/lib/env";
+import { siteCopy } from "@/lib/site";
 type Props = { params: Promise<{ token: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { token } = await params; const invitation = await getPublicInvitation(token); const locale = invitation?.locale ?? await getLocale(); const m = compareMessages[locale]; const description = pairingMessages[locale].summary + " " + pairingMessages[locale].delayedGeneration;
   if (!invitation) return { title: m.unavailable, robots: { index: false, follow: false }, referrer: "no-referrer", openGraph: null, twitter: null };
   const url = appUrl() + href(locale, `/t/${token}`); const image = appUrl() + href(locale, "/opengraph-image");
-  return { title: m.invitationHeading, description, robots: { index: false, follow: false }, referrer: "no-referrer", alternates: { canonical: url }, openGraph: { title: m.invitationHeading, description, url, siteName: "mirror", type: "website", locale: locale === "en" ? "en_US" : "zh_CN", images: [{ url: image, width: 1200, height: 630, alt: "mirror" }] }, twitter: { card: "summary_large_image", title: m.invitationHeading, description, images: [image] } };
+  // Absolute for the same reason as the share card: the invitation carries its own language.
+  return { title: { absolute: `${m.invitationHeading} · ${siteCopy(locale).name}` }, description, robots: { index: false, follow: false }, referrer: "no-referrer", alternates: { canonical: url }, openGraph: { title: m.invitationHeading, description, url, siteName: "mirror", type: "website", locale: locale === "en" ? "en_US" : "zh_CN", images: [{ url: image, width: 1200, height: 630, alt: "mirror" }] }, twitter: { card: "summary_large_image", title: m.invitationHeading, description, images: [image] } };
 }
 export default async function InvitationPage({ params }: Props) {
   const { token } = await params; const locale = await getLocale(); const visitor = await getVisitorId();
