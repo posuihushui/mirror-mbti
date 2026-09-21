@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import { z } from "zod";
 import { recoveryBucketKey, isRecoverySameOrigin } from "@/lib/recovery-policy";
+import { COMPARE_HOST_CONSENT_VERSION, HOST_NOTE_MAX } from "@/lib/compare-types";
 
 export const SHARE_CONSENT = "share-public-v1";
 export const shareTokenSchema = z.string().regex(/^[A-Za-z0-9_-]{32}$/);
@@ -12,7 +13,17 @@ export const shareInputSchema = z.object({
 }).strict();
 export type ShareInput = z.infer<typeof shareInputSchema>;
 export const pairingResultIdSchema = z.string().regex(/^[A-Za-z0-9_-]{12}$/);
-export const invitationInputSchema = z.object({ resultId: pairingResultIdSchema.optional(), shareId: z.uuid().optional(), consentVersion: z.enum(["compare-host-v1", "compare-host-v2"]), requestId: z.uuid() }).strict().refine(input => input.resultId || input.shareId);
+/**
+ * One plain line the host writes for an invitation. Anyone holding the link reads it, so it is
+ * normalised to a single line of printable text and capped; an empty note is simply absent.
+ * It never reaches metadata, an OG image or an analytics event.
+ */
+export const hostNoteSchema = z.string().max(HOST_NOTE_MAX * 4)
+  .transform((value) => value.replace(/\s+/gu, " ").trim())
+  .refine((value) => !/\p{C}/u.test(value) && [...value].length <= HOST_NOTE_MAX)
+  .transform((value) => value || undefined);
+export const invitationInputSchema = z.object({ resultId: pairingResultIdSchema.optional(), shareId: z.uuid().optional(), hostNote: hostNoteSchema.optional(), consentVersion: z.enum(["compare-host-v1", "compare-host-v2", "compare-host-v3"]), requestId: z.uuid() }).strict().refine(input => input.resultId || input.shareId)
+  .refine(input => !input.hostNote || input.consentVersion === COMPARE_HOST_CONSENT_VERSION);
 export const comparisonInputSchema = z.object({ invitationToken: shareTokenSchema, resultId: pairingResultIdSchema, consentVersion: z.enum(["compare-guest-v1", "compare-guest-v2"]) }).strict();
 export const continuationInputSchema = z.object({ invitationToken: shareTokenSchema, resultId: pairingResultIdSchema }).strict();
 const eventBase = { eventId: z.uuid(), surface: z.enum(["result", "quiz", "share_page", "my_shares", "invitation", "pair", "report", "my_pairing", "payment_sheet", "pay_status", "pairing"]), channel: z.enum(["link", "image", "unknown"]).default("unknown") };

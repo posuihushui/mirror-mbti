@@ -60,6 +60,10 @@ export default async function InvitationPage({ params }: Props) {
       <div className="grid gap-9 md:grid-cols-2 md:gap-x-14 md:gap-y-10 md:[grid-template-rows:auto_1fr]">
         <section className="md:col-start-1 md:row-start-1">
           <p className="eyebrow text-mist">{ui.introEyebrow}</p>
+          {invitation.hostNote && <figure className="mt-5 border-l-2 border-warm pl-4">
+            <blockquote className="text-[17px] leading-[1.7]">{invitation.hostNote}</blockquote>
+            <figcaption className="mt-2 text-xs text-mist">{m.hostNoteFrom}</figcaption>
+          </figure>}
           <h1 className="mt-5 text-[29px] leading-[1.4] md:text-[38px]">{m.invitationHeading}</h1>
           <p className="mt-5 text-sm leading-[1.9]">{p.summary}</p>
           <ol className="mt-7 border-y border-line">{ui.outputs.map((text, index) => <li key={text} className={`flex gap-4 py-4 ${index ? "border-t border-line" : ""}`}>

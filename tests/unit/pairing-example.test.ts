@@ -15,7 +15,7 @@ import { getPairingExample } from "@/lib/pairing-example";
 
 describe("paid pairing content and shared example", () => {
   it("uses separate current consent versions for each participant", () => {
-    expect(COMPARE_HOST_CONSENT_VERSION).toBe("compare-host-v2");
+    expect(COMPARE_HOST_CONSENT_VERSION).toBe("compare-host-v3");
     expect(COMPARE_GUEST_CONSENT_VERSION).toBe("compare-guest-v2");
   });
 

@@ -56,6 +56,9 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await expect(consent).toContainText(m.hostConsentDetail);
   await mkdir(evidence, { recursive: true });
   await page.screenshot({ path: `${evidence}/host-consent-${locale}-${info.project.name}.png`, fullPage: true, animations: "disabled" });
+  // A note is the host's own words, so it is typed here and published with this consent.
+  const hostNote = en ? "Let us look at this together" : "想和你一起看看这件事";
+  await consent.getByLabel(m.hostNoteLabel).fill(`  ${hostNote}  `);
   await consent.getByRole("checkbox").check();
   const inviteResponse = page.waitForResponse(response => response.url().endsWith("/api/comparison-invitations") && response.request().method() === "POST");
   await consent.getByRole("button", { name: p.hostAgree, exact: true }).click();
@@ -72,7 +75,16 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await recordMotion(guestPage);
   await guestPage.goto(new URL(invite.url).pathname);
   await expect(guestPage.locator("[data-share-card]")).toContainText(ui.hostScope);
+  await expect(guestPage.getByText(hostNote, { exact: true })).toBeVisible();
   expect(await guestPage.content()).not.toContain(host.result.id);
+  // The note belongs to the page, never to what a third-party preview server fetches and caches.
+  for (const selector of ['meta[name="description"]', 'meta[property="og:title"]', 'meta[property="og:description"]', 'meta[name="twitter:title"]', 'meta[name="twitter:description"]']) {
+    expect(await guestPage.locator(selector).getAttribute("content")).not.toContain(hostNote);
+  }
+  const card = await guestPage.request.get(`${new URL(invite.url).pathname}/opengraph-image`);
+  expect(card.status()).toBe(200);
+  expect(card.headers()["content-type"]).toContain("image/png");
+  expect(card.headers()["x-robots-tag"]).toContain("noindex");
   // Streamed Suspense content starts in a hidden container, so evidence must wait for the visible page.
   await expect(guestPage.getByRole("heading", { level: 1, name: m.invitationHeading })).toBeVisible();
   await expect(guestPage.locator("[data-share-card]")).toBeVisible();

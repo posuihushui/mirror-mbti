@@ -19,7 +19,7 @@ async function invitationForHost(request: APIRequestContext) {
   const share = (await shareResponse.json()).data;
   const order = (await (await request.post("/api/orders", { headers: { origin }, data: { resultId } })).json()).data;
   expect((await request.post(`/api/orders/${order.id}/mock-pay`, { headers: { origin } })).ok()).toBe(true);
-  const inviteResponse = await request.post("/api/comparison-invitations", { headers: { origin }, data: { shareId: share.id, consentVersion: "compare-host-v2", requestId: randomUUID() } });
+  const inviteResponse = await request.post("/api/comparison-invitations", { headers: { origin }, data: { shareId: share.id, consentVersion: "compare-host-v3", requestId: randomUUID() } });
   expect(inviteResponse.status()).toBe(201);
   return (await inviteResponse.json()).data as { token: string; url: string };
 }

@@ -2,7 +2,10 @@ import type { Locale } from "@/lib/i18n/locale";
 import type { QuestionnaireId } from "@/lib/questionnaires";
 
 export const COMPARE_CONTENT_VERSION = "compare-v3" as const;
-export const COMPARE_HOST_CONSENT_VERSION = "compare-host-v2" as const;
+/** Published length of a host note. Lives here so client islands need no server-only module. */
+export const HOST_NOTE_MAX = 30;
+/** Bumped with `host_note`: the host now publishes an optional line alongside the categories. */
+export const COMPARE_HOST_CONSENT_VERSION = "compare-host-v3" as const;
 export const COMPARE_GUEST_CONSENT_VERSION = "compare-guest-v2" as const;
 export const COMPARE_DIMENSION_ORDER = ["EI", "JP", "TF", "SN"] as const;
 export type CompareDimension = typeof COMPARE_DIMENSION_ORDER[number];
