@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { test, expect, type APIRequestContext, type Page } from "@playwright/test";
 import { getQuestionnaire } from "../../src/lib/questionnaires";
 import { compareMessages } from "../../src/lib/i18n/messages/compare";
@@ -103,12 +103,27 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await guestPage.screenshot({ path: `${evidence}/pair-${locale}-${info.project.name}.png`, fullPage: true, animations: "disabled" });
   expect(await guestPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
+  await expect(guestPage.getByRole("link", { name: m.inviteAnother, exact: true })).toBeVisible();
+  await expect(guestPage.getByRole("link", { name: m.saveImage, exact: true })).toBeVisible();
+
   const third = await browser.newContext({ baseURL: origin, viewport });
   const thirdPage = await third.newPage();
   await thirdPage.goto(pairPath);
   await expect(thirdPage.getByRole("heading", { name: m.unavailable })).toBeVisible();
   await expect(thirdPage.locator("[data-compare-motion]")).toHaveCount(0);
   expect((await third.request.delete(`/api/comparisons/${pairId}`, { headers: { origin } })).status()).not.toBe(200);
+  // The takeaway image is owner-only, and is rendered from the frozen reading alone.
+  expect((await third.request.get(`${pairPath}/image`)).status()).toBe(404);
+  for (const owner of [guestPage, page]) {
+    const png = await owner.request.get(`${pairPath}/image`);
+    expect(png.status()).toBe(200);
+    expect(png.headers()["content-type"]).toContain("image/png");
+    expect(png.headers()["cache-control"]).toContain("no-store");
+    expect(png.headers()["x-robots-tag"]).toContain("noindex");
+    const body = await png.body();
+    expect(body.byteLength).toBeGreaterThan(5000);
+    if (owner === guestPage) await writeFile(`${evidence}/pair-image-${locale}-${info.project.name}.png`, body);
+  }
   const noJs = await browser.newContext({ baseURL: origin, javaScriptEnabled: false, storageState: await guest.storageState() });
   const plain = await noJs.newPage(); await plain.goto(pairPath);
   await expect(plain.locator('[data-compare-motion="section"]')).toHaveCount(6);
