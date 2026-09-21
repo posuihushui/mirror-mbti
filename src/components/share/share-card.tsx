@@ -7,7 +7,7 @@ import type { PublicShareSnapshot } from "@/lib/share-types";
 /** Pure display: only the deliberately public snapshot crosses this component boundary. */
 export function ShareCard({ snapshot, className = "", draft = false }: { snapshot: PublicShareSnapshot; className?: string; draft?: boolean }) {
   const t = shareMessages[snapshot.locale];
-  return <article data-share-card className={`rounded-[4px] border border-line bg-paper p-6 text-ink ${className}`}>
+  return <article data-share-card className={`rounded-[4px] border border-line bg-card p-6 text-ink ${className}`}>
     <BrandLogo locale={snapshot.locale} width={brandLogoWidth(snapshot.locale, 168)} />
     <ShareReveal mode={draft ? "static" : "card"}>
       <h2 data-share-reveal className="mt-8 text-[25px] leading-[1.3] tracking-[-.03em]">{t.title}</h2>
