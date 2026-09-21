@@ -40,7 +40,7 @@ async function owner(paid = false, visitor = randomUUID(), balanced = false) {
   if (paid) await sql`update results set unlocked_at = now() where id=${result.id}`;
   return { visitor, id: result.id };
 }
-function invite(o: {visitor:string;id:string}, requestId=randomUUID()) { return createComparisonInvitation(o.visitor, { resultId:o.id, requestId, consentVersion:"compare-host-v2" }); }
+function invite(o: {visitor:string;id:string}, requestId=randomUUID()) { return createComparisonInvitation(o.visitor, { resultId:o.id, requestId, consentVersion:"compare-host-v3" }); }
 function join(o: {visitor:string;id:string}, token:string) { return joinComparison(o.visitor, { invitationToken:token, resultId:o.id, consentVersion:"compare-guest-v2" }); }
 
 describe("paid pairing server contracts", () => {

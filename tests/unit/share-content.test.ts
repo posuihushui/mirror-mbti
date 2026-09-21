@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPublicShareSnapshot, buildShareCandidates, defaultShareSelection, buildPublicDimensions } from "@/lib/share-content";
+import { buildPublicShareSnapshot, buildShareCandidates, defaultShareSelection, buildPublicDimensions, SHARE_VARIANTS, shareDimensions } from "@/lib/share-content";
 import type { Profile } from "@/lib/personality";
 
 const clear: Profile = { type: "INFJ", values: [79, 71, 64, 82], balanced: [false, false, false, false] };
@@ -38,6 +38,44 @@ describe("share-v1 public content", () => {
     const ids = defaultShareSelection(clear);
     for (const selection of [[], ids.slice(0, 2), [...ids, "share-v1:TF:F"], [ids[0], ids[0], ids[1]], [ids[0], ids[1], "share-v1:JP:P"]]) {
       expect(() => buildPublicShareSnapshot(clear, "zh", selection, false, false)).toThrow("INVALID_SHARE_SELECTION");
+    }
+  });
+  it("gives one result one fixed wording, whatever rebuilds the card", () => {
+    for (const locale of ["zh", "en"] as const) {
+      const first = buildShareCandidates(clear, locale, "result-aaa");
+      expect(buildShareCandidates(clear, locale, "result-aaa")).toEqual(first);
+      // The preview, the stored snapshot and a later rebuild must all read the same.
+      const ids = defaultShareSelection(clear);
+      const lines = buildPublicShareSnapshot(clear, locale, ids, false, false, "result-aaa").lines;
+      expect(lines).toEqual(first.filter((candidate) => ids.includes(candidate.id)).map((candidate) => candidate.text));
+    }
+    // Seeding never moves a candidate's identity, so stored selections stay valid.
+    expect(buildShareCandidates(clear, "zh", "result-aaa").map(c => c.id)).toEqual(buildShareCandidates(clear).map(c => c.id));
+  });
+  it("spreads wording across results so two people rarely post the same sentence", () => {
+    const seeds = Array.from({ length: 300 }, (_, index) => `result-${index.toString(36)}`);
+    for (const dimension of shareDimensions) {
+      const index = shareDimensions.indexOf(dimension);
+      const seen = new Set(seeds.map((seed) => buildShareCandidates(clear, "zh", seed)[index].text));
+      expect(seen.size).toBe(SHARE_VARIANTS);
+    }
+    // Every wording a seed can produce still belongs to that dimension and state.
+    const unseeded = buildShareCandidates(clear, "zh");
+    for (const seed of seeds) {
+      const seeded = buildShareCandidates(clear, "zh", seed);
+      for (const [index, candidate] of seeded.entries()) expect(candidate.id).toBe(unseeded[index].id);
+    }
+  });
+  it("keeps every wording within the card's line budget and in one language", () => {
+    for (const locale of ["zh", "en"] as const) {
+      const seeds = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"];
+      for (const profile of [clear, balanced, { ...clear, balanced: [false, true, false, true] } as typeof clear]) {
+        for (const seed of seeds) for (const candidate of buildShareCandidates(profile, locale, seed)) {
+          expect(locale === "zh" ? [...candidate.text].length : candidate.text.split(/\s+/u).length).toBeLessThanOrEqual(locale === "zh" ? 26 : 16);
+          if (locale === "en") expect(candidate.text).not.toMatch(/[\u3400-\u9fff]/u);
+          else expect(candidate.text).toMatch(/[\u3400-\u9fff]/u);
+        }
+      }
     }
   });
   it("canonicalizes selected order and does not mutate inputs", () => {

@@ -152,6 +152,8 @@ export const comparisonInvitations = pgTable("comparison_invitations", {
   resultId: text("result_id").notNull().references(() => results.id),
   locale: varchar("locale", { length: 2 }).notNull(),
   publicSnapshot: jsonb("public_snapshot").$type<CompareSnapshot>().notNull(),
+  /** Optional plain-text line the host wrote for this invitation; public to anyone holding the link. */
+  hostNote: varchar("host_note", { length: 30 }),
   contentVersion: text("content_version").notNull(),
   consentVersion: text("consent_version").notNull(),
   requestId: uuid("request_id").notNull(),

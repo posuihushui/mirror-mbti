@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { test, expect, type APIRequestContext, type Page } from "@playwright/test";
 import { getQuestionnaire } from "../../src/lib/questionnaires";
 import { compareMessages } from "../../src/lib/i18n/messages/compare";
@@ -56,6 +56,9 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await expect(consent).toContainText(m.hostConsentDetail);
   await mkdir(evidence, { recursive: true });
   await page.screenshot({ path: `${evidence}/host-consent-${locale}-${info.project.name}.png`, fullPage: true, animations: "disabled" });
+  // A note is the host's own words, so it is typed here and published with this consent.
+  const hostNote = en ? "Let us look at this together" : "想和你一起看看这件事";
+  await consent.getByLabel(m.hostNoteLabel).fill(`  ${hostNote}  `);
   await consent.getByRole("checkbox").check();
   const inviteResponse = page.waitForResponse(response => response.url().endsWith("/api/comparison-invitations") && response.request().method() === "POST");
   await consent.getByRole("button", { name: p.hostAgree, exact: true }).click();
@@ -72,7 +75,19 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await recordMotion(guestPage);
   await guestPage.goto(new URL(invite.url).pathname);
   await expect(guestPage.locator("[data-share-card]")).toContainText(ui.hostScope);
+  await expect(guestPage.getByText(hostNote, { exact: true })).toBeVisible();
   expect(await guestPage.content()).not.toContain(host.result.id);
+  // The note belongs to the page, never to what a third-party preview server fetches and caches.
+  for (const selector of ['meta[name="description"]', 'meta[property="og:title"]', 'meta[property="og:description"]', 'meta[name="twitter:title"]', 'meta[name="twitter:description"]']) {
+    expect(await guestPage.locator(selector).getAttribute("content")).not.toContain(hostNote);
+  }
+  const card = await guestPage.request.get(`${new URL(invite.url).pathname}/opengraph-image`);
+  expect(card.status()).toBe(200);
+  expect(card.headers()["content-type"]).toContain("image/png");
+  expect(card.headers()["x-robots-tag"]).toContain("noindex");
+  // Streamed Suspense content starts in a hidden container, so evidence must wait for the visible page.
+  await expect(guestPage.getByRole("heading", { level: 1, name: m.invitationHeading })).toBeVisible();
+  await expect(guestPage.locator("[data-share-card]")).toBeVisible();
   await guestPage.screenshot({ path: `${evidence}/invitation-${locale}-${info.project.name}.png`, fullPage: true, animations: "disabled" });
   await guestPage.getByRole("link", { name: m.chooseExisting, exact: true }).click();
   await guestPage.getByRole("button", { name: ui.choose }).click();
@@ -88,15 +103,20 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   const pairPath = new URL(guestPage.url()).pathname;
   const pairId = pairPath.split("/").at(-1)!;
   await expect(guestPage.getByRole("heading", { name: m.title, exact: true })).toBeVisible();
-  await expect(guestPage.locator('[data-compare-motion="section"]')).toHaveCount(3);
+  await expect(guestPage.locator('[data-compare-motion="section"]')).toHaveCount(6);
   await expect(guestPage.getByText(m.differentQuestionnaires, { exact: true })).toBeVisible();
+  // The consent scope now follows the reading, so its reveal waits until it is scrolled to.
+  await guestPage.locator('[data-compare-motion="host"]').scrollIntoViewIfNeeded();
   await expect.poll(() => guestPage.locator('[data-compare-motion="host"]').evaluate(node => (window as Window & { compareStarts?: WeakMap<Element, number> }).compareStarts?.get(node) ?? 0)).toBe(1);
-  await guestPage.locator('[data-compare-motion="section"]').last().scrollIntoViewIfNeeded();
+  await guestPage.locator('[data-compare-motion="section"]').first().scrollIntoViewIfNeeded();
   await guestPage.locator('[data-compare-motion="host"]').scrollIntoViewIfNeeded();
   expect(await guestPage.locator('[data-compare-motion="host"]').evaluate(node => (window as Window & { compareStarts?: WeakMap<Element, number> }).compareStarts?.get(node) ?? 0)).toBe(1);
   await expect.poll(() => guestPage.locator("main").evaluate(node => node.getAnimations({ subtree: true }).filter(animation => animation.playState === "running").length)).toBe(0);
   await guestPage.screenshot({ path: `${evidence}/pair-${locale}-${info.project.name}.png`, fullPage: true, animations: "disabled" });
   expect(await guestPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+  await expect(guestPage.getByRole("link", { name: m.inviteAnother, exact: true })).toBeVisible();
+  await expect(guestPage.getByRole("link", { name: m.saveImage, exact: true })).toBeVisible();
 
   const third = await browser.newContext({ baseURL: origin, viewport });
   const thirdPage = await third.newPage();
@@ -104,10 +124,24 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await expect(thirdPage.getByRole("heading", { name: m.unavailable })).toBeVisible();
   await expect(thirdPage.locator("[data-compare-motion]")).toHaveCount(0);
   expect((await third.request.delete(`/api/comparisons/${pairId}`, { headers: { origin } })).status()).not.toBe(200);
+  // The takeaway image is owner-only, and is rendered from the frozen reading alone.
+  expect((await third.request.get(`${pairPath}/image`)).status()).toBe(404);
+  for (const owner of [guestPage, page]) {
+    const png = await owner.request.get(`${pairPath}/image`);
+    expect(png.status()).toBe(200);
+    expect(png.headers()["content-type"]).toContain("image/png");
+    expect(png.headers()["cache-control"]).toContain("no-store");
+    expect(png.headers()["x-robots-tag"]).toContain("noindex");
+    const body = await png.body();
+    expect(body.byteLength).toBeGreaterThan(5000);
+    if (owner === guestPage) await writeFile(`${evidence}/pair-image-${locale}-${info.project.name}.png`, body);
+  }
   const noJs = await browser.newContext({ baseURL: origin, javaScriptEnabled: false, storageState: await guest.storageState() });
   const plain = await noJs.newPage(); await plain.goto(pairPath);
-  await expect(plain.locator('[data-compare-motion="section"]')).toHaveCount(3);
-  for (const title of m.titles) await expect(plain.getByRole("heading", { name: title })).toBeVisible();
+  await expect(plain.locator('[data-compare-motion="section"]')).toHaveCount(6);
+  await expect(plain.locator("[data-compare-card]")).toHaveCount(4);
+  await expect(plain.getByRole("heading", { name: m.cardsTitle, exact: true })).toBeVisible();
+  for (const theme of Object.values(m.themes)) await expect(plain.getByRole("heading", { name: theme, exact: true })).toBeVisible();
   await noJs.close();
   await guestPage.emulateMedia({ reducedMotion: "reduce" });
   await guestPage.reload();
@@ -116,13 +150,13 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
     expect(await element.evaluate(node => node.getAnimations().length)).toBe(0);
   }
   await guestPage.emulateMedia({ media: "print" });
-  await expect(guestPage.locator('[data-compare-motion="section"]')).toHaveCount(3);
+  await expect(guestPage.locator('[data-compare-motion="section"]')).toHaveCount(6);
   await guestPage.emulateMedia({ media: "screen" });
 
   await page.goto(`${prefix}/my/pairing`);
   await expect(page.locator(`[data-comparison-manager] a[href$="/compare/${pairId}"]`)).toBeVisible();
   await page.goto(pairPath);
-  await expect(page.locator('[data-compare-motion="section"]')).toHaveCount(3);
+  await expect(page.locator('[data-compare-motion="section"]')).toHaveCount(6);
   await guestPage.getByRole("button", { name: m.revoke, exact: true }).click();
   const modal = guestPage.getByRole("dialog");
   await expect(modal).toContainText(m.revokeConfirm);

@@ -1,0 +1,1 @@
+ALTER TABLE "comparison_invitations" ADD COLUMN "host_note" varchar(30);

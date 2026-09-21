@@ -28,7 +28,7 @@ export function PairingBenefit({ locale, resultId, unlocked = false, compact = f
           <Link className="text-link min-h-11 text-sm" href={href(locale, "/pairing")}>{ui.learn}</Link>
         </div>
       </div>
-      {!compact && !unlocked && <PairingExample locale={locale} compact />}
+      {!compact && !unlocked && <PairingExample locale={locale} />}
     </div>
   </section>;
 }

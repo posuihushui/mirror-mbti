@@ -90,7 +90,7 @@ export async function createComparisonInvitation(visitorId: string, raw: z.infer
     const resultId = input.resultId ?? share?.resultId;
     if (!resultId) throw new ShareError(404, "NOT_FOUND");
     await requirePairingEligibility(resultId, visitorId, tx);
-    const hash = createHash("sha256").update(JSON.stringify({ resultId, shareId: share?.id ?? null, consentVersion: input.consentVersion, accessPolicy: "paid-pair-v2" })).digest("hex");
+    const hash = createHash("sha256").update(JSON.stringify({ resultId, shareId: share?.id ?? null, consentVersion: input.consentVersion, accessPolicy: "paid-pair-v2", hostNote: input.hostNote ?? null })).digest("hex");
     const old = await tx.query.comparisonInvitations.findFirst({ where: and(eq(I.visitorId, visitorId), eq(I.requestId, input.requestId)) });
     if (old) {
       if (old.requestHash !== hash) throw new ShareError(409, "IDEMPOTENCY_CONFLICT");
@@ -103,7 +103,7 @@ export async function createComparisonInvitation(visitorId: string, raw: z.infer
     if (!result) throw new ShareError(404, "NOT_FOUND");
     const now = new Date();
     const [row] = await tx.insert(I).values({ id: randomUUID(), token: randomBytes(24).toString("base64url"), shareId: share?.id ?? null, visitorId,
-      resultId: result.id, locale: questionnaireLocale(result.questionnaireId), publicSnapshot: snapshotFromResult(result), contentVersion: COMPARE_CONTENT_VERSION,
+      resultId: result.id, locale: questionnaireLocale(result.questionnaireId), publicSnapshot: snapshotFromResult(result), hostNote: input.hostNote ?? null, contentVersion: COMPARE_CONTENT_VERSION,
       accessPolicy: "paid-pair-v2", consentVersion: input.consentVersion, requestId: input.requestId, requestHash: hash, createdAt: now, expiresAt: new Date(+now + 30 * 86400000) }).returning();
     return { created: true, item: invitationView(row) };
   });
@@ -115,7 +115,7 @@ export async function getInvitationState(token: string): Promise<"active" | "leg
 }
 export async function getPublicInvitation(token: string) {
   if (!shareTokenSchema.safeParse(token).success) return null;
-  const [row] = await db().select({ locale: I.locale, snapshot: I.publicSnapshot, expiresAt: I.expiresAt }).from(I).leftJoin(S, eq(S.id, I.shareId))
+  const [row] = await db().select({ locale: I.locale, snapshot: I.publicSnapshot, hostNote: I.hostNote, expiresAt: I.expiresAt }).from(I).leftJoin(S, eq(S.id, I.shareId))
     .where(and(eq(I.token, token), eq(I.accessPolicy, "paid-pair-v2"), isNull(I.revokedAt), invitationParentOpen, gt(I.expiresAt, new Date()))).limit(1);
   return row ? { ...row, locale: row.locale as Locale, expiresAt: row.expiresAt.toISOString() } : null;
 }
