@@ -4,3 +4,10 @@
 @media (min-width: 721px) { .panels { grid-template-columns: minmax(0,1fr) 8px minmax(0,1fr); align-items: center; } }
 @media (prefers-reduced-motion: reduce) { .shell, .shell * { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; } }
 @media print { .shell, .shell * { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; } }
+
+/* Relation marks reuse the brand's facing-mirror language: alike is one warm dot,
+   different is two, and a near-balanced pair is an open ring. */
+.markSame, .markOpposite, .markContextual { display: inline-flex; align-items: center; height: 6px; flex: none; }
+.markSame::before, .markOpposite::before, .markOpposite::after { content: ""; width: 6px; height: 6px; border-radius: 999px; background: #c49473; }
+.markOpposite::after { margin-left: 5px; }
+.markContextual::before { content: ""; width: 6px; height: 6px; border-radius: 999px; border: 1px solid #c49473; }

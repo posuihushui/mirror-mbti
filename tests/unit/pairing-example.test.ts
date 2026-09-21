@@ -7,6 +7,7 @@ import {
   COMPARE_GUEST_CONSENT_VERSION,
   COMPARE_HOST_CONSENT_VERSION,
   type CompareOutputSnapshotV1,
+  type CompareOutputSnapshotV2,
 } from "@/lib/compare-types";
 import { compareMessages } from "@/lib/i18n/messages/compare";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
@@ -23,45 +24,65 @@ describe("paid pairing content and shared example", () => {
     expect(host.categories).toEqual({ EI: "balanced", SN: "balanced", TF: "balanced", JP: "J" });
     expect(guest.categories).toEqual({ EI: "balanced", SN: "balanced", TF: "balanced", JP: "P" });
     expect(content).toEqual(generateCompareContent(host, guest, locale));
-    expect(content.sections[1].body).toBe(compareMessages[locale].opposite.JP);
-    expect(content.sections[2].openingLine).toBe(compareMessages[locale].openingLines.JP);
-    expect(content.sections[2].practice).toBe(compareMessages[locale].practices.JP);
+    expect(content.highlight.dimension).toBe("JP");
+    expect(content.highlight.body).toBe(compareMessages[locale].highlights.opposite.JP);
+    expect(content.highlight.openingLine).toBe(compareMessages[locale].openingLines.JP);
+    expect(content.practice).toBe(compareMessages[locale].practices.JP);
     expect(content.differentQuestionnaires).toBe(false);
 
     // Callers cannot mutate a shared module-level object and taint later examples.
     host.categories.JP = "balanced";
-    content.sections[2].openingLine = "changed";
+    content.highlight.openingLine = "changed";
     const fresh = getPairingExample(locale);
     expect(fresh.host.categories.JP).toBe("J");
-    expect(fresh.content.sections[2].openingLine).toBe(compareMessages[locale].openingLines.JP);
+    expect(fresh.content.highlight.openingLine).toBe(compareMessages[locale].openingLines.JP);
   });
 
-  it.each(["zh", "en"] as const)("renders all frozen v2 content in static HTML, with and without enhancement (%s)", (locale) => {
+  it.each(["zh", "en"] as const)("renders all frozen v3 content in static HTML, with and without enhancement (%s)", (locale) => {
     const content = getPairingExample(locale).content;
     for (const animate of [true, false]) {
       const html = renderToStaticMarkup(createElement(ComparisonReading, { content, locale, animate }));
-      expect(html.match(/<section /gu)).toHaveLength(3);
-      expect(html).toContain('data-compare-reading="compare-v2"');
-      for (const section of content.sections) {
-        expect(html).toContain(section.title);
-        expect(html).toContain(section.body);
+      expect(html).toContain('data-compare-reading="compare-v3"');
+      expect(html.match(/data-compare-card=/gu)).toHaveLength(4);
+      for (const card of content.cards) {
+        expect(html).toContain(card.body);
+        expect(html).toContain(card.scene);
+        expect(html).toContain(compareMessages[locale].themes[card.dimension]);
       }
-      expect(html).toContain(content.sections[2].openingLine);
-      expect(html).toContain(content.sections[2].practice);
+      expect(html).toContain(content.highlight.body);
+      expect(html).toContain(content.highlight.openingLine);
+      expect(html).toContain(content.practice);
+      expect(html).toContain(compareMessages[locale].cardsTitle);
       expect(html).not.toMatch(/<button|<a /u);
       if (locale === "en") expect(html).not.toMatch(/[\u3400-\u9fff]/u);
     }
   });
 
-  it.each(["zh", "en"] as const)("compact preview renders exactly the same second and third sections (%s)", (locale) => {
+  it.each(["zh", "en"] as const)("previews only the emphasised dimension and says the guide covers four (%s)", (locale) => {
     const content = getPairingExample(locale).content;
     const html = renderToStaticMarkup(createElement(ComparisonReading, { content, locale, compact: true, animate: false }));
-    expect(html.match(/<section /gu)).toHaveLength(2);
-    expect(html).not.toContain(content.sections[0].body);
-    expect(html).toContain(content.sections[1].body);
-    expect(html).toContain(content.sections[2].body);
-    expect(html).toContain(content.sections[2].openingLine);
-    expect(html).toContain(content.sections[2].practice);
+    expect(html.match(/data-compare-card=/gu)).toHaveLength(1);
+    expect(html).toContain('data-compare-card="JP"');
+    expect(html).toContain(compareMessages[locale].moreDimensions);
+    expect(html).not.toContain(compareMessages[locale].cardsTitle);
+    expect(html).toContain(content.highlight.body);
+    expect(html).toContain(content.highlight.openingLine);
+    for (const card of content.cards.filter(({ dimension }) => dimension !== "JP")) expect(html).not.toContain(card.body);
+    // A preview never carries the paid reading's closing practice or its full note.
+    expect(html).not.toContain(content.practice);
+    expect(html).not.toContain(compareMessages[locale].note);
+  });
+
+  it.each(["zh", "en"] as const)("names both sides on a card when the reader knows who they are (%s)", (locale) => {
+    const { host, guest, content } = getPairingExample(locale);
+    const m = compareMessages[locale];
+    const html = renderToStaticMarkup(createElement(ComparisonReading, {
+      content, locale, animate: false,
+      sides: { you: host.categories, other: guest.categories, youLabel: m.you, otherLabel: m.other },
+    }));
+    expect(html).toContain(`${m.you} ${m.categoryLabels.J}`);
+    expect(html).toContain(`${m.other} ${m.categoryLabels.P}`);
+    expect(html).toContain(`${m.you} ${m.categoryLabels.balanced}`);
   });
 
   it("preserves stored v1 text and does not inject v2 examples or practice labels", () => {
@@ -83,6 +104,25 @@ describe("paid pairing content and shared example", () => {
     expect(html).not.toContain(compareMessages.en.openingLineLabel);
     expect(html).not.toContain(compareMessages.en.practiceLabel);
     expect(html).not.toContain("<blockquote");
+  });
+
+  it("preserves stored v2 text rather than re-rendering it as a v3 reading", () => {
+    const stored: CompareOutputSnapshotV2 = {
+      contentVersion: "compare-v2", locale: "zh", differentQuestionnaires: false,
+      sections: [
+        { title: "存档第一章", body: "存档第一段。" },
+        { title: "存档第二章", body: "存档第二段。" },
+        { title: "存档第三章", body: "存档第三段。", openingLine: "存档的一句话。", practice: "存档的练习。" },
+      ],
+    };
+    const html = renderToStaticMarkup(createElement(ComparisonReading, { content: stored, locale: "zh", animate: false }));
+    expect(html).toContain('data-compare-reading="compare-v2"');
+    expect(html.match(/<section /gu)).toHaveLength(3);
+    expect(html).not.toContain("data-compare-card=");
+    expect(html).not.toContain(compareMessages.zh.cardsTitle);
+    for (const section of stored.sections) expect(html).toContain(section.body);
+    expect(html).toContain("存档的一句话。");
+    expect(html).toContain("存档的练习。");
   });
 
   it.each(["zh", "en"] as const)("introduces the invitation before testing and keeps consent explicit (%s)", (locale) => {

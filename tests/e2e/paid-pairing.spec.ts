@@ -39,7 +39,7 @@ for(const en of [false,true])test(`paid invitation → own overview → payment 
  await g.setViewportSize(originalViewport);
  await expect(g.getByRole('dialog').locator('[data-pairing-access="eligible"]')).toBeVisible();
  await shot(g,`payment-ready-${locale}-${info.project.name}`);await g.getByRole('dialog').getByRole('link',{name:m.continue,exact:true}).click();await g.waitForURL(/\/join\?result=/);
- const consent=g.locator('[data-compare-consent="guest"]');await expect(consent.getByRole('checkbox')).not.toBeChecked();await expect(consent.getByRole('button',{name:p.guestAgree})).toBeDisabled();await consent.getByRole('checkbox').check();await consent.getByRole('button',{name:p.guestAgree}).click();await g.waitForURL(/\/compare\//);await expect(g.locator('[data-compare-motion="section"]')).toHaveCount(3);
+ const consent=g.locator('[data-compare-consent="guest"]');await expect(consent.getByRole('checkbox')).not.toBeChecked();await expect(consent.getByRole('button',{name:p.guestAgree})).toBeDisabled();await consent.getByRole('checkbox').check();await consent.getByRole('button',{name:p.guestAgree}).click();await g.waitForURL(/\/compare\//);await expect(g.locator('[data-compare-motion="section"]')).toHaveCount(6);await expect(g.locator('[data-compare-card]')).toHaveCount(4);
  const resultPage=await guest.request.get(`${prefix}/result/${own}`);expect(await resultPage.text()).not.toContain('data-pairing-continuations');
  await g.goto(`${prefix}/my/pairing`);await expect(g.locator('[data-comparison-manager] a[href*="/compare/"]')).toBeVisible();await shot(g,`center-history-${locale}-${info.project.name}`);
  await guest.close();

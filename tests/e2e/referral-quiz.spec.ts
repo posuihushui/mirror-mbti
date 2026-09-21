@@ -78,12 +78,12 @@ for (const en of [false, true]) {
       await joinButton.click();
       await page.waitForURL(/\/compare\/[0-9a-f-]{36}$/);
       expect(joins).toBe(1);
-      await expect(page.getByRole("heading", { name: compareMessages.zh.titles[0], exact: true })).toBeVisible();
-      await expect(page.getByRole("heading", { name: compareMessages.zh.titles[1], exact: true })).toBeVisible();
-      await expect(page.getByRole("heading", { name: compareMessages.zh.titles[2], exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: compareMessages.zh.cardsTitle, exact: true })).toBeVisible();
+      await expect(page.locator("[data-compare-card]")).toHaveCount(4);
+      for (const theme of Object.values(compareMessages.zh.themes)) await expect(page.getByRole("heading", { name: theme, exact: true })).toBeVisible();
       if (en) await expect(page.getByText("双方使用的问卷版本不同；这里只对照已同意的定性类别，不比较分数。", { exact: true })).toBeVisible();
       await hostPage.goto(new URL(page.url()).pathname);
-      await expect(hostPage.getByRole("heading", { name: compareMessages.zh.titles[2], exact: true })).toBeVisible();
+      await expect(hostPage.getByRole("heading", { name: compareMessages.zh.cardsTitle, exact: true })).toBeVisible();
     } finally { await guest.close(); }
   });
 }

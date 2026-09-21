@@ -1,11 +1,11 @@
 import { generateCompareContent } from "@/lib/compare-content";
-import type { CompareOutputSnapshotV2, CompareSnapshot } from "@/lib/compare-types";
+import type { CompareOutputSnapshotV3, CompareSnapshot } from "@/lib/compare-types";
 import type { Locale } from "@/lib/i18n/locale";
 
 export type PairingExample = {
   host: CompareSnapshot;
   guest: CompareSnapshot;
-  content: CompareOutputSnapshotV2;
+  content: CompareOutputSnapshotV3;
 };
 
 /** Fixed fictional inputs, never the visitor's or an invitation host's preferences. */
