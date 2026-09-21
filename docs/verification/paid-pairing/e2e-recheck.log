@@ -1,0 +1,231 @@
+
+Running 50 tests using 2 workers
+
+(node:35740) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35741) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [mobile] › tests/e2e/flow.spec.ts:16:7 › core flow › home renders with the primary CTA and never quotes an amount (965ms)
+  ✓   2 [mobile] › tests/e2e/analytics.spec.ts:28:7 › analytics › home sends a redacted page view and counts the start CTA (1.0s)
+  ✓   3 [mobile] › tests/e2e/flow.spec.ts:26:7 › core flow › sample result and sample report are reachable (219ms)
+  ✓   4 [mobile] › tests/e2e/analytics.spec.ts:39:7 › analytics › opening the header menu is counted with its location (170ms)
+  ✓   5 [mobile] › tests/e2e/flow.spec.ts:34:7 › core flow › quiz gates next until an answer is chosen and persists progress across reload (620ms)
+  ✓   6 [mobile] › tests/e2e/analytics.spec.ts:51:7 › analytics › the paid funnel is measured end to end without result IDs or order numbers (16.5s)
+  ✓   8 [mobile] › tests/e2e/analytics.spec.ts:104:7 › analytics › the sample report records chapter reading and its closing CTA (393ms)
+  ✓   9 [mobile] › tests/e2e/motion.spec.ts:45:7 › first-round motion › reduced motion keeps home, result and report content complete without animation (395ms)
+  ✓  10 [mobile] › tests/e2e/motion.spec.ts:76:7 › first-round motion › a result radar draws when scrolled into view and never repeats on return (1.0s)
+  ✓  11 [mobile] › tests/e2e/motion.spec.ts:100:7 › first-round motion › returning to report chapter one keeps the completed radar without replaying it (1.4s)
+  ✓   7 [mobile] › tests/e2e/flow.spec.ts:49:7 › core flow › complete quiz → result → mock pay → report chapters (19.3s)
+  ✓  12 [mobile] › tests/e2e/motion.spec.ts:122:7 › first-round motion › rapid chapter changes keep the original panels, selection and URL in sync (264ms)
+  ✓  13 [mobile] › tests/e2e/flow.spec.ts:83:7 › core flow › the sample closes by inviting the test, not by quoting a price (356ms)
+  ✓  15 [mobile] › tests/e2e/flow.spec.ts:104:7 › core flow › the sample report is the real report layout, marked as a sample (141ms)
+  ✓  16 [mobile] › tests/e2e/flow.spec.ts:122:7 › core flow › sample report ships every chapter in the server HTML (16ms)
+  ✓  17 [mobile] › tests/e2e/flow.spec.ts:138:7 › core flow › report chapters deep-link, switch and keep both insight lists (651ms)
+  ✓  18 [mobile] › tests/e2e/flow.spec.ts:156:7 › core flow › locked report redirects to the result with the unlock sheet (2.4s)
+  ✓  19 [mobile] › tests/e2e/flow.spec.ts:166:7 › core flow › API rejects malformed answers and unknown results (118ms)
+  ✓  20 [mobile] › tests/e2e/flow.spec.ts:181:7 › core flow › SEO endpoints respond (186ms)
+  ✘  21 [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics (76ms)
+(node:35922) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  22 [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics (112ms)
+(node:35927) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  23 [desktop] › tests/e2e/analytics.spec.ts:28:7 › analytics › home sends a redacted page view and counts the start CTA (269ms)
+  ✓  24 [desktop] › tests/e2e/analytics.spec.ts:39:7 › analytics › opening the header menu is counted with its location (189ms)
+  ✓  14 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (6.3s)
+  ✓  26 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (6.1s)
+  ✓  27 [mobile] › tests/e2e/paid-pairing.spec.ts:35:5 › pairing page, narrow widths, no-JS, print and reduced motion (2.1s)
+  ✓  28 [mobile] › tests/e2e/paid-pairing.spec.ts:46:5 › owner-only access, strict continuation inputs and closed invite keep personal report (117ms)
+(node:36022) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  29 [desktop] › tests/e2e/flow.spec.ts:16:7 › core flow › home renders with the primary CTA and never quotes an amount (185ms)
+  ✓  30 [desktop] › tests/e2e/flow.spec.ts:26:7 › core flow › sample result and sample report are reachable (191ms)
+  ✓  31 [desktop] › tests/e2e/flow.spec.ts:34:7 › core flow › quiz gates next until an answer is chosen and persists progress across reload (586ms)
+  ✓  25 [desktop] › tests/e2e/analytics.spec.ts:51:7 › analytics › the paid funnel is measured end to end without result IDs or order numbers (15.6s)
+  ✓  33 [desktop] › tests/e2e/analytics.spec.ts:104:7 › analytics › the sample report records chapter reading and its closing CTA (417ms)
+  ✓  34 [desktop] › tests/e2e/motion.spec.ts:45:7 › first-round motion › reduced motion keeps home, result and report content complete without animation (428ms)
+  ✓  32 [desktop] › tests/e2e/flow.spec.ts:49:7 › core flow › complete quiz → result → mock pay → report chapters (6.1s)
+  ✓  36 [desktop] › tests/e2e/flow.spec.ts:83:7 › core flow › the sample closes by inviting the test, not by quoting a price (360ms)
+  ✓  37 [desktop] › tests/e2e/flow.spec.ts:104:7 › core flow › the sample report is the real report layout, marked as a sample (145ms)
+  ✓  38 [desktop] › tests/e2e/flow.spec.ts:122:7 › core flow › sample report ships every chapter in the server HTML (16ms)
+  ✓  35 [desktop] › tests/e2e/motion.spec.ts:76:7 › first-round motion › a result radar draws when scrolled into view and never repeats on return (1.0s)
+  ✓  39 [desktop] › tests/e2e/flow.spec.ts:138:7 › core flow › report chapters deep-link, switch and keep both insight lists (652ms)
+  ✓  40 [desktop] › tests/e2e/motion.spec.ts:100:7 › first-round motion › returning to report chapter one keeps the completed radar without replaying it (1.4s)
+  ✓  42 [desktop] › tests/e2e/motion.spec.ts:122:7 › first-round motion › rapid chapter changes keep the original panels, selection and URL in sync (269ms)
+  ✓  41 [desktop] › tests/e2e/flow.spec.ts:156:7 › core flow › locked report redirects to the result with the unlock sheet (6.0s)
+  ✓  44 [desktop] › tests/e2e/flow.spec.ts:166:7 › core flow › API rejects malformed answers and unknown results (128ms)
+  ✓  45 [desktop] › tests/e2e/flow.spec.ts:181:7 › core flow › SEO endpoints respond (114ms)
+  ✘  46 [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics (74ms)
+(node:36108) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  47 [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics (93ms)
+  ✘  43 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (1.0m)
+(node:36590) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  48 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (1.0m)
+(node:36876) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  49 [desktop] › tests/e2e/paid-pairing.spec.ts:35:5 › pairing page, narrow widths, no-JS, print and reduced motion (1.2s)
+  ✓  50 [desktop] › tests/e2e/paid-pairing.spec.ts:46:5 › owner-only access, strict continuation inputs and closed invite keep personal report (160ms)
+
+
+  1) [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics 
+
+    TypeError: Cannot read properties of undefined (reading 'id')
+
+      19 |   const share = (await shareResponse.json()).data;
+      20 |   const order = (await (await request.post("/api/orders", { headers: { origin }, data: { resultId } })).json()).data;
+    > 21 |   expect((await request.post(`/api/orders/${order.id}/mock-pay`, { headers: { origin } })).ok()).toBe(true);
+         |                                                   ^
+      22 |   const inviteResponse = await request.post("/api/comparison-invitations", { headers: { origin }, data: { shareId: share.id, consentVersion: "compare-host-v2", requestId: randomUUID() } });
+      23 |   expect(inviteResponse.status()).toBe(201);
+      24 |   return (await inviteResponse.json()).data as { token: string; url: string };
+        at invitationForHost (/Users/lake/work/mine/mirror-mbti/tests/e2e/referral-quiz.spec.ts:21:51)
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/referral-quiz.spec.ts:40:24
+
+    Error Context: ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-99341-lable-storage-and-analytics-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-99341-lable-storage-and-analytics-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-99341-lable-storage-and-analytics-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics 
+
+    TypeError: Cannot read properties of undefined (reading 'id')
+
+      19 |   const share = (await shareResponse.json()).data;
+      20 |   const order = (await (await request.post("/api/orders", { headers: { origin }, data: { resultId } })).json()).data;
+    > 21 |   expect((await request.post(`/api/orders/${order.id}/mock-pay`, { headers: { origin } })).ok()).toBe(true);
+         |                                                   ^
+      22 |   const inviteResponse = await request.post("/api/comparison-invitations", { headers: { origin }, data: { shareId: share.id, consentVersion: "compare-host-v2", requestId: randomUUID() } });
+      23 |   expect(inviteResponse.status()).toBe(201);
+      24 |   return (await inviteResponse.json()).data as { token: string; url: string };
+        at invitationForHost (/Users/lake/work/mine/mirror-mbti/tests/e2e/referral-quiz.spec.ts:21:51)
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/referral-quiz.spec.ts:40:24
+
+    Error Context: ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-3098f-lable-storage-and-analytics-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-3098f-lable-storage-and-analytics-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-3098f-lable-storage-and-analytics-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByRole('dialog').getByRole('link', { name: '继续这次配对', exact: true })
+
+
+      26 |  await g.addInitScript(()=>{for(const s of [localStorage,sessionStorage]){s.clear();Object.defineProperty(s,'setItem',{value:()=>{throw new Error('blocked');}});}});await g.reload();
+      27 |  await g.getByRole('button',{name:/解锁报告与|Unlock report|Unlock & pair/}).filter({visible:true}).first().click();await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Demo payment \$/:/模拟支付 ¥/}).click();
+    > 28 |  await expect(g.locator('[data-pairing-access="eligible"]')).toBeVisible();await shot(g,`payment-ready-${locale}-${info.project.name}`);await g.getByRole('dialog').getByRole('link',{name:m.continue,exact:true}).click();await g.waitForURL(/\/join\?result=/);
+         |                                                                                                                                                                                                                    ^
+      29 |  const consent=g.locator('[data-compare-consent="guest"]');await expect(consent.getByRole('checkbox')).not.toBeChecked();await expect(consent.getByRole('button',{name:p.guestAgree})).toBeDisabled();await consent.getByRole('checkbox').check();await consent.getByRole('button',{name:p.guestAgree}).click();await g.waitForURL(/\/compare\//);await expect(g.locator('[data-compare-motion="section"]')).toHaveCount(3);
+      30 |  const resultPage=await guest.request.get(`${prefix}/result/${own}`);expect(await resultPage.text()).not.toContain('data-pairing-continuations');
+      31 |  await g.goto(`${prefix}/my/pairing`);await expect(g.locator('[data-comparison-manager] a[href*="/compare/"]')).toBeVisible();await shot(g,`center-history-${locale}-${info.project.name}`);
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/paid-pairing.spec.ts:28:212
+
+    Error Context: ../../../../../tmp/mirror-pairing-final-tests/paid-pairing-paid-invitati-d5155-nt-→-independent-consent-zh-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-pairing-final-tests/paid-pairing-paid-invitati-d5155-nt-→-independent-consent-zh-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-pairing-final-tests/paid-pairing-paid-invitati-d5155-nt-→-independent-consent-zh-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByRole('dialog').getByRole('link', { name: 'Continue this pairing', exact: true })
+
+
+      26 |  await g.addInitScript(()=>{for(const s of [localStorage,sessionStorage]){s.clear();Object.defineProperty(s,'setItem',{value:()=>{throw new Error('blocked');}});}});await g.reload();
+      27 |  await g.getByRole('button',{name:/解锁报告与|Unlock report|Unlock & pair/}).filter({visible:true}).first().click();await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Demo payment \$/:/模拟支付 ¥/}).click();
+    > 28 |  await expect(g.locator('[data-pairing-access="eligible"]')).toBeVisible();await shot(g,`payment-ready-${locale}-${info.project.name}`);await g.getByRole('dialog').getByRole('link',{name:m.continue,exact:true}).click();await g.waitForURL(/\/join\?result=/);
+         |                                                                                                                                                                                                                    ^
+      29 |  const consent=g.locator('[data-compare-consent="guest"]');await expect(consent.getByRole('checkbox')).not.toBeChecked();await expect(consent.getByRole('button',{name:p.guestAgree})).toBeDisabled();await consent.getByRole('checkbox').check();await consent.getByRole('button',{name:p.guestAgree}).click();await g.waitForURL(/\/compare\//);await expect(g.locator('[data-compare-motion="section"]')).toHaveCount(3);
+      30 |  const resultPage=await guest.request.get(`${prefix}/result/${own}`);expect(await resultPage.text()).not.toContain('data-pairing-continuations');
+      31 |  await g.goto(`${prefix}/my/pairing`);await expect(g.locator('[data-comparison-manager] a[href*="/compare/"]')).toBeVisible();await shot(g,`center-history-${locale}-${info.project.name}`);
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/paid-pairing.spec.ts:28:212
+
+    Error Context: ../../../../../tmp/mirror-pairing-final-tests/paid-pairing-paid-invitati-53798-nt-→-independent-consent-en-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-pairing-final-tests/paid-pairing-paid-invitati-53798-nt-→-independent-consent-en-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-pairing-final-tests/paid-pairing-paid-invitati-53798-nt-→-independent-consent-en-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics 
+
+    TypeError: Cannot read properties of undefined (reading 'id')
+
+      19 |   const share = (await shareResponse.json()).data;
+      20 |   const order = (await (await request.post("/api/orders", { headers: { origin }, data: { resultId } })).json()).data;
+    > 21 |   expect((await request.post(`/api/orders/${order.id}/mock-pay`, { headers: { origin } })).ok()).toBe(true);
+         |                                                   ^
+      22 |   const inviteResponse = await request.post("/api/comparison-invitations", { headers: { origin }, data: { shareId: share.id, consentVersion: "compare-host-v2", requestId: randomUUID() } });
+      23 |   expect(inviteResponse.status()).toBe(201);
+      24 |   return (await inviteResponse.json()).data as { token: string; url: string };
+        at invitationForHost (/Users/lake/work/mine/mirror-mbti/tests/e2e/referral-quiz.spec.ts:21:51)
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/referral-quiz.spec.ts:40:24
+
+    Error Context: ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-99341-lable-storage-and-analytics-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-99341-lable-storage-and-analytics-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-99341-lable-storage-and-analytics-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics 
+
+    TypeError: Cannot read properties of undefined (reading 'id')
+
+      19 |   const share = (await shareResponse.json()).data;
+      20 |   const order = (await (await request.post("/api/orders", { headers: { origin }, data: { resultId } })).json()).data;
+    > 21 |   expect((await request.post(`/api/orders/${order.id}/mock-pay`, { headers: { origin } })).ok()).toBe(true);
+         |                                                   ^
+      22 |   const inviteResponse = await request.post("/api/comparison-invitations", { headers: { origin }, data: { shareId: share.id, consentVersion: "compare-host-v2", requestId: randomUUID() } });
+      23 |   expect(inviteResponse.status()).toBe(201);
+      24 |   return (await inviteResponse.json()).data as { token: string; url: string };
+        at invitationForHost (/Users/lake/work/mine/mirror-mbti/tests/e2e/referral-quiz.spec.ts:21:51)
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/referral-quiz.spec.ts:40:24
+
+    Error Context: ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-3098f-lable-storage-and-analytics-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-3098f-lable-storage-and-analytics-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-pairing-final-tests/referral-quiz-invitation-→-3098f-lable-storage-and-analytics-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6 failed
+    [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics 
+    [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics 
+    [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh 
+    [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en 
+    [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics 
+    [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics 
+  44 passed (2.8m)

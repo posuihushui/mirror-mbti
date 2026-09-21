@@ -1,3 +1,7 @@
+import { PairingBenefit } from "@/components/pairing/pairing-benefit";
+import { PairingTracker } from "@/components/pairing/pairing-tracker";
+import { ContinuationList } from "@/components/pairing/continuation-list";
+import { listComparisonContinuations } from "@/lib/comparison-continuations";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { TrackView } from "@/components/analytics/track-view";
@@ -55,6 +59,7 @@ export default async function ReportPage({ params }: Params) {
   }
 
   const data: ReportData = buildReportData(result.profile, { sample: result.sample, demo: paymentModeFor(locale) === "mock", locale });
+  const continuations = !data.sample && visitorId ? await listComparisonContinuations(visitorId, id) : [];
 
 
   return (
@@ -62,8 +67,9 @@ export default async function ReportPage({ params }: Params) {
       <AppHeader variant="page" title={data.sample ? t.sampleHeader : t.ownTitle} backHref={href(locale, `/result/${id}`)} path={data.sample ? "/report/sample" : undefined} />
       <ReportBody
         data={data}
-        banner={<>{data.sample && <SampleNotice />}<p className="mx-[25px] my-5 text-[12px] leading-[1.9] text-mist md:mx-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p></>}
-        footer={data.sample ? <SampleCta /> : undefined}
+        banner={<>{data.sample && <SampleNotice />}<p className="mx-[25px] my-5 text-[12px] leading-[1.9] text-mist md:mx-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>{!data.sample && <div className="mx-[25px] md:mx-0"><PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker></div>}</>}
+        relationshipAction={!data.sample ? <PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact dark /></PairingTracker> : undefined}
+        footer={data.sample ? <SampleCta /> : <div className="mx-[25px] md:mx-0"><ContinuationList items={continuations} locale={locale} surface="report" /></div>}
       />
       {data.sample && (
         <Dock>

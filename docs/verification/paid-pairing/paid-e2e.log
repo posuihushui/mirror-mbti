@@ -1,0 +1,81 @@
+
+Running 8 tests using 2 workers
+
+(node:32272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32271) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (6.4s)
+  ✓  3 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (6.6s)
+  ✓  4 [mobile] › tests/e2e/paid-pairing.spec.ts:35:5 › pairing page, narrow widths, no-JS, print and reduced motion (2.6s)
+  ✓  5 [mobile] › tests/e2e/paid-pairing.spec.ts:46:5 › owner-only access, strict continuation inputs and closed invite keep personal report (160ms)
+  ✘  1 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (1.0m)
+(node:33536) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  6 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (1.0m)
+(node:34498) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  7 [desktop] › tests/e2e/paid-pairing.spec.ts:35:5 › pairing page, narrow widths, no-JS, print and reduced motion (1.1s)
+  ✓  8 [desktop] › tests/e2e/paid-pairing.spec.ts:46:5 › owner-only access, strict continuation inputs and closed invite keep personal report (131ms)
+
+
+  1) [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByRole('dialog').getByRole('link', { name: '继续这次配对', exact: true })
+
+
+      26 |  await g.addInitScript(()=>{for(const s of [localStorage,sessionStorage]){s.clear();Object.defineProperty(s,'setItem',{value:()=>{throw new Error('blocked');}});}});await g.reload();
+      27 |  await g.getByRole('button',{name:/解锁报告与|Unlock report/}).filter({visible:true}).first().click();await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Demo payment \$/:/模拟支付 ¥/}).click();
+    > 28 |  await expect(g.locator('[data-pairing-access="eligible"]')).toBeVisible();await shot(g,`payment-ready-${locale}-${info.project.name}`);await g.getByRole('dialog').getByRole('link',{name:m.continue,exact:true}).click();await g.waitForURL(/\/join\?result=/);
+         |                                                                                                                                                                                                                    ^
+      29 |  const consent=g.locator('[data-compare-consent="guest"]');await expect(consent.getByRole('checkbox')).not.toBeChecked();await expect(consent.getByRole('button',{name:p.guestAgree})).toBeDisabled();await consent.getByRole('checkbox').check();await consent.getByRole('button',{name:p.guestAgree}).click();await g.waitForURL(/\/compare\//);await expect(g.locator('[data-compare-motion="section"]')).toHaveCount(3);
+      30 |  const resultPage=await guest.request.get(`${prefix}/result/${own}`);expect(await resultPage.text()).not.toContain('data-pairing-continuations');
+      31 |  await g.goto(`${prefix}/my/pairing`);await expect(g.locator('[data-comparison-manager] a[href*="/compare/"]')).toBeVisible();await shot(g,`center-history-${locale}-${info.project.name}`);
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/paid-pairing.spec.ts:28:212
+
+    Error Context: ../../../../../tmp/mirror-paid-e2e-results/paid-pairing-paid-invitati-d5155-nt-→-independent-consent-zh-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-paid-e2e-results/paid-pairing-paid-invitati-d5155-nt-→-independent-consent-zh-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-paid-e2e-results/paid-pairing-paid-invitati-d5155-nt-→-independent-consent-zh-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByRole('dialog').getByRole('link', { name: 'Continue this pairing', exact: true })
+
+
+      26 |  await g.addInitScript(()=>{for(const s of [localStorage,sessionStorage]){s.clear();Object.defineProperty(s,'setItem',{value:()=>{throw new Error('blocked');}});}});await g.reload();
+      27 |  await g.getByRole('button',{name:/解锁报告与|Unlock report/}).filter({visible:true}).first().click();await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Demo payment \$/:/模拟支付 ¥/}).click();
+    > 28 |  await expect(g.locator('[data-pairing-access="eligible"]')).toBeVisible();await shot(g,`payment-ready-${locale}-${info.project.name}`);await g.getByRole('dialog').getByRole('link',{name:m.continue,exact:true}).click();await g.waitForURL(/\/join\?result=/);
+         |                                                                                                                                                                                                                    ^
+      29 |  const consent=g.locator('[data-compare-consent="guest"]');await expect(consent.getByRole('checkbox')).not.toBeChecked();await expect(consent.getByRole('button',{name:p.guestAgree})).toBeDisabled();await consent.getByRole('checkbox').check();await consent.getByRole('button',{name:p.guestAgree}).click();await g.waitForURL(/\/compare\//);await expect(g.locator('[data-compare-motion="section"]')).toHaveCount(3);
+      30 |  const resultPage=await guest.request.get(`${prefix}/result/${own}`);expect(await resultPage.text()).not.toContain('data-pairing-continuations');
+      31 |  await g.goto(`${prefix}/my/pairing`);await expect(g.locator('[data-comparison-manager] a[href*="/compare/"]')).toBeVisible();await shot(g,`center-history-${locale}-${info.project.name}`);
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/paid-pairing.spec.ts:28:212
+
+    Error Context: ../../../../../tmp/mirror-paid-e2e-results/paid-pairing-paid-invitati-53798-nt-→-independent-consent-en-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-paid-e2e-results/paid-pairing-paid-invitati-53798-nt-→-independent-consent-en-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-paid-e2e-results/paid-pairing-paid-invitati-53798-nt-→-independent-consent-en-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh 
+    [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en 
+  6 passed (2.1m)

@@ -1,0 +1,25 @@
+
+Running 14 tests using 2 workers
+
+(node:44881) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:44882) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [mobile] › tests/e2e/pairing-motion.spec.ts:3:5 › pairing reveals run once, keep actions outside, and settle for motion preferences (773ms)
+(node:44976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   3 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (4.6s)
+  ✓   2 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (7.0s)
+  ✓   4 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (4.6s)
+  ✓   6 [desktop] › tests/e2e/paid-pairing.spec.ts:43:5 › pairing page, narrow widths, no-JS, print and reduced motion (993ms)
+  ✓   7 [desktop] › tests/e2e/paid-pairing.spec.ts:54:5 › owner-only access, strict continuation inputs and closed invite keep personal report (170ms)
+  ✓   8 [desktop] › tests/e2e/paid-pairing.spec.ts:69:5 › result docks fit phone breakpoints (35ms)
+  ✓   5 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (6.4s)
+  ✓   9 [desktop] › tests/e2e/paid-pairing.spec.ts:87:5 › empty center, report entry and recovered order retain separate invitations (2.9s)
+  ✓  11 [desktop] › tests/e2e/pairing-motion.spec.ts:3:5 › pairing reveals run once, keep actions outside, and settle for motion preferences (751ms)
+  ✓  10 [mobile] › tests/e2e/paid-pairing.spec.ts:43:5 › pairing page, narrow widths, no-JS, print and reduced motion (2.3s)
+  ✓  12 [mobile] › tests/e2e/paid-pairing.spec.ts:54:5 › owner-only access, strict continuation inputs and closed invite keep personal report (126ms)
+  ✓  13 [mobile] › tests/e2e/paid-pairing.spec.ts:69:5 › result docks fit phone breakpoints (2.9s)
+  ✓  14 [mobile] › tests/e2e/paid-pairing.spec.ts:87:5 › empty center, report entry and recovered order retain separate invitations (3.8s)
+
+  14 passed (22.9s)

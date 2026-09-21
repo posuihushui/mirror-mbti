@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { pairingUiMessages } from "../../src/lib/i18n/messages/pairing-ui";
+import { pairingMessages } from "../../src/lib/i18n/messages/pairing";
+import { compareMessages } from "../../src/lib/i18n/messages/compare";
 import { getQuestionnaire } from "../../src/lib/questionnaires";
 
 const origin = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 async function invitationForHost(request: APIRequestContext) {
   await request.get("/");
-  const resultResponse = await request.post("/api/results", { data: { answers: Array(32).fill(2) } });
+  const resultResponse = await request.post("/api/results", { data: { answers: getQuestionnaire("legacy32-v1")!.questions.map(q => q.reverse ? -2 : 2) } });
   expect(resultResponse.status()).toBe(201);
   const resultId = (await resultResponse.json()).data.id;
   const optionsResponse = await request.get(`/api/results/${resultId}/share-options`);
@@ -14,7 +17,9 @@ async function invitationForHost(request: APIRequestContext) {
   const shareResponse = await request.post("/api/shares", { headers: { origin }, data: { resultId, selectedIds: options.defaultSelectedIds, showType: false, showDimensions: false, consentVersion: "share-public-v1", requestId: randomUUID() } });
   expect(shareResponse.status()).toBe(201);
   const share = (await shareResponse.json()).data;
-  const inviteResponse = await request.post("/api/comparison-invitations", { headers: { origin }, data: { shareId: share.id, consentVersion: "compare-host-v1", requestId: randomUUID() } });
+  const order = (await (await request.post("/api/orders", { headers: { origin }, data: { resultId } })).json()).data;
+  expect((await request.post(`/api/orders/${order.id}/mock-pay`, { headers: { origin } })).ok()).toBe(true);
+  const inviteResponse = await request.post("/api/comparison-invitations", { headers: { origin }, data: { shareId: share.id, consentVersion: "compare-host-v2", requestId: randomUUID() } });
   expect(inviteResponse.status()).toBe(201);
   return (await inviteResponse.json()).data as { token: string; url: string };
 }
@@ -44,7 +49,7 @@ for (const en of [false, true]) {
       page.on("request", request => { if (new URL(request.url()).pathname === "/api/comparisons" && request.method() === "POST") joins++; });
       await page.goto(`/t/${invitation.token}`);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      await page.getByRole("link", { name: "开始测试", exact: true }).click();
+      await page.getByRole("link", { name: "免费开始测试", exact: true }).click();
       await expect(page).toHaveURL(new RegExp(`/quiz\\?compare=${invitation.token}$`));
       // Both languages may participate in a Chinese invitation. Keep the explicit flow context in the URL.
       if (en) await page.goto(`/en/quiz?compare=${invitation.token}`);
@@ -54,14 +59,18 @@ for (const en of [false, true]) {
       await expect(page.getByText(en ? "YOUR PERSONALITY" : "你的人格倾向", { exact: true })).toBeVisible();
       expect(joins).toBe(0);
       expect(eventFailures).toBeGreaterThan(0);
-      const continueLink = page.getByRole("link", { name: en ? "Continue the comparison" : "继续双人对照", exact: true });
-      await expect(continueLink).toHaveAttribute("href", new RegExp(`^/t/${invitation.token}/join\\?result=[A-Za-z0-9_-]{12}$`));
+      const ui = pairingUiMessages[en ? "en" : "zh"], p = pairingMessages[en ? "en" : "zh"], m = compareMessages[en ? "en" : "zh"];
+      const resultId = new URL(page.url()).pathname.split("/").at(-1)!;
+      const order = (await (await guest.request.post("/api/orders", { headers: { origin }, data: { resultId } })).json()).data;
+      expect((await guest.request.post(`/api/orders/${order.id}/mock-pay`, { headers: { origin } })).ok()).toBe(true);
+      const continueLink = page.getByRole("link", { name: ui.continue, exact: true });
+      await expect(continueLink).toHaveAttribute("href", new RegExp(`^${en ? "/en" : ""}/t/${invitation.token}/join\\?result=[A-Za-z0-9_-]{12}$`));
       await continueLink.click();
       await expect(page.locator('[data-compare-consent="guest"]')).toBeVisible();
-      // The consent page follows the host language, while the result remains in the guest's language.
-      await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
-      const consent = page.getByRole("checkbox", { name: "我已了解并同意以上公开范围" });
-      const joinButton = page.getByRole("button", { name: "同意并生成双人提示", exact: true });
+      // Consent follows the selected result language; the frozen pair uses the host language.
+      await expect(page.locator("html")).toHaveAttribute("lang", en ? "en" : "zh-CN");
+      const consent = page.getByRole("checkbox", { name: m.agree });
+      const joinButton = page.getByRole("button", { name: p.guestAgree, exact: true });
       await expect(consent).not.toBeChecked();
       await expect(joinButton).toBeDisabled();
       expect(joins).toBe(0);
@@ -69,12 +78,12 @@ for (const en of [false, true]) {
       await joinButton.click();
       await page.waitForURL(/\/compare\/[0-9a-f-]{36}$/);
       expect(joins).toBe(1);
-      await expect(page.getByRole("heading", { name: "可能容易理解彼此的地方", exact: true })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "可能需要说清楚的地方", exact: true })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "可以一起试一次", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: compareMessages.zh.titles[0], exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: compareMessages.zh.titles[1], exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: compareMessages.zh.titles[2], exact: true })).toBeVisible();
       if (en) await expect(page.getByText("双方使用的问卷版本不同；这里只对照已同意的定性类别，不比较分数。", { exact: true })).toBeVisible();
       await hostPage.goto(new URL(page.url()).pathname);
-      await expect(hostPage.getByRole("heading", { name: "可以一起试一次", exact: true })).toBeVisible();
+      await expect(hostPage.getByRole("heading", { name: compareMessages.zh.titles[2], exact: true })).toBeVisible();
     } finally { await guest.close(); }
   });
 }

@@ -1,0 +1,30 @@
+0000_init.sql: applied hash matches
+0001_concerned_lucky_pierre.sql: applied hash matches
+0002_oval_dagger.sql: applied hash matches
+0003_crypto_payments.sql: applied hash matches
+0004_flippant_brother_voodoo.sql: applied hash matches
+0005_chilly_raider.sql: applied hash matches
+0006_soft_king_bedlam.sql: applied hash matches
+Disposable upgrade database: migrations 0000–0005 applied, no access_policy column yet
+Pre-upgrade fixture: one old invitation and one frozen guide
+{
+  severity_local: 'NOTICE',
+  severity: 'NOTICE',
+  code: '42622',
+  message: 'identifier "comparison_continuations_invitation_id_comparison_invitations_id_fk" will be truncated to "comparison_continuations_invitation_id_comparison_invitations_i"',
+  file: 'scansup.c',
+  line: '102',
+  routine: 'truncate_identifier'
+}
+{
+  severity_local: 'NOTICE',
+  severity: 'NOTICE',
+  code: '42622',
+  message: 'identifier "referral_attributions_invitation_id_comparison_invitations_id_fk" will be truncated to "referral_attributions_invitation_id_comparison_invitations_id_f"',
+  file: 'scansup.c',
+  line: '102',
+  routine: 'truncate_identifier'
+}
+comparison_invitations: existing row => legacy-free-v1; new default => paid-pair-v2
+comparisons: existing row => legacy-free-v1; new default => paid-pair-v2
+Existing frozen content unchanged; all migration assertions passed

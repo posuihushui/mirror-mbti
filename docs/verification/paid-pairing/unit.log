@@ -1,0 +1,16 @@
+
+> mirror-mbti@0.1.0 test
+> vitest run
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.mts:11:35). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v5.0.0 /Users/lake/work/mine/mirror-mbti
+
+
+ Test Files  22 passed (22)
+      Tests  263 passed (263)
+   Start at  19:13:48
+   Duration  811ms (import 37%, transform 35%, tests 25%, worker 3%)
+

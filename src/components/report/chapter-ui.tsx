@@ -17,7 +17,7 @@ import { chapterPanelId, chapterTabId, setChapter, useChapter } from "./chapter-
  * these components only switch which one is visible.
  */
 
-export function ChapterPanel({ index, children }: { index: number; children: ReactNode }) {
+export function ChapterPanel({ index, children, after }: { index: number; children: ReactNode; after?: ReactNode }) {
   const chapter = useChapter();
   return (
     <div
@@ -25,9 +25,10 @@ export function ChapterPanel({ index, children }: { index: number; children: Rea
       role="tabpanel"
       aria-labelledby={chapterTabId(index)}
       hidden={chapter !== index}
-      className="report-chapter-motion"
+      className={after ? undefined : "report-chapter-motion"}
     >
-      {children}
+      {after ? <div className="report-chapter-motion">{children}</div> : children}
+      {after}
     </div>
   );
 }
@@ -80,7 +81,7 @@ export function ChapterTabs() {
           aria-selected={chapter === i}
           aria-controls={chapterPanelId(i)}
           onClick={() => openChapter(i, chapter, "tab")}
-          className={cn("chapter-tab-motion py-[9px] text-[10px] leading-[1.8] whitespace-nowrap text-[#7f949c]", chapter === i && "text-[#e1c4aa]")}
+          className={cn("chapter-tab-motion py-[9px] text-[10px] leading-[1.8] text-[#7f949c]", locale === "en" ? "min-h-11 min-w-0 px-1 wrap-anywhere whitespace-normal" : "whitespace-nowrap", chapter === i && "text-[#e1c4aa]")}
         >
           {label}
         </button>

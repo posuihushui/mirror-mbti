@@ -10,7 +10,7 @@
 - `getPairingExample(locale)` 每次返回固定虚构输入：JP 为 J/P，其余三维均衡，使用正式生成器。数据不来自当前访客或邀请者。
 - `ComparisonReading({content, locale, compact?, animate?})` 为服务器阅读组件；完整阅读和权益卡摘录共用它。紧凑模式只显示原第二、三段。有限动画只增强静态内容。
 - `ComparisonReadingActions({id, locale, children})` 单独承载撤回交互，服务器传入已授权的阅读内容；撤回操作位于动画容器外。
-- 独立同意常量更新为 `compare-host-v2`、`compare-guest-v2`。邀请文字明确双方解锁与好友独立确认。
+- 独立同意常量更新为 `compare-host-v2`、`compare-guest-v2`。好友独立确认保持明确。2026-09-19 按最新 AGENTS 调整：公开邀请话术不含购买提示，双方解锁要求放在本人结果与付款前。
 
 ## 本模块已执行的验证
 

@@ -1,3 +1,5 @@
+import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
+import { PairingTracker } from "@/components/pairing/pairing-tracker";
 import { shareMessages } from "@/lib/i18n/messages/share";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -37,6 +39,7 @@ export default async function MyReportPage() {
       <main className="mx-auto max-w-[1000px] px-[27px] pt-7 pb-[80px] md:px-10 md:pt-[55px]">
         <p className="eyebrow text-mist">{t.eyebrow}</p>
         <Link href={href(locale,"/my/shares")} prefetch={false} className="text-link mt-4">{shareMessages[locale].myShares}</Link>
+        <Link href={href(locale, "/my/pairing")} prefetch={false} className="text-link mt-4 ml-5">{pairingUiMessages[locale].center}</Link>
         <div className="mt-[18px] flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[38px]">
@@ -122,6 +125,7 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
           {unlocked ? t.viewBrief : clear ? t.unlock : t.review} <ArrowUpRight size={16} />
         </Link>
       </div>
+      {unlocked && <PairingTracker resultId={result.id} surface="my_pairing"><Link href={href(own, `/my/pairing?result=${result.id}`)} prefetch={false} className="pill mt-5 inline-flex min-h-11">{pairingUiMessages[locale].invite}</Link></PairingTracker>}
       {order && (
         <Accordion type="single" collapsible className="mt-6">
           <AccordionItem value="order">

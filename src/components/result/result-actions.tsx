@@ -10,6 +10,7 @@ import { track } from "@/lib/analytics/track";
 import { writeLastResultId } from "@/lib/client-storage";
 import { href } from "@/lib/i18n/locale";
 import { useLocale } from "@/lib/i18n/locale-provider";
+import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import type { CryptoNetwork } from "@/lib/payments/types";
 import type { PaymentMode } from "@/lib/site";
@@ -25,6 +26,7 @@ type Props = {
   owner: boolean;
   unlocked: boolean;
   clear: boolean;
+  syncing?: boolean;
   /** Which slot this instance renders: the desktop panel button or the phone dock. */
   slot: "panel" | "dock";
 };
@@ -33,7 +35,7 @@ type Props = {
  * Unlock / read CTA for the result page. The payment sheet is owned by the "dock" instance
  * (mounted once); the "panel" instance only triggers it through the `?unlock=1` search param.
  */
-export function ResultActions({ resultId, type, name, priceLabel, mode, networks, owner, unlocked, clear, slot }: Props) {
+export function ResultActions({ resultId, type, name, priceLabel, mode, networks, owner, unlocked, clear, syncing = false, slot }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -49,15 +51,18 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
 
   const readHref = href(locale, `/report/${resultId}`);
   const isUnlocked = unlocked || unlockedNow;
-  const canPay = owner && clear && !isUnlocked;
+  const canPay = owner && clear && !isUnlocked && !syncing;
 
   const setOpen = (next: boolean) => {
+    const query = new URLSearchParams(searchParams.toString());
     if (next) {
-      router.replace(`${pathname}?unlock=1`, { scroll: false });
+      query.set("unlock", "1");
+      router.replace(`${pathname}?${query}`, { scroll: false });
       return;
     }
     track("checkout_close", { payment_mode: mode, completed: unlockedNow });
-    router.replace(pathname, { scroll: false });
+    query.delete("unlock");
+    router.replace(`${pathname}${query.size ? `?${query}` : ""}`, { scroll: false });
     // The server still holds the old `unlocked` prop after a successful payment; refresh it once the sheet closes.
     if (unlockedNow && !unlocked) router.refresh();
   };
@@ -74,9 +79,11 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
   } else if (canPay) {
     button = (
       <PrimaryButton onClick={() => setOpen(true)} light={slot === "panel"} className={dockClass} {...trackAttrs("unlock_report", trackLocation)}>
-        {t.unlock}
+        {slot === "dock" ? pairingUiMessages[locale].unlockShort : t.unlock}
       </PrimaryButton>
     );
+  } else if (syncing) {
+    button = <span role="status" className="text-xs">{pairingUiMessages[locale].syncing}</span>;
   } else {
     button = (
       <PrimaryButton href={href(locale, "/quiz")} light={slot === "panel"} className={dockClass} {...trackAttrs("start_quiz", trackLocation)}>
@@ -90,20 +97,22 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
   return (
     <>
       <Dock>
-        <div className="flex items-center gap-5">
-          <div className="min-w-[101px]">
+        <div className="flex w-full min-w-0 items-center gap-3">
+          {!isUnlocked && !syncing && <div className="min-w-[80px]">
             <small className="block text-[9px] text-[#839199]">{t.dockLabel}</small>
             <strong className="mt-[3px] block text-[25px] leading-[1.1] font-medium tracking-[-1px]">
               {messages.currency}{priceLabel}
               <span className="text-[10px] font-normal tracking-normal text-[#8a989e]">{t.perTime}</span>
             </strong>
-          </div>
-          {button}
+          </div>}
+          <div className="min-w-0 flex-1">{button}</div>
+          {isUnlocked && <a className="text-link min-h-11 shrink-0 text-xs" href={href(locale, `/my/pairing?result=${resultId}`)}>{pairingUiMessages[locale].inviteShort}</a>}
         </div>
       </Dock>
-      {owner && clear && (
+      {owner && clear && !syncing && (
         <PaymentSheet
-          open={open && !unlocked}
+          open={open}
+          initiallyUnlocked={isUnlocked}
           onOpenChange={setOpen}
           resultId={resultId}
           type={type}
@@ -112,7 +121,6 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
           mode={mode}
           networks={networks ? [...networks] : undefined}
           onUnlocked={() => setUnlockedNow(true)}
-          onRead={() => router.push(readHref)}
         />
       )}
     </>

@@ -82,10 +82,10 @@ test.describe("English site", () => {
     const id = page.url().split("/en/result/")[1].split(/[?#]/)[0];
 
     await expect(page.getByText("YOUR PERSONALITY", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Unlock the full report" }).filter({ visible: true }).first().click();
+    await page.getByRole("button", { name: /Unlock report|Unlock & pair/ }).filter({ visible: true }).first().click();
     // The price comes from PRICE_USD_CENTS, so match the label rather than one amount.
     await page.getByRole("button", { name: /^Demo payment \$\d/ }).click();
-    await page.getByRole("button", { name: "Start reading" }).click();
+    await page.getByRole("link", { name: "Read my report", exact: true }).click();
     await page.waitForURL(new RegExp(`/en/report/${id}`));
     await expect(page.getByText("CHAPTER 01")).toBeVisible();
     // Desktop shows the sidebar badge; phones show the heading row instead.

@@ -70,7 +70,7 @@ test.describe("analytics", () => {
     await expectEvent(page, "result_view", { is_sample: "false", result_owner: "true", result_clear: "true", result_unlocked: "false" });
     await expectEvent(page, "view_item", { currency: "CNY", value: 6.9 });
 
-    await page.getByRole("button", { name: /解锁完整报告/ }).first().click();
+    await page.getByRole("button", { name: /解锁报告与/ }).first().click();
     await expectEvent(page, "cta_click", { cta_id: "unlock_report" });
     await expectEvent(page, "begin_checkout", { payment_mode: "mock", currency: "CNY", value: 6.9 });
 
@@ -84,7 +84,7 @@ test.describe("analytics", () => {
     // Opening the sheet only changed `?unlock=1`: still one result page view.
     expect((await events(page, "page_view")).filter((event) => event.params.page_type === "result")).toHaveLength(1);
 
-    await page.getByRole("button", { name: /开始阅读报告/ }).click();
+    await page.getByRole("link", { name: "阅读我的报告", exact: true }).click();
     await page.waitForURL(/\/report\//);
     await expectEvent(page, "cta_click", { cta_id: "read_report", cta_location: "payment_success" });
     await expectEvent(page, "report_view", { is_sample: "false", questionnaire_id: "legacy32-v1" });

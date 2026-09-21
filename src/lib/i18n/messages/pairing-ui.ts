@@ -1,6 +1,8 @@
 import type { Locale } from "@/lib/i18n/locale";
 
 const zh = {
+  introEyebrow: "从认识自己，到理解彼此",
+  publicSteps: ["先了解自己的偏好", "邀请对方并各自确认", "阅读你们的相处指南"],
   benefit: "完整报告包含的权益",
   included: "已包含双人相处指南",
   unlocked: "这份报告已解锁",
@@ -59,6 +61,8 @@ const zh = {
   noJs: "阅读无需 JavaScript；购买、生成邀请和确认参与需要启用 JavaScript。",
 };
 const en: typeof zh = {
+  introEyebrow: "UNDERSTAND YOURSELF AND EACH OTHER",
+  publicSteps: ["Explore your preferences", "Invite someone and each confirm", "Read your shared guide"],
   benefit: "INCLUDED WITH YOUR FULL REPORT",
   included: "Your report includes a shared guide",
   unlocked: "This report is unlocked",
@@ -74,7 +78,7 @@ const en: typeof zh = {
   readReport: "Read my report",
   invite: "Invite someone",
   inviteShort: "Invite",
-  unlockShort: "Unlock report & pairing",
+  unlockShort: "Unlock & pair",
   learn: "Explore shared guides",
   learnBenefit: "Explore pairing access",
   start: "Start the free test",

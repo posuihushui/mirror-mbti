@@ -1,0 +1,238 @@
+
+Running 148 tests using 2 workers
+
+(node:43483) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:43484) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓    2 [mobile] › tests/e2e/analytics.spec.ts:28:7 › analytics › home sends a redacted page view and counts the start CTA (1.0s)
+  ✓    3 [mobile] › tests/e2e/analytics.spec.ts:39:7 › analytics › opening the header menu is counted with its location (165ms)
+  ✓    1 [mobile] › tests/e2e/audit-updates.spec.ts:10:7 › review improvements › keeps separate drafts, checks answers and restarts only the chosen version (6.1s)
+  ✓    5 [mobile] › tests/e2e/audit-updates.spec.ts:40:7 › review improvements › migrates an existing 32-question browser draft without changing its answers (194ms)
+  ✓    4 [mobile] › tests/e2e/analytics.spec.ts:51:7 › analytics › the paid funnel is measured end to end without result IDs or order numbers (16.8s)
+  ✓    7 [mobile] › tests/e2e/analytics.spec.ts:104:7 › analytics › the sample report records chapter reading and its closing CTA (386ms)
+  ✓    6 [mobile] › tests/e2e/audit-updates.spec.ts:49:7 › review improvements › can finish the quiz when browser storage is blocked (14.4s)
+  ✓    8 [mobile] › tests/e2e/compare.spec.ts:44:37 › comparison explicit consent, cross-locale privacy and withdrawal zh (4.9s)
+  ✓    9 [mobile] › tests/e2e/audit-updates.spec.ts:64:7 › review improvements › completes all 64 questions, persists the version and serves the paid chapters as HTML (5.6s)
+  ✓   11 [mobile] › tests/e2e/audit-updates.spec.ts:95:7 › review improvements › unclear results cannot be sold; owners can review answers and keep the old record (1.2s)
+  ✓   12 [mobile] › tests/e2e/audit-updates.spec.ts:132:7 › review improvements › public pages explain MBTI, score limits and a working support contact (456ms)
+  ✓   13 [mobile] › tests/e2e/flow.spec.ts:16:7 › core flow › home renders with the primary CTA and never quotes an amount (123ms)
+  ✓   14 [mobile] › tests/e2e/flow.spec.ts:26:7 › core flow › sample result and sample report are reachable (174ms)
+  ✓   15 [mobile] › tests/e2e/flow.spec.ts:34:7 › core flow › quiz gates next until an answer is chosen and persists progress across reload (685ms)
+  ✓   10 [mobile] › tests/e2e/compare.spec.ts:44:37 › comparison explicit consent, cross-locale privacy and withdrawal en (6.3s)
+  ✓   17 [mobile] › tests/e2e/header-nav.spec.ts:7:7 › header navigation › every menu link stays in the server HTML while the menu is closed (30ms)
+  ✓   18 [mobile] › tests/e2e/header-nav.spec.ts:16:7 › header navigation › the menu opens on click and closes on Escape, an outside press and a followed link (533ms)
+  ✓   19 [mobile] › tests/e2e/header-nav.spec.ts:54:7 › header navigation › phones show the logo without its tagline while desktop keeps the full lockup (321ms)
+  ✓   20 [mobile] › tests/e2e/header-nav.spec.ts:64:7 › header navigation › the phone header fits narrow screens in both languages (590ms)
+  ✓   21 [mobile] › tests/e2e/header-nav.spec.ts:78:7 › header navigation › the phone header keeps the logo or back link and both menu labels on one centre line (254ms)
+  ✓   22 [mobile] › tests/e2e/i18n.spec.ts:17:7 › English site › serves English pages with hreflang, while Chinese URLs stay unprefixed (121ms)
+  ✓   23 [mobile] › tests/e2e/i18n.spec.ts:39:7 › English site › the header language menu opens the same page in the other language, and locale-bound pages open the other home (726ms)
+  ✓   24 [mobile] › tests/e2e/i18n.spec.ts:71:7 › English site › the English sample report ships all four chapters in the server HTML (8ms)
+  ✓   25 [mobile] › tests/e2e/i18n.spec.ts:78:7 › English site › English quiz → result → demo payment → English report (5.5s)
+  ✓   26 [mobile] › tests/e2e/i18n.spec.ts:99:7 › English site › API errors follow the language of the calling page (90ms)
+  ✓   27 [mobile] › tests/e2e/interaction-motion.spec.ts:7:9 › interaction motion: no-preference › question navigation preserves answers and keeps the phone dock inside the viewport (676ms)
+  ✓   28 [mobile] › tests/e2e/interaction-motion.spec.ts:44:9 › interaction motion: no-preference › rapid strength switches retain both original lists and align the selected pill (610ms)
+  -   29 [mobile] › tests/e2e/interaction-motion.spec.ts:81:9 › interaction motion: no-preference › desktop modal stays centered and releases its overlay when closed
+  ✓   30 [mobile] › tests/e2e/interaction-motion.spec.ts:7:9 › interaction motion: reduce › question navigation preserves answers and keeps the phone dock inside the viewport (341ms)
+  ✓   31 [mobile] › tests/e2e/interaction-motion.spec.ts:44:9 › interaction motion: reduce › rapid strength switches retain both original lists and align the selected pill (204ms)
+  -   32 [mobile] › tests/e2e/interaction-motion.spec.ts:81:9 › interaction motion: reduce › desktop modal stays centered and releases its overlay when closed
+  ✓   33 [mobile] › tests/e2e/motion.spec.ts:45:7 › first-round motion › reduced motion keeps home, result and report content complete without animation (379ms)
+  ✓   34 [mobile] › tests/e2e/motion.spec.ts:76:7 › first-round motion › a result radar draws when scrolled into view and never repeats on return (1.1s)
+  ✓   35 [mobile] › tests/e2e/motion.spec.ts:100:7 › first-round motion › returning to report chapter one keeps the completed radar without replaying it (1.4s)
+  ✓   36 [mobile] › tests/e2e/motion.spec.ts:122:7 › first-round motion › rapid chapter changes keep the original panels, selection and URL in sync (252ms)
+  ✓   37 [mobile] › tests/e2e/number-motion.spec.ts:7:9 › number motion: no-preference › rapid question jumps show the latest number, with only changed digits moving (1.3s)
+  ✓   38 [mobile] › tests/e2e/number-motion.spec.ts:38:9 › number motion: no-preference › switching 32 and 64 items animates the total and restores each draft (473ms)
+  ✓   39 [mobile] › tests/e2e/number-motion.spec.ts:7:9 › number motion: reduce › rapid question jumps show the latest number, with only changed digits moving (391ms)
+  ✓   40 [mobile] › tests/e2e/number-motion.spec.ts:38:9 › number motion: reduce › switching 32 and 64 items animates the total and restores each draft (459ms)
+  ✓   16 [mobile] › tests/e2e/flow.spec.ts:49:7 › core flow › complete quiz → result → mock pay → report chapters (18.5s)
+  ✓   42 [mobile] › tests/e2e/flow.spec.ts:83:7 › core flow › the sample closes by inviting the test, not by quoting a price (356ms)
+  ✓   43 [mobile] › tests/e2e/flow.spec.ts:104:7 › core flow › the sample report is the real report layout, marked as a sample (141ms)
+  ✓   44 [mobile] › tests/e2e/flow.spec.ts:122:7 › core flow › sample report ships every chapter in the server HTML (9ms)
+  ✓   45 [mobile] › tests/e2e/flow.spec.ts:138:7 › core flow › report chapters deep-link, switch and keep both insight lists (659ms)
+  ✓   41 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (6.2s)
+  ✓   46 [mobile] › tests/e2e/flow.spec.ts:156:7 › core flow › locked report redirects to the result with the unlock sheet (3.2s)
+  ✓   48 [mobile] › tests/e2e/flow.spec.ts:166:7 › core flow › API rejects malformed answers and unknown results (102ms)
+  ✓   49 [mobile] › tests/e2e/flow.spec.ts:181:7 › core flow › SEO endpoints respond (131ms)
+  ✓   47 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (6.0s)
+  ✓   51 [mobile] › tests/e2e/paid-pairing.spec.ts:43:5 › pairing page, narrow widths, no-JS, print and reduced motion (2.0s)
+  ✓   52 [mobile] › tests/e2e/paid-pairing.spec.ts:54:5 › owner-only access, strict continuation inputs and closed invite keep personal report (120ms)
+  ✓   53 [mobile] › tests/e2e/paid-pairing.spec.ts:69:5 › result docks fit phone breakpoints (1.6s)
+  ✘   54 [mobile] › tests/e2e/paid-pairing.spec.ts:87:5 › empty center, report entry and recovered order retain separate invitations (140ms)
+(node:44045) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   55 [mobile] › tests/e2e/report-history.spec.ts:52:7 › report history and order recovery › lists every result, including an older paid report, without depending on local storage (813ms)
+  ✓   56 [mobile] › tests/e2e/report-history.spec.ts:90:7 › report history and order recovery › a visitor without a saved session can start a test or recover with an order number (484ms)
+  ✓   57 [mobile] › tests/e2e/report-history.spec.ts:100:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked (1.2s)
+  ✓   58 [mobile] › tests/e2e/report-history.spec.ts:126:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access (620ms)
+  ✓   59 [mobile] › tests/e2e/report-history.spec.ts:157:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access (1.2s)
+  ✓   60 [mobile] › tests/e2e/report-history.spec.ts:194:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery (930ms)
+  ✓   61 [mobile] › tests/e2e/report-history.spec.ts:235:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity (136ms)
+  ✓   50 [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics (17.9s)
+  ✓   62 [mobile] › tests/e2e/share-edges.spec.ts:6:49 › guide generated image, copy, all-balanced privacy and GA zh (2.8s)
+  ✓   64 [mobile] › tests/e2e/share-edges.spec.ts:6:49 › guide generated image, copy, all-balanced privacy and GA en (2.5s)
+  ✓   65 [mobile] › tests/e2e/share-edges.spec.ts:45:5 › creation can finish after closing; owner management recovers it once (2.3s)
+  ✓   66 [mobile] › tests/e2e/share-edges.spec.ts:57:5 › no signed cookie cannot authorize a write (6ms)
+  ✓   67 [mobile] › tests/e2e/share-motion.spec.ts:17:5 › public card reveals once; CTA remains outside animated ancestors (895ms)
+  ✓   68 [mobile] › tests/e2e/share-motion.spec.ts:46:5 › reduced motion, print, no-JS and 320/720/721 layouts retain complete card (592ms)
+  ✓   69 [mobile] › tests/e2e/share.spec.ts:26:37 › share public capability privacy, ownership, retry, PNG and revoke zh (1.7s)
+  ✓   70 [mobile] › tests/e2e/share.spec.ts:26:37 › share public capability privacy, ownership, retry, PNG and revoke en (1.7s)
+  ✓   71 [mobile] › tests/e2e/share.spec.ts:84:5 › composer handles rapid selection, failed image and clipboard without losing published share (2.5s)
+  ✓   72 [mobile] › tests/e2e/visual.spec.ts:9:7 › visual › home (781ms)
+  ✓   73 [mobile] › tests/e2e/visual.spec.ts:16:7 › visual › sample result (685ms)
+  ✓   74 [mobile] › tests/e2e/visual.spec.ts:22:7 › visual › sample report chapter 2 (681ms)
+(node:44221) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   75 [desktop] › tests/e2e/analytics.spec.ts:28:7 › analytics › home sends a redacted page view and counts the start CTA (242ms)
+  ✓   76 [desktop] › tests/e2e/analytics.spec.ts:39:7 › analytics › opening the header menu is counted with its location (203ms)
+  ✓   63 [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics (16.1s)
+(node:44228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   78 [desktop] › tests/e2e/audit-updates.spec.ts:10:7 › review improvements › keeps separate drafts, checks answers and restarts only the chosen version (3.2s)
+  ✓   79 [desktop] › tests/e2e/audit-updates.spec.ts:40:7 › review improvements › migrates an existing 32-question browser draft without changing its answers (163ms)
+  ✓   77 [desktop] › tests/e2e/analytics.spec.ts:51:7 › analytics › the paid funnel is measured end to end without result IDs or order numbers (16.0s)
+  ✓   81 [desktop] › tests/e2e/analytics.spec.ts:104:7 › analytics › the sample report records chapter reading and its closing CTA (407ms)
+  ✓   80 [desktop] › tests/e2e/audit-updates.spec.ts:49:7 › review improvements › can finish the quiz when browser storage is blocked (14.3s)
+  ✓   82 [desktop] › tests/e2e/compare.spec.ts:44:37 › comparison explicit consent, cross-locale privacy and withdrawal zh (4.8s)
+  ✓   84 [desktop] › tests/e2e/compare.spec.ts:44:37 › comparison explicit consent, cross-locale privacy and withdrawal en (4.8s)
+  ✓   85 [desktop] › tests/e2e/flow.spec.ts:16:7 › core flow › home renders with the primary CTA and never quotes an amount (145ms)
+  ✓   86 [desktop] › tests/e2e/flow.spec.ts:26:7 › core flow › sample result and sample report are reachable (178ms)
+  ✓   87 [desktop] › tests/e2e/flow.spec.ts:34:7 › core flow › quiz gates next until an answer is chosen and persists progress across reload (307ms)
+  ✓   88 [desktop] › tests/e2e/flow.spec.ts:49:7 › core flow › complete quiz → result → mock pay → report chapters (5.6s)
+  ✓   89 [desktop] › tests/e2e/flow.spec.ts:83:7 › core flow › the sample closes by inviting the test, not by quoting a price (359ms)
+  ✓   90 [desktop] › tests/e2e/flow.spec.ts:104:7 › core flow › the sample report is the real report layout, marked as a sample (156ms)
+  ✓   91 [desktop] › tests/e2e/flow.spec.ts:122:7 › core flow › sample report ships every chapter in the server HTML (9ms)
+  ✓   92 [desktop] › tests/e2e/flow.spec.ts:138:7 › core flow › report chapters deep-link, switch and keep both insight lists (629ms)
+  ✓   93 [desktop] › tests/e2e/flow.spec.ts:156:7 › core flow › locked report redirects to the result with the unlock sheet (10.2s)
+  ✓   94 [desktop] › tests/e2e/flow.spec.ts:166:7 › core flow › API rejects malformed answers and unknown results (110ms)
+  ✓   95 [desktop] › tests/e2e/flow.spec.ts:181:7 › core flow › SEO endpoints respond (106ms)
+  ✓   96 [desktop] › tests/e2e/header-nav.spec.ts:7:7 › header navigation › every menu link stays in the server HTML while the menu is closed (34ms)
+  ✓   97 [desktop] › tests/e2e/header-nav.spec.ts:16:7 › header navigation › the menu opens on click and closes on Escape, an outside press and a followed link (550ms)
+  ✓   98 [desktop] › tests/e2e/header-nav.spec.ts:54:7 › header navigation › phones show the logo without its tagline while desktop keeps the full lockup (282ms)
+  -   99 [desktop] › tests/e2e/header-nav.spec.ts:64:7 › header navigation › the phone header fits narrow screens in both languages
+  -  100 [desktop] › tests/e2e/header-nav.spec.ts:78:7 › header navigation › the phone header keeps the logo or back link and both menu labels on one centre line
+  ✓  101 [desktop] › tests/e2e/i18n.spec.ts:17:7 › English site › serves English pages with hreflang, while Chinese URLs stay unprefixed (129ms)
+  ✓  102 [desktop] › tests/e2e/i18n.spec.ts:39:7 › English site › the header language menu opens the same page in the other language, and locale-bound pages open the other home (715ms)
+  ✓  103 [desktop] › tests/e2e/i18n.spec.ts:71:7 › English site › the English sample report ships all four chapters in the server HTML (9ms)
+  ✓   83 [desktop] › tests/e2e/audit-updates.spec.ts:64:7 › review improvements › completes all 64 questions, persists the version and serves the paid chapters as HTML (27.3s)
+  ✓  105 [desktop] › tests/e2e/audit-updates.spec.ts:95:7 › review improvements › unclear results cannot be sold; owners can review answers and keep the old record (1.2s)
+  ✓  106 [desktop] › tests/e2e/audit-updates.spec.ts:132:7 › review improvements › public pages explain MBTI, score limits and a working support contact (438ms)
+  ✓  107 [desktop] › tests/e2e/interaction-motion.spec.ts:7:9 › interaction motion: no-preference › question navigation preserves answers and keeps the phone dock inside the viewport (503ms)
+  ✓  108 [desktop] › tests/e2e/interaction-motion.spec.ts:44:9 › interaction motion: no-preference › rapid strength switches retain both original lists and align the selected pill (606ms)
+  ✓  109 [desktop] › tests/e2e/interaction-motion.spec.ts:81:9 › interaction motion: no-preference › desktop modal stays centered and releases its overlay when closed (1.6s)
+  ✓  110 [desktop] › tests/e2e/interaction-motion.spec.ts:7:9 › interaction motion: reduce › question navigation preserves answers and keeps the phone dock inside the viewport (250ms)
+  ✓  111 [desktop] › tests/e2e/interaction-motion.spec.ts:44:9 › interaction motion: reduce › rapid strength switches retain both original lists and align the selected pill (206ms)
+  ✓  112 [desktop] › tests/e2e/interaction-motion.spec.ts:81:9 › interaction motion: reduce › desktop modal stays centered and releases its overlay when closed (358ms)
+  ✓  113 [desktop] › tests/e2e/motion.spec.ts:45:7 › first-round motion › reduced motion keeps home, result and report content complete without animation (392ms)
+  ✓  114 [desktop] › tests/e2e/motion.spec.ts:76:7 › first-round motion › a result radar draws when scrolled into view and never repeats on return (1.0s)
+  ✓  115 [desktop] › tests/e2e/motion.spec.ts:100:7 › first-round motion › returning to report chapter one keeps the completed radar without replaying it (1.4s)
+  ✓  116 [desktop] › tests/e2e/motion.spec.ts:122:7 › first-round motion › rapid chapter changes keep the original panels, selection and URL in sync (252ms)
+  ✓  117 [desktop] › tests/e2e/number-motion.spec.ts:7:9 › number motion: no-preference › rapid question jumps show the latest number, with only changed digits moving (1.2s)
+  ✓  118 [desktop] › tests/e2e/number-motion.spec.ts:38:9 › number motion: no-preference › switching 32 and 64 items animates the total and restores each draft (461ms)
+  ✓  119 [desktop] › tests/e2e/number-motion.spec.ts:7:9 › number motion: reduce › rapid question jumps show the latest number, with only changed digits moving (340ms)
+  ✓  120 [desktop] › tests/e2e/number-motion.spec.ts:38:9 › number motion: reduce › switching 32 and 64 items animates the total and restores each draft (443ms)
+  ✓  104 [desktop] › tests/e2e/i18n.spec.ts:78:7 › English site › English quiz → result → demo payment → English report (15.2s)
+  ✓  122 [desktop] › tests/e2e/i18n.spec.ts:99:7 › English site › API errors follow the language of the calling page (108ms)
+  ✓  121 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (4.2s)
+  ✓  124 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (4.4s)
+  ✓  125 [desktop] › tests/e2e/paid-pairing.spec.ts:43:5 › pairing page, narrow widths, no-JS, print and reduced motion (974ms)
+  ✓  126 [desktop] › tests/e2e/paid-pairing.spec.ts:54:5 › owner-only access, strict continuation inputs and closed invite keep personal report (129ms)
+  ✓  127 [desktop] › tests/e2e/paid-pairing.spec.ts:69:5 › result docks fit phone breakpoints (27ms)
+  ✘  128 [desktop] › tests/e2e/paid-pairing.spec.ts:87:5 › empty center, report entry and recovered order retain separate invitations (137ms)
+(node:44660) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  129 [desktop] › tests/e2e/report-history.spec.ts:52:7 › report history and order recovery › lists every result, including an older paid report, without depending on local storage (484ms)
+  ✓  130 [desktop] › tests/e2e/report-history.spec.ts:90:7 › report history and order recovery › a visitor without a saved session can start a test or recover with an order number (420ms)
+  ✓  131 [desktop] › tests/e2e/report-history.spec.ts:100:7 › report history and order recovery › recovering a paid order restores all history while the other result stays locked (1.3s)
+  ✓  132 [desktop] › tests/e2e/report-history.spec.ts:126:7 › report history and order recovery › an unpaid order can recover from a direct request without a cookie and does not grant paid access (666ms)
+  ✓  133 [desktop] › tests/e2e/report-history.spec.ts:157:7 › report history and order recovery › recovers another visitor from the history page without merging records or changing paid access (444ms)
+  ✓  134 [desktop] › tests/e2e/report-history.spec.ts:194:7 › report history and order recovery › isolates visitors and keeps the current identity after invalid or cross-site recovery (382ms)
+  ✓  135 [desktop] › tests/e2e/report-history.spec.ts:235:7 › report history and order recovery › limits repeated recovery attempts without issuing a replacement identity (137ms)
+  ✓  136 [desktop] › tests/e2e/share-edges.spec.ts:6:49 › guide generated image, copy, all-balanced privacy and GA zh (1.7s)
+  ✓  137 [desktop] › tests/e2e/share-edges.spec.ts:6:49 › guide generated image, copy, all-balanced privacy and GA en (2.0s)
+  ✓  123 [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics (15.1s)
+  ✓  138 [desktop] › tests/e2e/share-edges.spec.ts:45:5 › creation can finish after closing; owner management recovers it once (1.5s)
+  ✓  140 [desktop] › tests/e2e/share-edges.spec.ts:57:5 › no signed cookie cannot authorize a write (5ms)
+  ✓  141 [desktop] › tests/e2e/share-motion.spec.ts:17:5 › public card reveals once; CTA remains outside animated ancestors (879ms)
+  ✓  142 [desktop] › tests/e2e/share-motion.spec.ts:46:5 › reduced motion, print, no-JS and 320/720/721 layouts retain complete card (447ms)
+  ✓  143 [desktop] › tests/e2e/share.spec.ts:26:37 › share public capability privacy, ownership, retry, PNG and revoke zh (1.6s)
+  ✓  144 [desktop] › tests/e2e/share.spec.ts:26:37 › share public capability privacy, ownership, retry, PNG and revoke en (1.6s)
+  ✓  145 [desktop] › tests/e2e/share.spec.ts:84:5 › composer handles rapid selection, failed image and clipboard without losing published share (1.7s)
+  ✓  146 [desktop] › tests/e2e/visual.spec.ts:9:7 › visual › home (839ms)
+  ✓  147 [desktop] › tests/e2e/visual.spec.ts:16:7 › visual › sample result (722ms)
+  ✓  148 [desktop] › tests/e2e/visual.spec.ts:22:7 › visual › sample report chapter 2 (707ms)
+  ✓  139 [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics (16.8s)
+
+
+  1) [mobile] › tests/e2e/paid-pairing.spec.ts:87:5 › empty center, report entry and recovered order retain separate invitations 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('还没有邀请。选择一份已解锁的本人结果开始。', { exact: true })
+    Expected: visible
+    Error: strict mode violation: getByText('还没有邀请。选择一份已解锁的本人结果开始。', { exact: true }) resolved to 2 elements:
+        1) <p class="text-sm leading-[1.8]">还没有邀请。选择一份已解锁的本人结果开始。</p> aka locator('section').filter({ hasText: '选择一份本人结果还没有邀请。选择一份已解锁的本人结果开始。从我的报告继续' }).locator('p')
+        2) <p class="text-sm text-mist">还没有邀请。选择一份已解锁的本人结果开始。</p> aka getByText('还没有邀请。选择一份已解锁的本人结果开始。').nth(1)
+
+    Call log:
+      - Expect "toBeVisible" getByText('还没有邀请。选择一份已解锁的本人结果开始。', { exact: true }) with timeout 10000ms
+      - waiting for getByText('还没有邀请。选择一份已解锁的本人结果开始。', { exact: true })
+
+
+      91 |   const g=await guest.newPage();
+      92 |   await g.goto(`${prefix}/my/pairing`);
+    > 93 |   await expect(g.getByText(m.emptyInvitations, {exact:true})).toBeVisible();
+         |                                                               ^
+      94 |   await shot(g,`center-empty-${locale}-${info.project.name}`);
+      95 |   const own=await seed(guest.request,en);
+      96 |   const tokens:string[]=[];
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/paid-pairing.spec.ts:93:63
+
+    Error Context: ../../../../../tmp/mirror-pairing-e2e-final/paid-pairing-empty-center--f69be-retain-separate-invitations-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-pairing-e2e-final/paid-pairing-empty-center--f69be-retain-separate-invitations-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-pairing-e2e-final/paid-pairing-empty-center--f69be-retain-separate-invitations-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests/e2e/paid-pairing.spec.ts:87:5 › empty center, report entry and recovered order retain separate invitations 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('还没有邀请。选择一份已解锁的本人结果开始。', { exact: true })
+    Expected: visible
+    Error: strict mode violation: getByText('还没有邀请。选择一份已解锁的本人结果开始。', { exact: true }) resolved to 2 elements:
+        1) <p class="text-sm leading-[1.8]">还没有邀请。选择一份已解锁的本人结果开始。</p> aka locator('section').filter({ hasText: '选择一份本人结果还没有邀请。选择一份已解锁的本人结果开始。从我的报告继续' }).locator('p')
+        2) <p class="text-sm text-mist">还没有邀请。选择一份已解锁的本人结果开始。</p> aka getByText('还没有邀请。选择一份已解锁的本人结果开始。').nth(1)
+
+    Call log:
+      - Expect "toBeVisible" getByText('还没有邀请。选择一份已解锁的本人结果开始。', { exact: true }) with timeout 10000ms
+      - waiting for getByText('还没有邀请。选择一份已解锁的本人结果开始。', { exact: true })
+
+
+      91 |   const g=await guest.newPage();
+      92 |   await g.goto(`${prefix}/my/pairing`);
+    > 93 |   await expect(g.locator('[data-comparison-manager]').getByText(m.emptyInvitations, {exact:true})).toBeVisible();
+         |                                                               ^
+      94 |   await shot(g,`center-empty-${locale}-${info.project.name}`);
+      95 |   const own=await seed(guest.request,en);
+      96 |   const tokens:string[]=[];
+        at /Users/lake/work/mine/mirror-mbti/tests/e2e/paid-pairing.spec.ts:93:63
+
+    Error Context: ../../../../../tmp/mirror-pairing-e2e-final/paid-pairing-empty-center--f69be-retain-separate-invitations-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../tmp/mirror-pairing-e2e-final/paid-pairing-empty-center--f69be-retain-separate-invitations-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../tmp/mirror-pairing-e2e-final/paid-pairing-empty-center--f69be-retain-separate-invitations-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [mobile] › tests/e2e/paid-pairing.spec.ts:87:5 › empty center, report entry and recovered order retain separate invitations 
+    [desktop] › tests/e2e/paid-pairing.spec.ts:87:5 › empty center, report entry and recovered order retain separate invitations 
+  4 skipped
+  142 passed (3.0m)

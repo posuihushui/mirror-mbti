@@ -54,16 +54,16 @@ test.describe("core flow", () => {
     await expect(page.getByText(/^100/).first()).toBeVisible();
     await expect(page.getByText("ESTJ总经理", { exact: true })).toBeVisible();
 
-    await page.getByRole("button", { name: /解锁完整报告/ }).first().click();
+    await page.getByRole("button", { name: /解锁报告与/ }).first().click();
     await expect(page.getByText("更完整地，认识自己。")).toBeVisible();
     await page.getByRole("button", { name: /暂不支付/ }).click();
     await expect(page.getByText("支付已取消，测试结果已保留")).toBeVisible();
 
-    await page.getByRole("button", { name: /解锁完整报告/ }).first().click();
+    await page.getByRole("button", { name: /解锁报告与/ }).first().click();
     await page.getByRole("button", { name: /模拟支付 ¥6\.9/ }).click();
     await expect(page.getByText("正在演示解锁…")).toBeVisible();
     await expect(page.getByText("演示解锁成功，本次未产生扣款。")).toBeVisible({ timeout: 15_000 });
-    await page.getByRole("button", { name: /开始阅读报告/ }).click();
+    await page.getByRole("link", { name: "阅读我的报告", exact: true }).click();
     await page.waitForURL(/\/report\//);
     await expect(page.getByText("第一章")).toBeVisible();
     await expect(page.locator('[role="tabpanel"]')).toHaveCount(4);
@@ -86,7 +86,7 @@ test.describe("core flow", () => {
     await expect(page.getByRole("heading", { name: /属于你的故事/ })).toBeVisible();
     // nothing is locked here, so no paywall block and no unlock action
     await expect(page.getByText("你不止于此")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /解锁完整报告/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /解锁报告与/ })).toHaveCount(0);
     // no price and no hint that anything is sold, and both CTAs lead to the test
     await expect(page.getByText(/免费测试与性格概览/)).toBeVisible();
     expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
@@ -104,7 +104,7 @@ test.describe("core flow", () => {
   test("the sample report is the real report layout, marked as a sample", async ({ page }) => {
     await page.goto("/report/sample");
     // marked as a sample: the notice above the reading, the badge or phone heading row, and the title
-    await expect(page.getByText(/这是一份示例/)).toBeVisible();
+    await expect(page.getByText(/这是一份示例/).first()).toBeVisible();
     await expect(page.getByText("示例报告", { exact: true }).first()).toBeVisible();
     await expect(page).toHaveTitle(/示例报告/);
     // same structure as a paid report: four chapter panels behind one chapter switcher
@@ -113,7 +113,7 @@ test.describe("core flow", () => {
     await expect(page.locator('nav[aria-label="报告章节"] button')).toHaveCount(4);
     // and it guides to the test rather than to a payment
     await expect(page.getByRole("heading", { name: /属于你的故事/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /解锁完整报告/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /解锁报告与/ })).toHaveCount(0);
     for (const cta of await page.getByRole("link", { name: /开始认识自己/ }).all()) {
       await expect(cta).toHaveAttribute("href", "/quiz");
     }

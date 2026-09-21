@@ -1,6 +1,6 @@
 # 付费双人相处指南：GPT-6 medium 实施提示词
 
-以下是执行提示词，不代表已经开始或完成开发。主规格：[paid-pairing-product.md](./paid-pairing-product.md)。
+以下保留实施合同；当前执行状态见 [实施记录](../verification/paid-pairing.md)。主规格：[paid-pairing-product.md](./paid-pairing-product.md)。
 
 ```text
 请在 /Users/lake/work/mine/mirror-mbti 实施「付费双人相处指南」。
@@ -34,7 +34,8 @@ docs/plans/referral-growth-implementation.md、docs/verification/share-growth.md
 4. 付费前权益预览与 /pairing 介绍页；现有支付面板展示完整报告＋配对资格和费用规则。
    付费后在结果、报告、我的报告和 /my/pairing 提供直接入口。
    未支付全均衡结果不能购买；sample 仍引导免费测试。
-5. 好友页在测试前说明费用；原问卷→正常结果→必要时支付→显式同意完整闭环。
+5. 遵循最新 AGENTS：测试前只介绍功能；本人正常结果页、支付前说明双方权益与费用。
+   原问卷→正常结果→必要时支付→显式同意完整闭环。
    服务端 continuation 支持支付回跳与身份恢复；多个待办不得串邀请。
    修复只保留 unlock 参数导致 compare 丢失的问题，拒绝任意 returnUrl。
    支付成功而结果权益未同步时服务端幂等校验，禁止重复购买／提前授权。

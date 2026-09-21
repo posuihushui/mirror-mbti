@@ -26,7 +26,7 @@ export const chapterLabels = ["性格总览", "优势与盲点", "关系与沟�
 
 export const blindspotTitles = ["精力的边界", "视角的边界", "决策的边界", "节奏的边界"] as const;
 
-export const unlockBullets = ["按偏好强弱与近均衡情况解读场景", "优势盲点、沟通示例与工作安排", "七天小实践与复盘问题"] as const;
+export const unlockBullets = ["双人相处指南：理解彼此、练习沟通", "按偏好强弱与近均衡情况解读场景", "优势盲点、沟通示例与工作安排", "七天小实践与复盘问题"] as const;
 
 /** `690` -> `6.9`, `700` -> `7`, `1280` -> `12.8` */
 export function formatPriceFen(fen: number): string {

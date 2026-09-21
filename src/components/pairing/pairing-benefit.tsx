@@ -7,6 +7,16 @@ import { PairingReveal } from "./pairing-reveal";
 
 export function PairingBenefit({ locale, resultId, unlocked = false, compact = false, dark = false }: { locale: Locale; resultId?: string; unlocked?: boolean; compact?: boolean; dark?: boolean }) {
   const m = pairingMessages[locale]; const ui = pairingUiMessages[locale];
+  if (compact) return <section data-pairing-benefit={unlocked ? "unlocked" : "preview"} className={`${dark ? "border-[#59676c] text-paper" : "border-line"} my-6 border p-5 md:p-7`}>
+    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-7">
+      <div className="min-w-0 flex-1"><PairingReveal><h2 className="text-xl leading-[1.5]">{unlocked ? ui.included : m.title}</h2><p className="mt-2 text-xs leading-[1.9] text-mist">{ui.noConsentYet}</p></PairingReveal></div>
+      <div className="flex shrink-0 flex-wrap items-center gap-4">
+        {unlocked && resultId && <Link prefetch={false} className={`pill min-h-11 w-auto ${dark ? "bg-paper text-ink hover:bg-paper" : ""}`} href={href(locale, `/my/pairing?result=${encodeURIComponent(resultId)}`)}>{ui.invite}</Link>}
+        <Link className="text-link min-h-11 text-sm" href={href(locale, "/pairing")}>{ui.learn}</Link>
+      </div>
+    </div>
+    <p className="mt-3 text-xs leading-[1.9] text-mist">{m.feeRule}</p>
+  </section>;
   return <section data-pairing-benefit={unlocked ? "unlocked" : "preview"} className={`${dark ? "border-[#59676c] text-paper" : "border-line"} border p-5 md:p-7 ${compact ? "my-6" : "mx-6 my-7 md:mx-0 md:my-10"}`}>
     <div className={!compact && !unlocked ? "grid gap-5 md:grid-cols-2 md:gap-7" : ""}>
       <div>

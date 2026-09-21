@@ -1,5 +1,12 @@
 import { getPublicInvitation } from "@/lib/comparisons";
-import { compareMessages } from "@/lib/i18n/messages/compare";
+import { PairingBenefit } from "@/components/pairing/pairing-benefit";
+import { PairingTracker } from "@/components/pairing/pairing-tracker";
+import { ContinuationAction } from "@/components/pairing/continuation-action";
+import { ContinuationList } from "@/components/pairing/continuation-list";
+import { AccessActions } from "@/components/pairing/access-actions";
+import { listComparisonContinuations } from "@/lib/comparison-continuations";
+import { getPairingEligibility } from "@/lib/pairing-eligibility";
+import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { ShareEntry } from "@/components/share/share-entry";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -14,7 +21,6 @@ import { UnlockPanel } from "@/components/result/unlock-panel";
 import { PreferenceReading } from "@/components/result/preference-reading";
 import { ReviewAnswers } from "@/components/result/review-answers";
 import { RecoverReports } from "@/components/report/recover-reports";
-import Link from "next/link";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { TrackView } from "@/components/analytics/track-view";
@@ -66,11 +72,13 @@ export default async function ResultPage({ params, searchParams }: Params) {
   if (!result) notFound();
   // A real result is read in the language it was taken in; the sample exists in every locale.
   const resultLocale = questionnaireLocale(result.questionnaireId);
-  if (!result.sample && resultLocale !== locale) redirect(href(resultLocale, `/result/${id}`));
-
   const query = !result.sample && result.owner ? await searchParams : {};
   const compare = typeof query.compare === "string" && /^[A-Za-z0-9_-]{32}$/.test(query.compare) ? query.compare : null;
+  if (!result.sample && resultLocale !== locale) redirect(href(resultLocale, `/result/${id}${compare ? `?compare=${compare}` : ""}`));
   const invitation = compare ? await getPublicInvitation(compare).catch(() => null) : null;
+  const eligibility = result.owner && visitorId ? await getPairingEligibility(id, visitorId) : null;
+  const continuations = result.owner && visitorId ? await listComparisonContinuations(visitorId, id) : [];
+  const ui = pairingUiMessages[locale];
   const { profile, sample } = result;
   const { name } = profileMeta(profile, locale);
   const clear = hasClearPreference(profile);
@@ -88,6 +96,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
     owner: result.owner,
     unlocked: result.owner && result.unlocked,
     clear,
+    syncing: eligibility === "syncing",
   } as const;
 
   const productJsonLd = sample
@@ -111,12 +120,15 @@ export default async function ResultPage({ params, searchParams }: Params) {
           <ResultChart profile={profile} />
         </section>
         <PreferenceReading profile={profile} />
-        {!sample && result.owner && <ShareEntry resultId={id} locale={locale} />}
-        {!sample && result.owner && compare && invitation && <section className="mx-[27px] mb-8 border-t border-line pt-6 md:mx-0"><h2 className="text-[22px]">{compareMessages[locale].title}</h2><p className="mt-3 text-[12px] leading-[2] text-mist">{compareMessages[locale].guestConsentDetail}</p><Link prefetch={false} href={href(invitation.locale,`/t/${compare}/join?result=${id}`)} className="pill mt-5 inline-flex">{compareMessages[locale].continue}</Link></section>}
+        {!sample && result.owner && <>
+          <ContinuationList items={continuations} locale={locale} />
+          {compare && !continuations.some(item => item.invitationToken === compare) && <section className="mx-6 my-7 border-t border-line pt-5 md:mx-0"><h2 className="text-xl">{ui.continue}</h2><p className="my-4 text-sm leading-[1.8]">{invitation ? ui.continuationNote : ui.continuationExpired}</p>{invitation && <ContinuationAction invitationToken={compare} resultId={id} resultLocale={locale} locale={locale} />}</section>}
+          {eligibility === "syncing" ? <section className="mx-6 md:mx-0"><AccessActions resultId={id} locale={locale} surface="result" /></section> : (clear || result.unlocked) && <PairingTracker resultId={id} surface="result"><PairingBenefit locale={locale} resultId={id} unlocked={result.unlocked} /></PairingTracker>}
+        </>}
         {sample ? (
           /* Nothing is locked on the sample, so it closes by inviting the test, not by quoting a price. */
           <SampleCta secondary={{ href: href(locale, `/report/${SAMPLE_RESULT_ID}`), label: t.readSample }} />
-        ) : clear ? (
+        ) : result.owner && result.unlocked ? <div className="mx-6 mb-8 md:mx-0"><PrimaryButton href={href(locale, `/report/${id}`)} className="max-w-[320px]">{t.readPurchased}</PrimaryButton></div> : eligibility === "syncing" ? null : clear ? (
           <UnlockPanel
             priceLabel={price}
             secureNote={secureNote}
@@ -131,6 +143,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
           {result.owner ? <ReviewAnswers resultId={id} /> : <PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "unclear_result")}>{t.startMine}</PrimaryButton>}
           {result.owner && result.unlocked && <PrimaryButton href={href(locale, `/report/${id}`)} className="mt-5 max-w-[300px]" {...trackAttrs("read_report", "unclear_result")}>{t.readPurchased}</PrimaryButton>}
         </section>}
+        {!sample && result.owner && <ShareEntry resultId={id} locale={locale} />}
         {/* A buyer who reopened this page inside a wallet app has no visitor cookie; the order number restores it. */}
         {!sample && !result.owner && clear && mode === "crypto" && (
           <section className="mx-[27px] mb-8 max-w-[560px] border-t border-line pt-6 md:mx-0" aria-labelledby="wallet-handoff">
@@ -147,7 +160,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
         <Dock>
           <PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "dock")}>{t.start}</PrimaryButton>
         </Dock>
-      ) : clear ? (
+      ) : clear || (result.owner && result.unlocked) || eligibility === "syncing" ? (
         <Suspense fallback={null}>
           <ResultActions {...actionProps} slot="dock" />
         </Suspense>

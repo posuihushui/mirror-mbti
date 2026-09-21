@@ -1,0 +1,26 @@
+{
+  "verifiedAt": "2026-09-21",
+  "method": "macOS Vision VNDetectBarcodesRequest, actual exported PNG bytes",
+  "images": [
+    {
+      "locale": "zh",
+      "size": [
+        960,
+        1280
+      ],
+      "sha256": "92b0c4ac82b69418f06f42094ba46950ceb2b3aeadd8d4c21ff5f8526ae05193",
+      "qrDecoded": true,
+      "matchesExpectedUrl": true
+    },
+    {
+      "locale": "en",
+      "size": [
+        960,
+        1280
+      ],
+      "sha256": "bcc37d38c94c43d579510677cc91f4180c51f5a320b10072af00cbcc3062040b",
+      "qrDecoded": true,
+      "matchesExpectedUrl": true
+    }
+  ]
+}

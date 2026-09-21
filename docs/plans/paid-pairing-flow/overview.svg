@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1130" viewBox="0 0 1600 1130" role="img" aria-labelledby="title desc">
-<title id="title">付费双人相处指南：主流程评审</title><desc id="desc">当前方案默认双方分别解锁所选报告。发起者了解权益、解锁并同意公开后发送邀请；好友了解费用、选结果或测试、解锁并单独同意；服务端校验后生成仅双方可读的三段指南。免费单人分享独立保留。</desc>
+<title id="title">付费双人相处指南：主流程评审</title><desc id="desc">当前实施规则为双方分别解锁所选报告。发起者了解权益、解锁并同意公开后发送邀请；好友了解价值、选结果或测试、了解费用、解锁并单独同意；服务端校验后生成仅双方可读的三段指南。免费单人分享独立保留。</desc>
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#788d95"/></marker></defs>
 <rect width="1600" height="1130" fill="#edf2f3"/>
 <g font-family="PingFang SC, Noto Sans CJK SC, Microsoft YaHei, sans-serif">
 <text x="60" y="62" font-size="34" fill="#171b1c" font-weight="600" text-anchor="start">双人相处指南 · 主流程评审</text>
 <text x="60" y="98" font-size="19" fill="#52656e" font-weight="400" text-anchor="start">付费前展示价值 → 付费后直接邀请 → 双方确认后获得私密指南</text>
 <rect x="1150" y="38" width="390" height="40" rx="20" fill="#f5ebe3" stroke="#d2b59e"/>
-<text x="1345" y="64" font-size="16" fill="#775c48" font-weight="500" text-anchor="middle">待实施方案 · 当前默认双方分别付费</text>
+<text x="1345" y="64" font-size="16" fill="#775c48" font-weight="500" text-anchor="middle">实施流程 · 双方分别解锁所选报告</text>
 <text x="1540" y="104" font-size="14" fill="#52656e" font-weight="400" text-anchor="end">2026-09-17 · 收费细则仍可评审</text>
 <path d="M60,126 H1540" stroke="#cbd5d8"/>
 <circle cx="77" cy="160" r="17" fill="#171b1c"/>
@@ -38,7 +38,7 @@
 <text x="1290" y="264" font-size="16" fill="#52656e" font-weight="400" text-anchor="start">邀请有效期 30 日</text>
 <text x="1290" y="290" font-size="16" fill="#52656e" font-weight="400" text-anchor="start">复制链接，由用户自行发送</text>
 <path d="M1404,334 V370 H30 V546 H52" fill="none" stroke="#788d95" stroke-width="2" marker-end="url(#arrow)"/>
-<text x="800" y="396" font-size="17" fill="#52656e" font-weight="400" text-anchor="middle">邀请页先说明参与价值和费用，再让好友决定是否继续</text>
+<text x="800" y="396" font-size="17" fill="#52656e" font-weight="400" text-anchor="middle">测试前了解参与价值，正常结果页说明双方权益与费用</text>
 <circle cx="77" cy="442" r="17" fill="#171b1c"/>
 <text x="77" y="448" font-size="15" fill="#fff" font-weight="600" text-anchor="middle">B</text>
 <text x="108" y="449" font-size="21" fill="#171b1c" font-weight="600" text-anchor="start">好友：先了解自己，再确认参与</text>
@@ -46,7 +46,7 @@
 <rect x="60" y="476" width="272" height="140" rx="14" fill="#ffffff" stroke="#cbd5d8" stroke-width="1.5"/>
 <text x="82" y="512" font-size="21" fill="#171b1c" font-weight="600" text-anchor="start">打开好友邀请</text>
 <text x="82" y="546" font-size="16" fill="#52656e" font-weight="400" text-anchor="start">看示例与发起者公开信息</text>
-<text x="82" y="572" font-size="16" fill="#52656e" font-weight="400" text-anchor="start">测试前已知双方费用</text>
+<text x="82" y="572" font-size="16" fill="#52656e" font-weight="400" text-anchor="start">测试后先读自己的结果</text>
 <path d="M336,546 L355,546" fill="none" stroke="#788d95" stroke-width="2" marker-end="url(#arrow)"/>
 <rect x="362" y="476" width="272" height="140" rx="14" fill="#ffffff" stroke="#cbd5d8" stroke-width="1.5"/>
 <text x="384" y="512" font-size="21" fill="#171b1c" font-weight="600" text-anchor="start">选结果或免费测试</text>

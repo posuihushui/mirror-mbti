@@ -85,15 +85,16 @@ describe("paid pairing content and shared example", () => {
     expect(html).not.toContain("<blockquote");
   });
 
-  it.each(["zh", "en"] as const)("makes the invitation text's fee and consent requirements explicit (%s)", (locale) => {
+  it.each(["zh", "en"] as const)("introduces the invitation before testing and keeps consent explicit (%s)", (locale) => {
     const tokenUrl = "https://example.test/t/fictional-public-token";
     const message = pairingMessages[locale].invitationText(tokenUrl);
     expect(message).toContain(tokenUrl);
+    expect(message).not.toMatch(/付费|解锁|订阅|续费|\bpaid\b|\bunlock|\bsubscription\b/iu);
     if (locale === "zh") {
-      expect(message).toContain("各自完成测试并解锁用于配对的报告");
+      expect(message).toContain("各自完成测试并确认");
       expect(message).toContain("你确认后才会加入");
     } else {
-      expect(message).toContain("each need to complete a test and unlock the report we use");
+      expect(message).toContain("each need to complete a test and confirm");
       expect(message).toContain("only join after agreeing");
       expect(message).not.toMatch(/[\u3400-\u9fff]/u);
     }

@@ -6,10 +6,13 @@ import Link from "next/link";
 import { ArrowUpRight, Check, CircleNotch, CreditCard, WechatLogo } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { ResponsiveSheet } from "@/components/site/responsive-sheet";
-import { PrimaryButton } from "@/components/site/primary-button";
 import { Button } from "@/components/ui/button";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { currencyFor, paymentTypeOf, priceLabelToMinor, reportCommerce } from "@/lib/analytics/commerce";
+import { AccessActions } from "@/components/pairing/access-actions";
+import { pairingMessages } from "@/lib/i18n/messages/pairing";
+import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
+import { emitPairingEvent } from "@/lib/pairing-tracking";
 import { trackAttrs } from "@/lib/analytics/events";
 import { track, trackPurchase } from "@/lib/analytics/track";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -38,7 +41,7 @@ type Props = {
   /** Crypto mode: the networks the server has configured. */
   networks?: CryptoNetwork[];
   onUnlocked: () => void;
-  onRead: () => void;
+  initiallyUnlocked?: boolean;
 };
 
 type PayState = "ready" | "processing" | "success" | "cancelled";
@@ -81,13 +84,13 @@ export function PaymentSheet({ open, onOpenChange, ...flow }: Props) {
 const noopSubscribe = () => () => {};
 
 /** Mounted only while the sheet is open, so every open starts from "ready" without effects. */
-function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, networks = [], onUnlocked, onRead }: Omit<Props, "open">) {
+function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, networks = [], onUnlocked, initiallyUnlocked = false }: Omit<Props, "open">) {
   const locale = useLocale();
   const messages = paymentMessages[locale];
   const t = messages.sheet;
   const compact = useMediaQuery("(max-width: 720px)", true);
   const inWeChat = useSyncExternalStore(noopSubscribe, () => isWeChat(navigator.userAgent), () => false);
-  const [state, setState] = useState<PayState>("ready");
+  const [state, setState] = useState<PayState>(initiallyUnlocked ? "success" : "ready");
   const [qrSvg, setQrSvg] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const cancelledRef = useRef(false);
@@ -103,10 +106,11 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
 
   // Every opening of the sheet is a checkout, whether from the unlock button or a `?unlock=1` link.
   useEffect(() => {
-    if (checkoutTracked.current) return;
+    if (checkoutTracked.current || initiallyUnlocked) return;
     checkoutTracked.current = true;
+    emitPairingEvent("pairing_checkout_opened", resultId, "payment_sheet");
     track("begin_checkout", { ...reportCommerce(currencyFor(locale), priceLabelToMinor(priceLabel)), payment_mode: mode });
-  }, [locale, priceLabel, mode]);
+  }, [locale, priceLabel, mode, resultId, initiallyUnlocked]);
 
   function stopPolling() {
     if (pollRef.current) {
@@ -118,7 +122,6 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
   const succeed = () => {
     stopPolling();
     setState("success");
-    onUnlocked();
   };
 
   const purchased = (order: OrderView) => {
@@ -218,7 +221,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
         window.location.href = `/api/wechat/oauth?return=${encodeURIComponent(back)}`;
         return;
       }
-      if (err.code === "ALREADY_UNLOCKED") {
+      if (err.code === "ALREADY_UNLOCKED" || err.code === "PAIRING_ENTITLEMENT_SYNCING") {
         succeed();
         return;
       }
@@ -252,9 +255,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
           <p className="eyebrow text-[9px] tracking-[0.16em] text-[#8a9a9c]">{t.readyEyebrow}</p>
           <h3 className="mt-[25px] mb-[18px] text-[26px] leading-[1.5] font-normal whitespace-pre-line">{t.readyHeading}</h3>
           <p className="text-[11px] text-[#7e8b91]">{mode === "mock" ? t.demoSuccess : t.paidSuccess}</p>
-          <PrimaryButton className="mt-[35px]" onClick={onRead} {...trackAttrs("read_report", "payment_success")}>
-            {t.startReading}
-          </PrimaryButton>
+          <AccessActions resultId={resultId} locale={locale} surface="payment_sheet" onReady={onUnlocked} />
           {orderId && <div className="mt-6 border-t border-line pt-5"><OrderReceipt orderId={orderId} /></div>}
           <Link href={href(locale, "/my/report")} prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center" {...trackAttrs("my_report", "payment_success")}>{t.allRecords}</Link>
         </div>
@@ -270,6 +271,8 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
               {priceLabel}
             </strong>
           </div>
+          <p className="mt-5 text-sm leading-[1.8]">{pairingUiMessages[locale].priceNote}</p>
+          <p className="mt-3 text-sm leading-[1.8]">{pairingMessages[locale].feeRule} {pairingMessages[locale].delayedGeneration}</p>
           <ul className="my-[18px] list-none p-0 md:my-[22px]">
             {unlockBulletsFor(locale).map((l) => (
               <li key={l} className="my-3 flex items-center gap-[9px] text-[11px] text-[#5d707a]">

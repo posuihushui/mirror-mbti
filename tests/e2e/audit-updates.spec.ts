@@ -99,7 +99,7 @@ test.describe("review improvements", () => {
     expect(result).toMatchObject({ type: null, clear: false });
     await page.goto(`/result/${result.id}?unlock=1`);
     await expect(page.getByText("倾向待探索", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: /解锁完整报告/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /解锁报告与/ })).toHaveCount(0);
     await expect(page.getByText("更完整地，认识自己。")).toHaveCount(0);
     await expect(page.getByText("ESTJ", { exact: true })).toHaveCount(0);
     await page.screenshot({ path: testInfo.outputPath("unclear-result.png"), fullPage: true, animations: "disabled" });

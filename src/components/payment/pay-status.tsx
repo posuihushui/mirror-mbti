@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PrimaryButton } from "@/components/site/primary-button";
+import { AccessActions } from "@/components/pairing/access-actions";
+import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { trackAttrs } from "@/lib/analytics/events";
 import { track, trackPurchase } from "@/lib/analytics/track";
@@ -17,7 +18,6 @@ const RECENT_PAYMENT_MS = 30 * 60 * 1000;
 
 /** Order recovery page body: polls while pending, then routes to the report. */
 export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLabel: string }) {
-  const router = useRouter();
   const locale = useLocale();
   const messages = paymentMessages[locale];
   const t = messages.status;
@@ -72,6 +72,7 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
           {priceLabel}
         </strong>
       </div>
+      <p className="mt-4 text-xs leading-[1.8] text-mist">{pairingMessages[locale].feeRule}</p>
       <p role="status" className="mt-6 text-[13px] text-[#4f5c61]">
         {t.labels[order.status]}
         {pending ? "…" : ""}
@@ -84,7 +85,7 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
       )}
       <div className="mt-8">
         {order.status === "paid" ? (
-          <PrimaryButton onClick={() => router.push(href(locale, `/report/${order.resultId}`))} {...trackAttrs("read_report", "pay_status")}>{t.readFull}</PrimaryButton>
+          <AccessActions resultId={order.resultId} locale={locale} surface="pay_status" />
         ) : (
           <PrimaryButton href={href(locale, `/result/${order.resultId}${pending ? "" : "?unlock=1"}`)} light={pending} {...trackAttrs(pending ? "back_to_result" : "retry_payment", "pay_status")}>
             {pending ? t.backToResult : t.retry}

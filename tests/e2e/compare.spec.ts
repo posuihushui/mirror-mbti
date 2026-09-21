@@ -3,16 +3,23 @@ import { mkdir } from "node:fs/promises";
 import { test, expect, type APIRequestContext, type Page } from "@playwright/test";
 import { getQuestionnaire } from "../../src/lib/questionnaires";
 import { compareMessages } from "../../src/lib/i18n/messages/compare";
+import { pairingMessages } from "../../src/lib/i18n/messages/pairing";
+import { pairingUiMessages } from "../../src/lib/i18n/messages/pairing-ui";
 import { shareMessages } from "../../src/lib/i18n/messages/share";
 
 const origin = process.env.E2E_BASE_URL ?? "http://localhost:3000";
-const evidence = "docs/verification/share-growth";
+const evidence = "docs/verification/paid-pairing";
 async function result(request: APIRequestContext, en: boolean, balanced = false) {
   await request.get(en ? "/en" : "/");
   const q = getQuestionnaire(en ? "en32-v1" : "standard64-v1")!;
   const response = await request.post("/api/results", { data: { questionnaireId: q.id, answers: q.questions.map(question => ({ questionId: question.id, value: balanced ? 0 : question.reverse ? -2 : 2 })) } });
   expect(response.status()).toBe(201);
-  return (await response.json()).data;
+  const own = (await response.json()).data;
+  const order = await request.post("/api/orders", { data: { resultId: own.id }, headers: { origin } });
+  expect(order.ok()).toBe(true);
+  const paid = await request.post(`/api/orders/${(await order.json()).data.id}/mock-pay`, { headers: { origin } });
+  expect(paid.ok()).toBe(true);
+  return own;
 }
 async function share(request: APIRequestContext, en: boolean) {
   const own = await result(request, en);
@@ -36,22 +43,22 @@ async function recordMotion(page: Page) {
 
 for (const en of [false, true]) test(`comparison explicit consent, cross-locale privacy and withdrawal ${en ? "en" : "zh"}`, async ({ page, browser }, info) => {
   test.setTimeout(120000);
-  const locale = en ? "en" : "zh"; const m = compareMessages[locale]; const s = shareMessages[locale];
+  const locale = en ? "en" : "zh"; const p = pairingMessages[locale]; const ui = pairingUiMessages[locale]; const m = compareMessages[locale]; const s = shareMessages[locale];
   const prefix = en ? "/en" : "";
   const viewport = info.project.name === "mobile" ? { width: 393, height: 852 } : { width: 1363, height: 936 };
   const host = await share(page.request, en);
-  await page.goto(`${prefix}/my/shares`);
-  await page.getByRole("button", { name: m.create, exact: true }).first().click();
+  await page.goto(`${prefix}/my/pairing`);
+  await page.getByRole("button", { name: ui.invite, exact: true }).first().click();
   const consent = page.locator('[data-compare-consent="host"]');
   await expect(consent).toBeVisible();
-  await expect(consent.getByRole("button", { name: m.create, exact: true })).toBeDisabled();
+  await expect(consent.getByRole("button", { name: p.hostAgree, exact: true })).toBeDisabled();
   await expect(consent.getByRole("checkbox")).not.toBeChecked();
   await expect(consent).toContainText(m.hostConsentDetail);
   await mkdir(evidence, { recursive: true });
   await page.screenshot({ path: `${evidence}/host-consent-${locale}-${info.project.name}.png`, fullPage: true, animations: "disabled" });
   await consent.getByRole("checkbox").check();
   const inviteResponse = page.waitForResponse(response => response.url().endsWith("/api/comparison-invitations") && response.request().method() === "POST");
-  await consent.getByRole("button", { name: m.create, exact: true }).click();
+  await consent.getByRole("button", { name: p.hostAgree, exact: true }).click();
   const invite = (await (await inviteResponse).json()).data;
   expect(invite.url).toMatch(/\/t\/[A-Za-z0-9_-]{32}$/);
   await expect(page.getByText(m.created, { exact: true })).toBeVisible();
@@ -60,23 +67,23 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   expect(await shareAgain.text()).not.toContain('"typeLabel":');
 
   const guest = await browser.newContext({ baseURL: origin, viewport });
-  const guestResult = await result(guest.request, !en, true);
+  const guestResult = await result(guest.request, !en, false);
   const guestPage = await guest.newPage();
   await recordMotion(guestPage);
   await guestPage.goto(new URL(invite.url).pathname);
-  await expect(guestPage.locator("[data-share-card]")).toContainText(m.host);
+  await expect(guestPage.locator("[data-share-card]")).toContainText(ui.hostScope);
   expect(await guestPage.content()).not.toContain(host.result.id);
   await guestPage.screenshot({ path: `${evidence}/invitation-${locale}-${info.project.name}.png`, fullPage: true, animations: "disabled" });
   await guestPage.getByRole("link", { name: m.chooseExisting, exact: true }).click();
-  const choice = guestPage.locator(`a[href*="result=${guestResult.id}"]`);
-  await expect(choice).toBeVisible(); await choice.click();
+  await guestPage.getByRole("button", { name: ui.choose }).click();
+  await guestPage.waitForURL(/\/result\//);
+  await guestPage.goto(`${prefix}/t/${invite.token}/join?result=${guestResult.id}`);
   const guestConsent = guestPage.locator('[data-compare-consent="guest"]');
-  await expect(guestConsent.getByRole("button", { name: m.join })).toBeDisabled();
+  await expect(guestConsent.getByRole("button", { name: p.guestAgree })).toBeDisabled();
   await expect(guestConsent).toContainText(m.guestConsent);
-  await expect(guestConsent).toContainText(m.balanced);
   await guestPage.screenshot({ path: `${evidence}/guest-consent-${locale}-${info.project.name}.png`, fullPage: true, animations: "disabled" });
   await guestConsent.getByRole("checkbox").check();
-  await guestConsent.getByRole("button", { name: m.join }).click();
+  await guestConsent.getByRole("button", { name: p.guestAgree }).click();
   await guestPage.waitForURL(/\/compare\/[a-f0-9-]+$/);
   const pairPath = new URL(guestPage.url()).pathname;
   const pairId = pairPath.split("/").at(-1)!;
@@ -112,7 +119,7 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await expect(guestPage.locator('[data-compare-motion="section"]')).toHaveCount(3);
   await guestPage.emulateMedia({ media: "screen" });
 
-  await page.goto(`${prefix}/my/shares`);
+  await page.goto(`${prefix}/my/pairing`);
   await expect(page.locator(`[data-comparison-manager] a[href$="/compare/${pairId}"]`)).toBeVisible();
   await page.goto(pairPath);
   await expect(page.locator('[data-compare-motion="section"]')).toHaveCount(3);

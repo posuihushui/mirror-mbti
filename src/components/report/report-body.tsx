@@ -32,7 +32,7 @@ export type ReportData = {
  * there is no second reading view. All four chapters are rendered on the server and
  * shipped in the HTML; the client only decides which one is visible.
  */
-export async function ReportBody({ data, banner, footer }: { data: ReportData; banner?: ReactNode; footer?: ReactNode }) {
+export async function ReportBody({ data, banner, footer, relationshipAction }: { data: ReportData; banner?: ReactNode; footer?: ReactNode; relationshipAction?: ReactNode }) {
   const locale = await getLocale();
   const t = reportMessages[locale].aside;
   const { name, sample, demo, typeLabel } = data;
@@ -84,7 +84,7 @@ export async function ReportBody({ data, banner, footer }: { data: ReportData; b
           <ChapterLabel index={1} type={typeLabel} locale={locale} />
           <ChapterTwo data={data} locale={locale} />
         </ChapterPanel>
-        <ChapterPanel index={2}>
+        <ChapterPanel index={2} after={relationshipAction}>
           <ChapterLabel index={2} type={typeLabel} locale={locale} />
           <ChapterThree data={data} locale={locale} />
         </ChapterPanel>

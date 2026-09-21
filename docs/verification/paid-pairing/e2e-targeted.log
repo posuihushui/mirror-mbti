@@ -1,0 +1,25 @@
+
+Running 14 tests using 2 workers
+
+(node:42213) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:42214) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   2 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (6.7s)
+  ✓   3 [mobile] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (5.8s)
+  ✓   4 [mobile] › tests/e2e/paid-pairing.spec.ts:35:5 › pairing page, narrow widths, no-JS, print and reduced motion (2.0s)
+  ✓   5 [mobile] › tests/e2e/paid-pairing.spec.ts:46:5 › owner-only access, strict continuation inputs and closed invite keep personal report (135ms)
+  ✓   6 [mobile] › tests/e2e/paid-pairing.spec.ts:61:5 › result docks and management empty state fit phone breakpoints (2.8s)
+(node:42598) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics (18.3s)
+  ✓   7 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent zh (5.2s)
+  ✓   9 [desktop] › tests/e2e/paid-pairing.spec.ts:16:34 › paid invitation → own overview → payment → independent consent en (4.2s)
+  ✓  10 [desktop] › tests/e2e/paid-pairing.spec.ts:35:5 › pairing page, narrow widths, no-JS, print and reduced motion (1.0s)
+  ✓  11 [desktop] › tests/e2e/paid-pairing.spec.ts:46:5 › owner-only access, strict continuation inputs and closed invite keep personal report (121ms)
+  ✓  12 [desktop] › tests/e2e/paid-pairing.spec.ts:61:5 › result docks and management empty state fit phone breakpoints (27ms)
+  ✓   8 [mobile] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics (16.1s)
+  ✓  13 [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual Chinese quiz → own result → explicit consent survives unavailable storage and analytics (16.0s)
+  ✓  14 [desktop] › tests/e2e/referral-quiz.spec.ts:38:7 › invitation → actual English cross-locale quiz → own result → explicit consent survives unavailable storage and analytics (16.9s)
+
+  14 passed (1.0m)

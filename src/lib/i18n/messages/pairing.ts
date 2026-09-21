@@ -29,7 +29,7 @@ const zh = {
     firstLine: "先把时间定下来，我才放心。",
     secondLine: "先留一点余地，临时再看看。",
   },
-  invitationText: (url: string) => `想和你一起看看，我们哪些地方容易理解彼此，哪些话可以换个方式说。这里能生成一份只给我们双方看的相处指南，需要各自完成测试并解锁用于配对的报告。你确认后才会加入：${url}`,
+  invitationText: (url: string) => `想和你一起看看，我们哪些地方容易理解彼此，哪些话可以换个方式说。这里能生成一份只给我们双方看的相处指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
 };
 
 const en: typeof zh = {
@@ -61,7 +61,7 @@ const en: typeof zh = {
     firstLine: "I feel more at ease once we have set a time.",
     secondLine: "I'd rather leave some room and decide closer to the day.",
   },
-  invitationText: (url: string) => `I'd like to explore where we may understand each other easily and what we could explain differently. We can create a private guide that only the two of us can read. We each need to complete a test and unlock the report we use. You will only join after agreeing: ${url}`,
+  invitationText: (url: string) => `I'd like to explore where we may understand each other easily and what we could explain differently. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
 };
 
 export const pairingMessages: Record<Locale, typeof zh> = { zh, en };

@@ -64,3 +64,8 @@ export async function deleteComparisonContinuation(id: string, visitorId: string
   // Unknown/other-owner IDs share the same idempotent empty result and reveal no record.
   await db().delete(C).where(and(eq(C.id, id), eq(C.visitorId, visitorId)));
 }
+
+export async function hasUnavailableComparisonContinuation(visitorId: string, resultId: string, validIds: string[]) {
+  const pending = await db().select({ id: C.id }).from(C).where(and(eq(C.visitorId, visitorId), eq(C.resultId, resultId), isNull(C.completedAt))).limit(100);
+  return pending.some(row => !validIds.includes(row.id));
+}
