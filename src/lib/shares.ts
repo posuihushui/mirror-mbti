@@ -18,12 +18,13 @@ export async function shareOptions(resultId: string, visitorId: string) {
   const row = await db().query.results.findFirst({ where: and(eq(schema.results.id, resultId), eq(schema.results.visitorId, visitorId)), columns: { type: true, values: true, balanced: true, questionnaireId: true } });
   if (!row) throw new ShareError(404, "NOT_FOUND");
   const locale = questionnaireLocale(row.questionnaireId);
-  const candidates = buildShareCandidates(row, locale);
+  // The result id fixes this card's wording, so preview and published card always agree.
+  const candidates = buildShareCandidates(row, locale, resultId);
   const defaultSelectedIds = defaultShareSelection(row);
-  const preview = buildPublicShareSnapshot(row, locale, defaultSelectedIds, true, true);
+  const preview = buildPublicShareSnapshot(row, locale, defaultSelectedIds, true, true, resultId);
   const recent = await db().query.resultShares.findMany({ where: and(eq(schema.resultShares.visitorId, visitorId), eq(schema.resultShares.resultId, resultId)), orderBy: [desc(schema.resultShares.createdAt), desc(schema.resultShares.id)], limit: 5 });
   return { locale, candidates, defaultSelectedIds, typeLabel: preview.typeLabel, typeNote: preview.typeNote, dimensions: preview.dimensions,
-    snapshotBase: buildPublicShareSnapshot(row, locale, defaultSelectedIds, false, false), recentShares: recent.map(ownedShareView) };
+    snapshotBase: buildPublicShareSnapshot(row, locale, defaultSelectedIds, false, false, resultId), recentShares: recent.map(ownedShareView) };
 }
 export async function createShare(visitorId: string, input: ShareInput) {
   return db().transaction(async (tx) => {
@@ -38,9 +39,9 @@ export async function createShare(visitorId: string, input: ShareInput) {
     const row = await tx.query.results.findFirst({ where: and(eq(schema.results.id, input.resultId), eq(schema.results.visitorId, visitorId)), columns: { type: true, values: true, balanced: true, questionnaireId: true } });
     if (!row) throw new ShareError(404, "NOT_FOUND");
     const locale = questionnaireLocale(row.questionnaireId);
-    const allowed = new Set(buildShareCandidates(row, locale).map((candidate) => candidate.id));
+    const allowed = new Set(buildShareCandidates(row, locale, input.resultId).map((candidate) => candidate.id));
     if (input.selectedIds.some((id) => !allowed.has(id))) throw new ShareError(400, "INVALID_SHARE_INPUT");
-    const snapshot = buildPublicShareSnapshot(row, locale, input.selectedIds, input.showType, input.showDimensions);
+    const snapshot = buildPublicShareSnapshot(row, locale, input.selectedIds, input.showType, input.showDimensions, input.resultId);
     const [saved] = await tx.insert(schema.resultShares).values({ id: randomUUID(), token: randomBytes(24).toString("base64url"), visitorId, resultId: input.resultId,
       requestId: input.requestId, requestHash: hash, locale, contentVersion: "share-v1", snapshot, selectedIds: input.selectedIds,
       showType: input.showType, showDimensions: input.showDimensions, consentVersion: input.consentVersion }).returning();
