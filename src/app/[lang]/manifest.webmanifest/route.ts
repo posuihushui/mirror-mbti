@@ -1,14 +1,14 @@
 import { siteManifest } from "@/lib/manifest";
 
-/** `/en/manifest.webmanifest`. Chinese is served from the unprefixed `/manifest.webmanifest`, so other locales 404 here. */
+/** `/zh/manifest.webmanifest`. English is served from the unprefixed `/manifest.webmanifest`. */
 export function generateStaticParams() {
-  return [{ lang: "en" }];
+  return [{ lang: "zh" }];
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  if (lang !== "en") return new Response("Not found", { status: 404 });
-  return new Response(JSON.stringify(siteManifest("en")), {
+  if (lang !== "zh") return new Response("Not found", { status: 404 });
+  return new Response(JSON.stringify(siteManifest("zh")), {
     headers: { "Content-Type": "application/manifest+json; charset=utf-8" },
   });
 }

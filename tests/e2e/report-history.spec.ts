@@ -35,7 +35,7 @@ async function makeOrder(request: APIRequestContext, result: SavedResult, paid =
 }
 
 async function expectRecord(page: Page, result: SavedResult, paid = false) {
-  const href = `/${paid ? "report" : "result"}/${result.id}`;
+  const href = `/zh/${paid ? "report" : "result"}/${result.id}`;
   const card = page.getByRole("article", { name: `${result.type} 测试记录`, exact: true }).filter({
     has: page.locator(`a[href="${href}"]`),
   });
@@ -50,26 +50,26 @@ test.describe("report history and order recovery", () => {
   });
 
   test("lists every result, including an older paid report, without depending on local storage", async ({ page }, testInfo) => {
-    await page.goto("/");
+    await page.goto("/zh");
     const paid = await saveResult(page.request);
     await makeOrder(page.request, paid, true);
     const unpaid = await saveResult(page.request, true);
     const latest = await saveResult(page.request);
 
-    await page.goto("/my/report");
+    await page.goto("/zh/my/report");
     await expect(page).toHaveURL(/\/my\/report$/);
     await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(3);
     await expectRecord(page, paid, true);
     await expectRecord(page, unpaid);
     await expectRecord(page, latest);
 
-    const html = await (await page.request.get("/my/report")).text();
-    for (const href of [`/report/${paid.id}`, `/result/${unpaid.id}`, `/result/${latest.id}`]) {
+    const html = await (await page.request.get("/zh/my/report")).text();
+    for (const href of [`/zh/report/${paid.id}`, `/zh/result/${unpaid.id}`, `/zh/result/${latest.id}`]) {
       expect(html).toContain(`href="${href}"`);
     }
 
     await page.evaluate(() => localStorage.clear());
-    await page.goto("/");
+    await page.goto("/zh");
     // Phones keep 我的报告 inside the header's 更多 menu; open it once the button is hydrated.
     const header = page.getByRole("navigation", { name: "主导航" }).filter({ visible: true });
     const more = header.getByRole("button", { name: "更多", exact: true });
@@ -80,7 +80,7 @@ test.describe("report history and order recovery", () => {
         await expect(myReports).toBeVisible({ timeout: 1000 });
       }).toPass();
     }
-    await expect(myReports).toHaveAttribute("href", "/my/report");
+    await expect(myReports).toHaveAttribute("href", "/zh/my/report");
     await myReports.click();
     await expect(page).toHaveURL(/\/my\/report$/);
     await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(3);
@@ -89,16 +89,16 @@ test.describe("report history and order recovery", () => {
 
   test("a visitor without a saved session can start a test or recover with an order number", async ({ page, context }, testInfo) => {
     expect((await context.cookies()).filter((cookie) => cookie.name === "mid")).toHaveLength(0);
-    await page.goto("/my/report");
+    await page.goto("/zh/my/report");
     await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: /开始.*测试|开始认识自己/ }).filter({ visible: true }).first()).toHaveAttribute("href", "/quiz");
+    await expect(page.getByRole("link", { name: /开始.*测试|开始认识自己/ }).filter({ visible: true }).first()).toHaveAttribute("href", "/zh/quiz");
     await expect(page.getByLabel("订单号", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "找回测试记录", exact: true })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("report-empty.png"), fullPage: true, animations: "disabled" });
   });
 
   test("recovering a paid order restores all history while the other result stays locked", async ({ page, context }) => {
-    await page.goto("/");
+    await page.goto("/zh");
     const paid = await saveResult(page.request);
     const orderId = await makeOrder(page.request, paid, true);
     const unpaid = await saveResult(page.request, true);
@@ -106,7 +106,7 @@ test.describe("report history and order recovery", () => {
 
     await page.evaluate(() => localStorage.clear());
     await context.clearCookies();
-    await page.goto("/my/report");
+    await page.goto("/zh/my/report");
     await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(0);
     await page.getByLabel("订单号", { exact: true }).fill(orderId);
     await page.getByRole("button", { name: "找回测试记录", exact: true }).click();
@@ -115,16 +115,16 @@ test.describe("report history and order recovery", () => {
     await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(2);
     expect((await context.cookies()).filter((cookie) => cookie.name === "mid").map((cookie) => cookie.value)).toEqual([ownerCookie.value]);
 
-    await page.locator(`a[href="/report/${paid.id}"]`).click();
+    await page.locator(`a[href="/zh/report/${paid.id}"]`).click();
     await expect(page.getByText("第一章", { exact: true })).toBeVisible();
-    await page.goto(`/report/${unpaid.id}`);
-    await expect(page).toHaveURL(new RegExp(`/result/${unpaid.id}\\?unlock=1$`));
+    await page.goto(`/zh/report/${unpaid.id}`);
+    await expect(page).toHaveURL(new RegExp(`/zh/result/${unpaid.id}\\?unlock=1$`));
     await expect(page.getByText("更完整地，认识自己。", { exact: true })).toBeVisible();
     expect((await (await page.request.get(`/api/results/${unpaid.id}`)).json()).data.unlocked).toBe(false);
   });
 
   test("an unpaid order can recover from a direct request without a cookie and does not grant paid access", async ({ page, context, browser, baseURL }, testInfo) => {
-    await page.goto("/");
+    await page.goto("/zh");
     const ordered = await saveResult(page.request);
     const orderId = await makeOrder(page.request, ordered);
     const other = await saveResult(page.request, true);
@@ -142,12 +142,12 @@ test.describe("report history and order recovery", () => {
       expect(recovery.headersArray().filter((header) => header.name.toLowerCase() === "set-cookie" && header.value.startsWith("mid="))).toHaveLength(1);
 
       const recoveredPage = await recoveredContext.newPage();
-      await recoveredPage.goto("/my/report");
+      await recoveredPage.goto("/zh/my/report");
       await expectRecord(recoveredPage, ordered);
       await expectRecord(recoveredPage, other);
       await expect(recoveredPage.getByRole("article", { name: /测试记录$/ })).toHaveCount(2);
-      await recoveredPage.goto(`/report/${ordered.id}`);
-      await expect(recoveredPage).toHaveURL(new RegExp(`/result/${ordered.id}\\?unlock=1$`));
+      await recoveredPage.goto(`/zh/report/${ordered.id}`);
+      await expect(recoveredPage).toHaveURL(new RegExp(`/zh/result/${ordered.id}\\?unlock=1$`));
       expect((await (await recoveredContext.request.get(`/api/results/${ordered.id}`)).json()).data.unlocked).toBe(false);
     } finally {
       await recoveredContext.close();
@@ -155,19 +155,19 @@ test.describe("report history and order recovery", () => {
   });
 
   test("recovers another visitor from the history page without merging records or changing paid access", async ({ page, context, browser, baseURL }, testInfo) => {
-    await page.goto("/");
+    await page.goto("/zh");
     const current = await saveResult(page.request);
     const previousContext = await browser.newContext({ baseURL, extraHTTPHeaders: requestHeaders(testInfo) });
 
     try {
-      await previousContext.request.get("/");
+      await previousContext.request.get("/zh");
       const unpaid = await saveResult(previousContext.request, true);
       const recoveryOrder = await makeOrder(previousContext.request, unpaid);
       const paid = await saveResult(previousContext.request);
       await makeOrder(previousContext.request, paid, true);
       const previousCookie = (await previousContext.cookies()).find((cookie) => cookie.name === "mid")!;
 
-      await page.goto("/my/report");
+      await page.goto("/zh/my/report");
       await expectRecord(page, current);
       await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(1);
       await expect(page.getByLabel("订单号", { exact: true })).toBeHidden();
@@ -179,12 +179,12 @@ test.describe("report history and order recovery", () => {
       await expectRecord(page, unpaid);
       await expectRecord(page, paid, true);
       await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(2);
-      await expect(page.locator(`a[href="/result/${current.id}"]`)).toHaveCount(0);
+      await expect(page.locator(`a[href="/zh/result/${current.id}"]`)).toHaveCount(0);
       expect((await context.cookies()).filter((cookie) => cookie.name === "mid").map((cookie) => cookie.value)).toEqual([previousCookie.value]);
       expect((await (await page.request.get(`/api/results/${current.id}`)).json()).data.owner).toBe(false);
 
-      await page.goto(`/report/${unpaid.id}`);
-      await expect(page).toHaveURL(new RegExp(`/result/${unpaid.id}\\?unlock=1$`));
+      await page.goto(`/zh/report/${unpaid.id}`);
+      await expect(page).toHaveURL(new RegExp(`/zh/result/${unpaid.id}\\?unlock=1$`));
       expect((await (await page.request.get(`/api/results/${unpaid.id}`)).json()).data.unlocked).toBe(false);
     } finally {
       await previousContext.close();
@@ -192,20 +192,20 @@ test.describe("report history and order recovery", () => {
   });
 
   test("isolates visitors and keeps the current identity after invalid or cross-site recovery", async ({ page, context, browser, baseURL }, testInfo) => {
-    await page.goto("/");
+    await page.goto("/zh");
     const own = await saveResult(page.request);
     const originalCookie = (await context.cookies()).find((cookie) => cookie.name === "mid")!;
     const otherContext = await browser.newContext({ baseURL, extraHTTPHeaders: requestHeaders(testInfo) });
 
     try {
-      await otherContext.request.get("/");
+      await otherContext.request.get("/zh");
       const foreign = await saveResult(otherContext.request, true);
       const foreignOrder = await makeOrder(otherContext.request, foreign, true);
 
-      await page.goto("/my/report");
+      await page.goto("/zh/my/report");
       await expectRecord(page, own);
       await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(1);
-      await expect(page.locator(`a[href="/report/${foreign.id}"]`)).toHaveCount(0);
+      await expect(page.locator(`a[href="/zh/report/${foreign.id}"]`)).toHaveCount(0);
 
       for (const [orderId, status] of [["not-an-order", 400], ["M190001010000000000000000", 404]] as const) {
         const response = await page.request.post("/api/reports/recover", {
@@ -224,8 +224,8 @@ test.describe("report history and order recovery", () => {
       await page.reload();
       await expectRecord(page, own);
       await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(1);
-      await page.goto(`/report/${foreign.id}`);
-      await expect(page).toHaveURL(new RegExp(`/result/${foreign.id}$`));
+      await page.goto(`/zh/report/${foreign.id}`);
+      await expect(page).toHaveURL(new RegExp(`/zh/result/${foreign.id}$`));
       await expect(page.getByText("第一章", { exact: true })).toHaveCount(0);
     } finally {
       await otherContext.close();
@@ -233,7 +233,7 @@ test.describe("report history and order recovery", () => {
   });
 
   test("limits repeated recovery attempts without issuing a replacement identity", async ({ page, context, baseURL }) => {
-    await page.goto("/");
+    await page.goto("/zh");
     const originalCookie = (await context.cookies()).find((cookie) => cookie.name === "mid")!;
     for (let attempt = 0; attempt < 10; attempt++) {
       const response = await page.request.post("/api/reports/recover", {

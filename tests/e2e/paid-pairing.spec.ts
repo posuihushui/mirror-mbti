@@ -7,7 +7,7 @@ import { pairingMessages } from "../../src/lib/i18n/messages/pairing";
 const origin=process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 const evidence='docs/verification/paid-pairing';
 async function seed(request:APIRequestContext,en=false){
- await request.get(en?'/en':'/'); const q=getQuestionnaire(en?'en32-v1':'legacy32-v1')!;
+ await request.get(en?'/':'/zh'); const q=getQuestionnaire(en?'en32-v1':'legacy32-v1')!;
  const res=await request.post('/api/results',{data:{questionnaireId:q.id,answers:q.questions.map(x=>({questionId:x.id,value:x.reverse?-2:2}))}});
  expect(res.status()).toBe(201); return (await res.json()).data.id as string;
 }
@@ -19,7 +19,7 @@ async function shot(page:Page,name:string){
  await page.screenshot({path:`${evidence}/${name}.png`,fullPage:!inDialog});
 }
 for(const en of [false,true])test(`paid invitation → own overview → payment → independent consent ${en?'en':'zh'}`,async({page,browser},info)=>{
- const locale=en?'en':'zh', prefix=en?'/en':'',m=pairingUiMessages[locale],p=pairingMessages[locale];const host=await seed(page.request,en);
+ const locale=en?'en':'zh', prefix=en?'':'/zh',m=pairingUiMessages[locale],p=pairingMessages[locale];const host=await seed(page.request,en);
  const inviteInput={resultId:host,requestId:randomUUID(),consentVersion:'compare-host-v3'};
  const denied=await page.request.post('/api/comparison-invitations',{headers:{origin},data:inviteInput});expect(denied.status()).toBe(403);
  await page.goto(`${prefix}/result/${host}`);await expect(page.locator('[data-pairing-benefit="preview"]')).toBeVisible();await shot(page,`benefit-${locale}-${info.project.name}`);
@@ -47,7 +47,7 @@ for(const en of [false,true])test(`paid invitation → own overview → payment 
 
 test('pairing page, narrow widths, no-JS, print and reduced motion',async({page,browser},info)=>{
  for(const en of [false,true]){
-  const prefix=en?'/en':'',m=pairingUiMessages[en?'en':'zh'];
+  const prefix=en?'':'/zh',m=pairingUiMessages[en?'en':'zh'];
   await page.goto(`${prefix}/pairing`);expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|\bpaid\b|\bunlock|\bsubscription\b|[¥$]\s?\d/i);await expect(page.getByRole('link',{name:m.start,exact:true})).toBeVisible();await shot(page,`introduction-${en?'en':'zh'}-${info.project.name}`);
   for(const width of [320,390,720,721]){await page.setViewportSize({width,height:width===390?749:852});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await shot(page,`intro-${en?'en':'zh'}-${width}-${info.project.name}`);}
   await page.emulateMedia({reducedMotion:'reduce'});await page.reload();for(const el of await page.locator('[data-pairing-reveal]').all()){await expect(el).toHaveCSS('opacity','1');expect(await el.evaluate(x=>x.getAnimations().length)).toBe(0);}
@@ -74,7 +74,7 @@ test('owner-only access, strict continuation inputs and closed invite keep perso
 test('result docks fit phone breakpoints',async({page},info)=>{
  if(info.project.name!=='mobile')return;
  for(const en of [false,true]){
-  const prefix=en?'/en':'',id=await seed(page.request,en);
+  const prefix=en?'':'/zh',id=await seed(page.request,en);
   await page.goto(`${prefix}/result/${id}`);
   await expect(page.locator('[data-pairing-benefit="preview"]')).toBeAttached();
   await expect(page.getByRole('heading',{level:1})).toBeVisible();
@@ -101,7 +101,7 @@ test('result docks fit phone breakpoints',async({page},info)=>{
 
 test('empty center, report entry and recovered order retain separate invitations', async ({ page, browser }, info) => {
  for (const en of [false, true]) {
-  const prefix=en?'/en':'', locale=en?'en':'zh', m=pairingUiMessages[locale];
+  const prefix=en?'':'/zh', locale=en?'en':'zh', m=pairingUiMessages[locale];
   const guest=await browser.newContext({baseURL:origin, viewport:info.project.use.viewport});
   const g=await guest.newPage();
   await g.goto(`${prefix}/my/pairing`);

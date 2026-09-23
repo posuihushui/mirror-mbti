@@ -65,11 +65,12 @@ function classify(path: string): [PageType, string] {
  * order numbers recover a visitor, and result links expose someone's result.
  */
 export function pageInfo(pathname: string): { locale: Locale; pageType: PageType; path: string } {
-  const normalized = pathname.replace(/^\/zh(?=\/|$)/, "") || "/";
-  const trimmed = normalized.replace(/\/+$/, "") || "/";
-  const en = trimmed === "/en" || trimmed.startsWith("/en/");
-  const [pageType, path] = classify(en ? trimmed.slice(3) : trimmed);
-  return { locale: en ? "en" : "zh", pageType, path: en ? (path === "/" ? "/en" : `/en${path}`) : path };
+  const trimmed = pathname.replace(/\/+$/, "") || "/";
+  const chinese = trimmed === "/zh" || trimmed.startsWith("/zh/");
+  // Legacy English URLs redirect to their unprefixed canonical URLs in the proxy.
+  const legacyEnglish = trimmed === "/en" || trimmed.startsWith("/en/");
+  const [pageType, path] = classify(chinese || legacyEnglish ? trimmed.slice(3) || "/" : trimmed);
+  return { locale: chinese ? "zh" : "en", pageType, path: chinese ? (path === "/" ? "/zh" : `/zh${path}`) : path };
 }
 
 /** `page_location` for GA: redacted path plus attribution parameters only. */

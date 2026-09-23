@@ -14,7 +14,7 @@ async function answerAll(page: Page) {
 
 test.describe("core flow", () => {
   test("home renders with the primary CTA and never quotes an amount", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/zh");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("向内看见");
     await expect(page.getByRole("link", { name: /开始人格测试/ }).first()).toBeVisible();
     // Desktop shows "免费测试与性格概览"; the phone dock shows just "免费测试".
@@ -24,15 +24,15 @@ test.describe("core flow", () => {
   });
 
   test("sample result and sample report are reachable", async ({ page }) => {
-    await page.goto("/result/sample");
+    await page.goto("/zh/result/sample");
     await expect(page.getByText("示例报告", { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("img", { name: /内向偏好 79%/ }).first()).toBeVisible();
-    await page.goto("/report/sample");
+    await page.goto("/zh/report/sample");
     await expect(page.getByText("第一章")).toBeVisible();
   });
 
   test("quiz gates next until an answer is chosen and persists progress across reload", async ({ page }) => {
-    await page.goto("/quiz");
+    await page.goto("/zh/quiz");
     await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
     const next = page.getByRole("button", { name: /下一题/ }).first();
     await expect(next).toBeDisabled();
@@ -42,12 +42,12 @@ test.describe("core flow", () => {
     await expect(page.getByText(/^02/).filter({ visible: true }).first()).toBeVisible();
     await page.reload();
     await expect(page.getByText(/^02/).filter({ visible: true }).first()).toBeVisible();
-    await page.goto("/");
+    await page.goto("/zh");
     await expect(page.getByRole("link", { name: "继续测试 · 1/32 题" }).first()).toBeVisible();
   });
 
   test("complete quiz → result → mock pay → report chapters", async ({ page }) => {
-    await page.goto("/quiz");
+    await page.goto("/zh/quiz");
     await answerAll(page);
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     await expect(page.getByText("你的人格倾向", { exact: true })).toBeVisible();
@@ -75,13 +75,13 @@ test.describe("core flow", () => {
     await expect(page.getByText("精力的边界")).toBeVisible();
 
     const reportPath = new URL(page.url()).pathname;
-    await page.goto("/my/report");
+    await page.goto("/zh/my/report");
     await page.locator(`a[href="${reportPath}"]`).first().click();
     await expect(page).toHaveURL(reportPath);
   });
 
   test("the sample closes by inviting the test, not by quoting a price", async ({ page }, testInfo) => {
-    await page.goto("/result/sample");
+    await page.goto("/zh/result/sample");
     await expect(page.getByText("轮到你了", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: /属于你的故事/ })).toBeVisible();
     // nothing is locked here, so no paywall block and no unlock action
@@ -91,9 +91,9 @@ test.describe("core flow", () => {
     await expect(page.getByText(/免费测试与性格概览/)).toBeVisible();
     expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
     for (const cta of await page.getByRole("link", { name: /开始认识自己/ }).all()) {
-      await expect(cta).toHaveAttribute("href", "/quiz");
+      await expect(cta).toHaveAttribute("href", "/zh/quiz");
     }
-    await expect(page.getByRole("link", { name: "阅读完整示例报告" })).toHaveAttribute("href", "/report/sample");
+    await expect(page.getByRole("link", { name: "阅读完整示例报告" })).toHaveAttribute("href", "/zh/report/sample");
     await page.getByRole("heading", { name: /属于你的故事/ }).scrollIntoViewIfNeeded();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("sample-invitation.png"), animations: "disabled" });
@@ -102,7 +102,7 @@ test.describe("core flow", () => {
   });
 
   test("the sample report is the real report layout, marked as a sample", async ({ page }) => {
-    await page.goto("/report/sample");
+    await page.goto("/zh/report/sample");
     // marked as a sample: the notice above the reading, the badge or phone heading row, and the title
     await expect(page.getByText(/这是一份示例/).first()).toBeVisible();
     await expect(page.getByText("示例报告", { exact: true }).first()).toBeVisible();
@@ -115,12 +115,12 @@ test.describe("core flow", () => {
     await expect(page.getByRole("heading", { name: /属于你的故事/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /解锁报告与/ })).toHaveCount(0);
     for (const cta of await page.getByRole("link", { name: /开始认识自己/ }).all()) {
-      await expect(cta).toHaveAttribute("href", "/quiz");
+      await expect(cta).toHaveAttribute("href", "/zh/quiz");
     }
   });
 
   test("sample report ships every chapter in the server HTML", async ({ request }) => {
-    const html = (await (await request.get("/report/sample")).text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<!--[\s\S]*?-->/g, "");
+    const html = (await (await request.get("/zh/report/sample")).text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<!--[\s\S]*?-->/g, "");
     for (const copy of [
       "先看清偏好",
       "理解你的优势",
@@ -136,7 +136,7 @@ test.describe("core flow", () => {
   });
 
   test("report chapters deep-link, switch and keep both insight lists", async ({ page }) => {
-    await page.goto("/report/sample?chapter=3");
+    await page.goto("/zh/report/sample?chapter=3");
     await expect(page.getByRole("heading", { name: /好的关系/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /先看清偏好/ })).toBeHidden();
 
@@ -144,7 +144,7 @@ test.describe("core flow", () => {
     await expect(page.getByRole("heading", { name: /找到适合你的方式/ })).toBeVisible();
     await expect(page).toHaveURL(/chapter=4/);
 
-    await page.goto("/report/sample?chapter=2");
+    await page.goto("/zh/report/sample?chapter=2");
     const chapterTwo = page.locator("#chapter-panel-2");
     await expect(chapterTwo.getByRole("heading", { name: "在独处中恢复能量" })).toBeVisible();
     await expect(chapterTwo.getByRole("heading", { name: "精力的边界" })).toBeHidden();
@@ -154,17 +154,17 @@ test.describe("core flow", () => {
   });
 
   test("locked report redirects to the result with the unlock sheet", async ({ page }) => {
-    await page.goto("/quiz");
+    await page.goto("/zh/quiz");
     await answerAll(page);
     await page.waitForURL(/\/result\//);
     const id = page.url().split("/result/")[1];
-    await page.goto(`/report/${id}`);
-    await expect(page).toHaveURL(new RegExp(`/result/${id}\\?unlock=1`));
+    await page.goto(`/zh/report/${id}`);
+    await expect(page).toHaveURL(new RegExp(`/zh/result/${id}\\?unlock=1`));
     await expect(page.getByText("更完整地，认识自己。")).toBeVisible();
   });
 
   test("API rejects malformed answers and unknown results", async ({ page }) => {
-    await page.goto("/"); // obtains the visitor cookie
+    await page.goto("/zh"); // obtains the visitor cookie
     const request = page.request;
     const noSession = await page.context().request.fetch("/api/results", { method: "POST", data: { answers: [] }, headers: { cookie: "" } });
     expect([400, 401]).toContain(noSession.status());

@@ -5,7 +5,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     test.use({ reducedMotion });
 
     test("rapid question jumps show the latest number, with only changed digits moving", async ({ page }) => {
-      await page.goto("/quiz");
+      await page.goto("/zh/quiz");
       await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
       await page.getByRole("button", { name: /检查已答题/ }).click();
       const observations = await page.evaluate(async () => {
@@ -36,7 +36,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     });
 
     test("switching 32 and 64 items animates the total and restores each draft", async ({ page }) => {
-      await page.goto("/quiz");
+      await page.goto("/zh/quiz");
       await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
       await page.getByRole("button", { name: "非常符合", exact: true }).click();
       await page.getByRole("button", { name: "下一题", exact: true }).filter({ visible: true }).click();

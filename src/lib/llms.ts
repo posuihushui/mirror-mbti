@@ -1,6 +1,6 @@
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { enSite } from "@/lib/i18n/content/en/site";
-import { href, type Locale } from "@/lib/i18n/locale";
+import { defaultLocale, href, type Locale } from "@/lib/i18n/locale";
 import { TYPES, typeMeta } from "@/lib/personality";
 import { preferenceDimensionsFor, preferenceNotesFor } from "@/lib/preference-content";
 import { contentUpdatedAt } from "@/lib/seo";
@@ -9,13 +9,15 @@ import { typeContext } from "@/lib/type-context";
 
 /**
  * `/llms.txt` and `/llms-full.txt` (llmstxt.org) for AI answer engines, one pair per locale
- * (`/en/llms.txt` for English). Built only from the same copy the pages render, so the files
+ * (`/zh/llms.txt` for Chinese). Built only from the same copy the pages render, so the files
  * cannot drift from the site.
  */
 export type LlmsContext = { baseUrl: string };
 
-const overview =
-  "mirror (观己) is an MBTI-style self-exploration quiz in Chinese (at /) and English (at /en), built mobile-first. It uses original everyday-situation items, is not the official MBTI® instrument, has not been psychometrically validated, and is meant for self-reflection — not diagnosis, hiring or labelling people.";
+const overview = {
+  zh: "mirror（观己）是一份适合手机作答的 MBTI 风格自我探索测试。英文版位于 /，中文版位于 /zh。题目基于原创日常情境；它不是官方 MBTI® 量表，未经过心理测量学验证，结果用于自我探索，不用于诊断、招聘筛选或给他人贴标签。",
+  en: "mirror is a mobile-first MBTI®-style self-exploration quiz in English (at /) and Chinese (at /zh). It uses original everyday-situation items, is not the official MBTI® instrument, has not been psychometrically validated, and is meant for self-reflection — not diagnosis, hiring or labelling people.",
+};
 
 const copy = {
   zh: {
@@ -45,7 +47,7 @@ const copy = {
     privacy: "隐私政策",
     terms: "用户协议",
     other: { label: "English version", locale: "en" as Locale },
-    updated: (baseUrl: string) => `内容更新：${contentUpdatedAt} · 网站：${baseUrl}`,
+    updated: (baseUrl: string) => `内容更新：${contentUpdatedAt} · 网站：${baseUrl}/zh`,
     question: (question: string) => `观察问题：${question}`,
     typeSection: (type: string, locale: Locale, url: (path: string) => string) => {
       const { name, line, summary } = typeMeta(type, "zh");
@@ -86,8 +88,8 @@ const copy = {
     full: { label: "Full content", note: "The FAQ, the four preferences and all 16 types in full", title: "Full content" },
     privacy: "Privacy policy",
     terms: "Terms of service",
-    other: { label: "中文版", locale: "zh" as Locale },
-    updated: (baseUrl: string) => `Content updated: ${contentUpdatedAt} · Site: ${baseUrl}/en`,
+    other: { label: "Chinese version", locale: "zh" as Locale },
+    updated: (baseUrl: string) => `Content updated: ${contentUpdatedAt} · Site: ${baseUrl}`,
     question: (question: string) => `Question to notice: ${question}`,
     typeSection: (type: string, locale: Locale, url: (path: string) => string) => {
       const { line, summary } = typeMeta(type, "en");
@@ -108,7 +110,7 @@ function urlFor(ctx: LlmsContext, locale: Locale) {
   return (path: string) => `${ctx.baseUrl}${href(locale, path)}`;
 }
 
-export function llmsText(ctx: LlmsContext, locale: Locale = "zh"): string {
+export function llmsText(ctx: LlmsContext, locale: Locale = defaultLocale): string {
   const t = copy[locale];
   const url = urlFor(ctx, locale);
   const other = urlFor(ctx, t.other.locale);
@@ -117,7 +119,7 @@ export function llmsText(ctx: LlmsContext, locale: Locale = "zh"): string {
     "",
     t.summary,
     "",
-    overview,
+    overview[locale],
     "",
     `## ${t.headings.facts}`,
     "",
@@ -141,7 +143,7 @@ export function llmsText(ctx: LlmsContext, locale: Locale = "zh"): string {
   ].join("\n");
 }
 
-export function llmsFullText(ctx: LlmsContext, locale: Locale = "zh"): string {
+export function llmsFullText(ctx: LlmsContext, locale: Locale = defaultLocale): string {
   const t = copy[locale];
   const url = urlFor(ctx, locale);
   return [
@@ -149,7 +151,7 @@ export function llmsFullText(ctx: LlmsContext, locale: Locale = "zh"): string {
     "",
     t.summary,
     "",
-    overview,
+    overview[locale],
     "",
     t.updated(ctx.baseUrl),
     "",

@@ -8,7 +8,7 @@ async function answerAndNext(page: Page, option = 0) {
 
 test.describe("review improvements", () => {
   test("keeps separate drafts, checks answers and restarts only the chosen version", async ({ page }, testInfo) => {
-    await page.goto("/quiz");
+    await page.goto("/zh/quiz");
     await expect(page.getByRole("heading", { name: "32 题 · 轻量版" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "64 题 · 标准版" })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("quiz-versions.png"), fullPage: true, animations: "disabled" });
@@ -39,7 +39,7 @@ test.describe("review improvements", () => {
 
   test("migrates an existing 32-question browser draft without changing its answers", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("mirror.quiz.v1", JSON.stringify({ answers: [1, ...Array(31).fill(null)], index: 1, updatedAt: Date.now() })));
-    await page.goto("/quiz");
+    await page.goto("/zh/quiz");
     await expect(page.getByText("轻量版 · 32 题")).toBeVisible();
     await expect(page.getByText("已答 1/32 题")).toBeVisible();
     await page.getByRole("button", { name: "上一题" }).first().click();
@@ -51,18 +51,18 @@ test.describe("review improvements", () => {
       Storage.prototype.getItem = () => { throw new DOMException("blocked", "SecurityError"); };
       Storage.prototype.setItem = () => { throw new DOMException("blocked", "SecurityError"); };
     });
-    await page.goto("/quiz");
+    await page.goto("/zh/quiz");
     await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
     await expect(page.getByText("当前进度仅保存在本页")).toBeVisible();
     for (let i = 0; i < 32; i++) await answerAndNext(page, 2);
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     await expect(page.getByText("倾向待探索", { exact: true })).toBeVisible();
-    await page.goto("/my/report");
+    await page.goto("/zh/my/report");
     await expect(page.getByRole("article", { name: "待探索 测试记录" })).toHaveCount(1);
   });
 
   test("completes all 64 questions, persists the version and serves the paid chapters as HTML", async ({ page }, testInfo) => {
-    await page.goto("/quiz");
+    await page.goto("/zh/quiz");
     await page.getByRole("button", { name: "开始 64 题标准版" }).click();
     const questionnaire = getQuestionnaire(STANDARD_QUESTIONNAIRE_ID)!;
     for (const question of questionnaire.questions) {
@@ -80,30 +80,30 @@ test.describe("review improvements", () => {
     expect(order.status()).toBe(201);
     const orderId = (await order.json()).data.id;
     expect((await page.request.post(`/api/orders/${orderId}/mock-pay`)).status()).toBe(200);
-    const report = await page.request.get(`/report/${resultId}`);
+    const report = await page.request.get(`/zh/report/${resultId}`);
     expect(report.status()).toBe(200);
     const html = (await report.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<!--[\s\S]*?-->/g, "");
     for (const text of ["第一章", "第二章", "第三章", "第四章", "第 1 天", "第 7 天", "这次偏向较明显"]) expect(html.includes(text), text).toBe(true);
-    await page.goto(`/report/${resultId}?chapter=4`);
+    await page.goto(`/zh/report/${resultId}?chapter=4`);
     await expect(page.getByRole("heading", { name: "第 7 天 · 保留一个小调整" })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("paid-action-plan.png"), fullPage: true, animations: "disabled" });
-    await page.goto("/my/report");
-    await expect(page.getByRole("link", { name: "阅读详细报告", exact: true })).toHaveAttribute("href", `/report/${resultId}`);
+    await page.goto("/zh/my/report");
+    await expect(page.getByRole("link", { name: "阅读详细报告", exact: true })).toHaveAttribute("href", `/zh/report/${resultId}`);
     await expect(page.getByText(/标准版 · 64 题/)).toBeVisible();
   });
 
   test("unclear results cannot be sold; owners can review answers and keep the old record", async ({ page, browser, baseURL }, testInfo) => {
-    await page.goto("/");
+    await page.goto("/zh");
     const created = await page.request.post("/api/results", { data: { answers: Array(32).fill(0) } });
     const result = (await created.json()).data;
     expect(result).toMatchObject({ type: null, clear: false });
-    await page.goto(`/result/${result.id}?unlock=1`);
+    await page.goto(`/zh/result/${result.id}?unlock=1`);
     await expect(page.getByText("倾向待探索", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /解锁报告与/ })).toHaveCount(0);
     await expect(page.getByText("更完整地，认识自己。")).toHaveCount(0);
     await expect(page.getByText("ESTJ", { exact: true })).toHaveCount(0);
     await page.screenshot({ path: testInfo.outputPath("unclear-result.png"), fullPage: true, animations: "disabled" });
-    const og = await page.request.get(`/result/${result.id}/opengraph-image`);
+    const og = await page.request.get(`/zh/result/${result.id}/opengraph-image`);
     expect(og.status()).toBe(200);
     await testInfo.attach("unclear-og", { body: await og.body(), contentType: "image/png" });
     const order = await page.request.post("/api/orders", { data: { resultId: result.id } });
@@ -125,21 +125,21 @@ test.describe("review improvements", () => {
     await page.getByRole("button", { name: /查看我的结果|查看结果/ }).first().click();
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     expect(page.url()).not.toContain(result.id);
-    await page.goto("/my/report");
+    await page.goto("/zh/my/report");
     await expect(page.getByRole("article", { name: "待探索 测试记录" })).toHaveCount(2);
   });
 
   test("public pages explain MBTI, score limits and a working support contact", async ({ page, request }, testInfo) => {
-    await page.goto("/");
+    await page.goto("/zh");
     await expect(page).toHaveTitle(/MBTI/);
     await expect(page.getByText(/MBTI 测试体验/).first()).toBeVisible();
-    for (const path of ["/help", "/privacy", "/terms"]) {
+    for (const path of ["/zh/help", "/zh/privacy", "/zh/terms"]) {
       await page.goto(path);
       await expect(page.getByRole("link", { name: "lakehu0x@gmail.com", exact: true })).toHaveAttribute("href", "mailto:lakehu0x@gmail.com");
     }
-    const quizHtml = await (await request.get("/quiz")).text();
+    const quizHtml = await (await request.get("/zh/quiz")).text();
     for (const copy of ["轻量版", "标准版", "64", "心理测量学验证"]) expect(quizHtml).toContain(copy);
-    await page.goto("/help");
+    await page.goto("/zh/help");
     await page.screenshot({ path: testInfo.outputPath("help.png"), fullPage: true, animations: "disabled" });
   });
 });

@@ -6,7 +6,7 @@ import { getQuestionnaire } from "../../src/lib/questionnaires";
 const origin = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 const evidence = "docs/verification/share-growth";
 async function seed(request: APIRequestContext, en = false) {
-  await request.get(en ? "/en" : "/");
+  await request.get(en ? "/" : "/zh");
   const q = getQuestionnaire(en ? "en32-v1" : "legacy32-v1")!;
   const response = await request.post("/api/results", { data: { questionnaireId: q.id, answers: q.questions.map(question => ({ questionId: question.id, value: question.reverse ? -2 : 2 })) } });
   expect(response.status()).toBe(201);
@@ -85,7 +85,7 @@ test("composer handles rapid selection, failed image and clipboard without losin
   const { result } = await seed(page.request);
   await page.addInitScript(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new Error("unavailable"); } } }));
   await page.route("**/s/*/image", route => route.fulfill({ status: 503, body: "unavailable" }));
-  await page.goto(`/result/${result.id}`);
+  await page.goto(`/zh/result/${result.id}`);
   const trigger = page.locator("[data-share-entry] button");
   await trigger.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${evidence}/entry-${info.project.name}.png`, animations: "disabled" });
@@ -114,7 +114,7 @@ test("composer handles rapid selection, failed image and clipboard without losin
   await expect(created.locator("input[readonly]")).toBeVisible();
   expect(await created.locator("input[readonly]").inputValue()).toMatch(/\/s\/[A-Za-z0-9_-]{32}$/);
   await page.screenshot({ path: `${evidence}/created-fallback-${info.project.name}.png`, animations: "disabled" });
-  await page.goto("/my/shares");
+  await page.goto("/zh/my/shares");
   await expect(page.locator("[data-share-card]").first()).toBeVisible();
   await page.screenshot({ path: `${evidence}/management-${info.project.name}.png`, fullPage: true, animations: "disabled" });
 });

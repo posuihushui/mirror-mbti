@@ -11,7 +11,7 @@ export type WaffoProvider = PaymentProvider & { readonly mode: "waffo" };
 
 /**
  * Card payments through Waffo Pancake, the merchant of record for English orders: the buyer leaves
- * for the hosted checkout and comes back to `/en/pay/[orderId]`. The webhook is the primary signal;
+ * for the hosted checkout and comes back to `/pay/[orderId]`. The webhook is the primary signal;
  * `queryPayment` is the fallback the status poll uses when the callback is late.
  */
 export function createWaffoProvider(client: WaffoClient = createWaffoClient()): WaffoProvider {

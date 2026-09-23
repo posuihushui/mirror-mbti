@@ -4,7 +4,7 @@ import { shareMessages } from "../../src/lib/i18n/messages/share";
 import { getQuestionnaire } from "../../src/lib/questionnaires";
 const origin = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 for (const locale of ["zh", "en"] as const) test(`guide generated image, copy, all-balanced privacy and GA ${locale}`, async ({page,context,browser},info) => {
- const t=shareMessages[locale]; const prefix=locale==="en"?"/en":"";
+ const t=shareMessages[locale]; const prefix=locale==="en"?"":"/zh";
  await page.request.get(prefix || "/");
  const q=getQuestionnaire(locale==="en"?"en32-v1":"legacy32-v1")!;
  const r=await page.request.post("/api/results",{data:{questionnaireId:q.id,answers:q.questions.map(x=>({questionId:x.id,value:0}))}});
@@ -44,7 +44,7 @@ for (const locale of ["zh", "en"] as const) test(`guide generated image, copy, a
 });
 test('creation can finish after closing; owner management recovers it once',async({page})=>{
  await page.request.get('/');const r=(await(await page.request.post('/api/results',{data:{answers:Array(32).fill(0)}})).json()).data;
- await page.goto(`/result/${r.id}`);await page.locator('[data-share-entry]').getByRole('button').click();
+ await page.goto(`/zh/result/${r.id}`);await page.locator('[data-share-entry]').getByRole('button').click();
  let release!:()=>void;const barrier=new Promise<void>(resolve=>{release=resolve;});
  let saved!:()=>void;const persisted=new Promise<void>(resolve=>{saved=resolve;});
  await page.route('**/api/shares',async route=>{if(route.request().method()!=='POST')return route.continue();const response=await route.fetch();saved();await barrier;await route.fulfill({response}).catch(()=>{});});
@@ -52,7 +52,7 @@ test('creation can finish after closing; owner management recovers it once',asyn
  await page.getByRole('dialog').getByRole('button',{name:shareMessages.zh.close,exact:true}).click();release();
  await expect(page.getByRole('dialog')).toHaveCount(0);
  const list=(await(await page.request.get('/api/shares')).json()).data;expect(list.items).toHaveLength(1);
- await page.goto('/my/shares');await expect(page.locator('[data-share-manager]')).toBeVisible();
+ await page.goto('/zh/my/shares');await expect(page.locator('[data-share-manager]')).toBeVisible();
 });
 test('no signed cookie cannot authorize a write',async({playwright})=>{
  const blank=await playwright.request.newContext({baseURL:origin});

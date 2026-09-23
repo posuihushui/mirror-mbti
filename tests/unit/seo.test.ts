@@ -9,21 +9,21 @@ const ctx = { baseUrl: "https://mirror.example" };
 
 describe("pageMetadata", () => {
   it("keeps share defaults that shallow metadata merging would otherwise drop", () => {
-    const meta = pageMetadata({ title: "16 种人格倾向", description: "d", path: "/types" });
-    expect(meta.alternates?.canonical).toBe("/types");
-    expect(meta.openGraph).toMatchObject({ siteName: site.name, locale: site.locale, url: "/types", title: `16 种人格倾向 · ${site.name}` });
+    const meta = pageMetadata({ locale: "zh", title: "16 种人格倾向", description: "d", path: "/types" });
+    expect(meta.alternates?.canonical).toBe("/zh/types");
+    expect(meta.openGraph).toMatchObject({ siteName: site.name, locale: site.locale, url: "/zh/types", title: `16 种人格倾向 · ${site.name}` });
     expect(meta.twitter).toMatchObject({ card: "summary_large_image" });
-    expect(meta.openGraph?.images).toEqual([expect.objectContaining({ url: "/opengraph-image", width: 1200, height: 630 })]);
+    expect(meta.openGraph?.images).toEqual([expect.objectContaining({ url: "/zh/opengraph-image", width: 1200, height: 630 })]);
   });
   it("points a segment's own share image at its public, locale-prefixed URL", () => {
-    const zh = pageMetadata({ title: "INFJ", description: "d", path: "/types/INFJ", image: "/types/INFJ/opengraph-image" });
-    expect(zh.openGraph?.images).toEqual([expect.objectContaining({ url: "/types/INFJ/opengraph-image" })]);
-    expect(zh.twitter?.images).toEqual([expect.objectContaining({ url: "/types/INFJ/opengraph-image" })]);
+    const zh = pageMetadata({ locale: "zh", title: "INFJ", description: "d", path: "/types/INFJ", image: "/types/INFJ/opengraph-image" });
+    expect(zh.openGraph?.images).toEqual([expect.objectContaining({ url: "/zh/types/INFJ/opengraph-image" })]);
+    expect(zh.twitter?.images).toEqual([expect.objectContaining({ url: "/zh/types/INFJ/opengraph-image" })]);
     const en = pageMetadata({ locale: "en", title: "INFJ", description: "d", path: "/types/INFJ", image: "/types/INFJ/opengraph-image" });
-    expect(en.openGraph?.images).toEqual([expect.objectContaining({ url: "/en/types/INFJ/opengraph-image" })]);
+    expect(en.openGraph?.images).toEqual([expect.objectContaining({ url: "/types/INFJ/opengraph-image" })]);
   });
   it("uses an absolute title without appending the brand twice", () => {
-    const meta = pageMetadata({ title: site.title, description: "d", path: "/", absoluteTitle: true });
+    const meta = pageMetadata({ locale: "zh", title: site.title, description: "d", path: "/", absoluteTitle: true });
     expect(meta.title).toEqual({ absolute: site.title });
     expect(meta.openGraph?.title).toBe(site.title);
   });
@@ -50,12 +50,12 @@ describe("typeContext definition", () => {
 
 describe("llms files", () => {
   it("llms.txt links every public section and all 16 types, without quoting a price", () => {
-    const text = llmsText(ctx);
+    const text = llmsText(ctx, "zh");
     expect(text.startsWith(`# ${site.name}\n\n> `)).toBe(true);
     for (const path of ["/quiz", "/result/sample", "/report/sample", "/preferences", "/about", "/types", "/help", "/llms-full.txt"]) {
-      expect(text).toContain(`](${ctx.baseUrl}${path})`);
+      expect(text).toContain(`](${ctx.baseUrl}/zh${path})`);
     }
-    for (const type of TYPES) expect(text).toContain(`[${type} ${names[type][0]}](${ctx.baseUrl}/types/${type})`);
+    for (const type of TYPES) expect(text).toContain(`[${type} ${names[type][0]}](${ctx.baseUrl}/zh/types/${type})`);
     expect(text).toContain("测试、人格类型与简短概览免费。");
     // Nothing before the test may quote a price or hint at one.
     expect(text).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
@@ -63,7 +63,7 @@ describe("llms files", () => {
     expect(text).not.toMatch(/\/(my|pay|api)\//);
   });
   it("llms-full.txt carries the FAQ and every type definition", () => {
-    const text = llmsFullText(ctx);
+    const text = llmsFullText(ctx, "zh");
     for (const [q, a] of faqs()) expect(text).toContain(`### ${q}\n\n${a}`);
     for (const type of TYPES) expect(text).toContain(typeContext(type).definition);
   });

@@ -3,7 +3,7 @@ import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
 import type { Locale } from "@/lib/i18n/locale";
 import { OG_FONT_FAMILY, ogFonts, portraitDataUrl } from "@/lib/og/fonts";
 
-/** Home share card, shared by `/opengraph-image` (Chinese) and `/en/opengraph-image`. */
+/** Home share card, shared by `/opengraph-image` (English) and `/zh/opengraph-image`. */
 const copy = {
   zh: {
     eyebrow: "MBTI 测试体验 · 16 型人格探索",

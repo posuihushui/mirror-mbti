@@ -12,20 +12,17 @@ function secret(): string {
 const ROOT_ROUTES = /^\/(api\/|robots\.txt$|sitemap\.xml$|llms(-full)?\.txt$|manifest\.webmanifest$|favicon\.ico$|icon|apple-icon|opengraph-image)/;
 
 /**
- * Pages live under `app/[lang]`. Chinese keeps its unprefixed URLs: `/quiz` is served by
- * `/zh/quiz` through a rewrite, and a typed `/zh/quiz` redirects back so there is one URL per page.
+ * Pages live under `app/[lang]`. English keeps unprefixed URLs: `/quiz` is served by
+ * `/en/quiz` through a rewrite. Old `/en/quiz` URLs redirect in `next.config.ts`, before Proxy.
  */
 function routeLocale(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
-  if (pathname === "/zh" || pathname.startsWith("/zh/")) {
-    const url = request.nextUrl.clone();
-    url.pathname = pathname.slice(3) || "/";
-    return NextResponse.redirect(url, 308);
-  }
-  if (ROOT_ROUTES.test(pathname) || pathname === "/en" || pathname.startsWith("/en/")) return NextResponse.next();
+  if (ROOT_ROUTES.test(pathname) || pathname === "/en" || pathname.startsWith("/en/") || pathname === "/zh" || pathname.startsWith("/zh/")) return NextResponse.next();
   const url = request.nextUrl.clone();
-  url.pathname = pathname === "/" ? "/zh" : `/zh${pathname}`;
-  return NextResponse.rewrite(url);
+  url.pathname = pathname === "/" ? "/en" : `/en${pathname}`;
+  const headers = new Headers(request.headers);
+  headers.set("x-mirror-internal-locale", "1");
+  return NextResponse.rewrite(url, { request: { headers } });
 }
 
 /**
@@ -38,8 +35,8 @@ export function proxy(request: NextRequest) {
   if (request.method === "POST" && request.nextUrl.pathname === "/api/reports/recover") return NextResponse.next();
 
   const response = routeLocale(request);
-  if (response.status === 308) return response;
-
+  // The internal `/en` pass inherits the outer response. Issue the visitor cookie only once.
+  if (request.headers.get("x-mirror-internal-locale") === "1") return response;
   const existing = request.cookies.get(VISITOR_COOKIE)?.value;
   if (verifyVisitorToken(existing, secret())) return response;
 

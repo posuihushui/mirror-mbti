@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 /**
- * Catch-all for URLs that match no page in this language. Without it an unknown `/en/...` URL falls
+ * Catch-all for URLs that match no page in this language. Without it an unknown `/zh/...` URL falls
  * through to `app/global-not-found.tsx`, which sits outside `[lang]` and is written in Chinese;
  * here `[lang]/not-found.tsx` answers in the language of the URL instead.
  *

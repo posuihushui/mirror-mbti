@@ -9,19 +9,19 @@ const resultId = "aB3_dE5-gH7i";
 
 describe("pageInfo", () => {
   it("classifies pages in both languages", () => {
-    expect(pageInfo("/")).toEqual({ locale: "zh", pageType: "home", path: "/" });
-    expect(pageInfo("/en")).toEqual({ locale: "en", pageType: "home", path: "/en" });
-    expect(pageInfo("/en/quiz/")).toEqual({ locale: "en", pageType: "quiz", path: "/en/quiz" });
+    expect(pageInfo("/")).toEqual({ locale: "en", pageType: "home", path: "/" });
+    expect(pageInfo("/zh")).toEqual({ locale: "zh", pageType: "home", path: "/zh" });
+    expect(pageInfo("/quiz/")).toEqual({ locale: "en", pageType: "quiz", path: "/quiz" });
     expect(pageInfo("/types/INFJ")).toMatchObject({ pageType: "type_detail", path: "/types/INFJ" });
     expect(pageInfo("/result/sample")).toMatchObject({ pageType: "result_sample", path: "/result/sample" });
-    expect(pageInfo("/en/report/sample")).toMatchObject({ locale: "en", pageType: "report_sample", path: "/en/report/sample" });
+    expect(pageInfo("/zh/report/sample")).toMatchObject({ locale: "zh", pageType: "report_sample", path: "/zh/report/sample" });
     expect(pageInfo("/my/report")).toMatchObject({ pageType: "my_report", path: "/my/report" });
   });
 
   it("replaces result IDs and order numbers with placeholders", () => {
     const orderId = newOrderId();
     expect(pageInfo(`/result/${resultId}`)).toMatchObject({ pageType: "result", path: "/result/[id]" });
-    expect(pageInfo(`/en/report/${resultId}`)).toMatchObject({ pageType: "report", path: "/en/report/[id]" });
+    expect(pageInfo(`/zh/report/${resultId}`)).toMatchObject({ pageType: "report", path: "/zh/report/[id]" });
     expect(pageInfo(`/pay/${orderId}`)).toMatchObject({ pageType: "pay", path: "/pay/[orderId]" });
     expect(pageInfo(`/somewhere/${orderId}/else`)).toMatchObject({ pageType: "other", path: "/somewhere/[orderId]/else" });
   });

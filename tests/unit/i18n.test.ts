@@ -42,19 +42,19 @@ describe("English questionnaires", () => {
 });
 
 describe("locale routing helpers", () => {
-  it("keeps Chinese unprefixed and prefixes English", () => {
-    expect(href("zh", "/")).toBe("/");
-    expect(href("zh", "/quiz")).toBe("/quiz");
-    expect(href("en", "/")).toBe("/en");
-    expect(href("en", "/types/INFJ")).toBe("/en/types/INFJ");
+  it("keeps English unprefixed and prefixes Chinese", () => {
+    expect(href("en", "/")).toBe("/");
+    expect(href("en", "/quiz")).toBe("/quiz");
+    expect(href("zh", "/")).toBe("/zh");
+    expect(href("zh", "/types/INFJ")).toBe("/zh/types/INFJ");
   });
 
   it("reads API message language from the same-origin referer", () => {
     const req = (referer?: string) => new Request("https://mirror.example/api/orders", { headers: referer ? { referer } : {} });
-    expect(requestLocale(req("https://mirror.example/en/result/abc"))).toBe("en");
-    expect(requestLocale(req("https://mirror.example/result/abc"))).toBe("zh");
-    expect(requestLocale(req("not a url"))).toBe("zh");
-    expect(requestLocale(req())).toBe("zh");
+    expect(requestLocale(req("https://mirror.example/result/abc"))).toBe("en");
+    expect(requestLocale(req("https://mirror.example/zh/result/abc"))).toBe("zh");
+    expect(requestLocale(req("not a url"))).toBe("en");
+    expect(requestLocale(req())).toBe("en");
   });
 });
 
@@ -84,23 +84,23 @@ describe("English content", () => {
 });
 
 describe("English SEO", () => {
-  it("builds prefixed canonical, hreflang pairs and the English share image", () => {
+  it("builds unprefixed canonical, hreflang pairs and the English share image", () => {
     const meta = pageMetadata({ locale: "en", title: "The 16 personality types", description: "d", path: "/types" });
-    expect(meta.alternates?.canonical).toBe("/en/types");
-    expect(meta.alternates?.languages).toEqual({ "zh-CN": "/types", en: "/en/types", "x-default": "/types" });
-    expect(meta.openGraph).toMatchObject({ locale: "en_US", url: "/en/types", siteName: "mirror" });
-    expect(meta.openGraph?.images).toEqual([expect.objectContaining({ url: "/en/opengraph-image" })]);
+    expect(meta.alternates?.canonical).toBe("/types");
+    expect(meta.alternates?.languages).toEqual({ "zh-CN": "/zh/types", en: "/types", "x-default": "/types" });
+    expect(meta.openGraph).toMatchObject({ locale: "en_US", url: "/types", siteName: "mirror" });
+    expect(meta.openGraph?.images).toEqual([expect.objectContaining({ url: "/opengraph-image" })]);
   });
 
   it("English llms files link English pages only and never quote an amount", () => {
     const ctx = { baseUrl: "https://mirror.example" };
     const text = llmsText(ctx, "en");
-    expect(text).toContain("](https://mirror.example/en/types/INFJ)");
+    expect(text).toContain("](https://mirror.example/types/INFJ)");
     expect(text).toContain("The test, your type and a short overview are free.");
     // Nothing before the test may quote a price or hint at one.
     expect(text).not.toMatch(/\$\s?\d|\bpaid\b|\bunlock|\bpricing\b/i);
-    expect(text).toContain("](https://mirror.example/llms.txt)");
-    expect(text).not.toMatch(/\]\(https:\/\/mirror\.example\/(quiz|types|about)/);
+    expect(text).toContain("](https://mirror.example/zh/llms.txt)");
+    expect(text).not.toMatch(/\]\(https:\/\/mirror\.example\/zh\/(quiz|types|about)/);
     expect(llmsFullText(ctx, "en")).toContain(typeContext("ENTP", "en").definition);
   });
 });

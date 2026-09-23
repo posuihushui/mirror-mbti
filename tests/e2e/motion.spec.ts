@@ -44,7 +44,7 @@ function chapterNavigation(page: Page) {
 test.describe("first-round motion", () => {
   test("reduced motion keeps home, result and report content complete without animation", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await page.goto("/zh");
     const homeMotion = page.locator(".home-title-motion, .home-description-motion, .home-portrait-motion");
     await expect(homeMotion).toHaveCount(4);
     for (const element of await homeMotion.all()) {
@@ -55,7 +55,7 @@ test.describe("first-round motion", () => {
     }
     await expect(page.getByRole("link", { name: /开始人格测试/ }).first()).toBeVisible();
 
-    for (const path of ["/result/sample", "/report/sample"]) {
+    for (const path of ["/zh/result/sample", "/zh/report/sample"]) {
       await page.goto(path);
       const radar = page.locator("[data-radar-motion]");
       await expect(radar).toHaveAttribute("data-radar-motion", "done");
@@ -78,7 +78,7 @@ test.describe("first-round motion", () => {
     // Keep each project's layout width, but force the chart below the first viewport.
     await page.setViewportSize({ width: page.viewportSize()!.width, height: 160 });
     await recordRadarMotion(page);
-    await page.goto("/result/sample");
+    await page.goto("/zh/result/sample");
     const radar = page.locator("[data-radar-motion]");
     await expect(radar).toHaveAttribute("data-radar-motion", "deferred");
     const beforeReveal = await radarStarts(radar);
@@ -100,7 +100,7 @@ test.describe("first-round motion", () => {
   test("returning to report chapter one keeps the completed radar without replaying it", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await recordRadarMotion(page);
-    await page.goto("/report/sample");
+    await page.goto("/zh/report/sample");
     const radar = page.locator("[data-radar-motion]");
     await radar.scrollIntoViewIfNeeded();
     await expect(radar).toHaveAttribute("data-radar-motion", "done");
@@ -122,7 +122,7 @@ test.describe("first-round motion", () => {
   test("rapid chapter changes keep the original panels, selection and URL in sync", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     // A hydrated deep link gives us an observable ready state before rapid clicks.
-    await page.goto("/report/sample?chapter=4");
+    await page.goto("/zh/report/sample?chapter=4");
     await expect(page.locator("#chapter-panel-4")).toBeVisible();
     const states = await page.evaluate(async () => {
       const panels = Array.from(document.querySelectorAll<HTMLElement>('[role="tabpanel"]'));

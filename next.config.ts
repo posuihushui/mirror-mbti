@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
     // Pages live under `app/[lang]`, so unmatched URLs need a layout-free 404 (`app/global-not-found.tsx`).
     globalNotFound: true,
   },
+  async redirects() {
+    return [
+      { source: "/en", destination: "/", permanent: true, missing: [{ type: "header" as const, key: "x-mirror-internal-locale" }] },
+      { source: "/en/:path+", destination: "/:path+", permanent: true, missing: [{ type: "header" as const, key: "x-mirror-internal-locale" }] },
+    ];
+  },
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },

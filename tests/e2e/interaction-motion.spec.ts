@@ -6,7 +6,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
 
     test("question navigation preserves answers and keeps the phone dock inside the viewport", async ({ page }, testInfo) => {
       if (testInfo.project.name === "mobile") await page.setViewportSize({ width: 320, height: 852 });
-      await page.goto("/quiz");
+      await page.goto("/zh/quiz");
       await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
       const question = page.locator(".quiz-question-motion");
       const title = page.locator("#question-title");
@@ -42,7 +42,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     });
 
     test("rapid strength switches retain both original lists and align the selected pill", async ({ page }) => {
-      await page.goto("/report/sample?chapter=2");
+      await page.goto("/zh/report/sample?chapter=2");
       const switcher = page.getByRole("tablist", { name: "优势与盲点" });
       await expect(switcher).toBeVisible();
       const result = await page.evaluate(async () => {
@@ -80,7 +80,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
 
     test("desktop modal stays centered and releases its overlay when closed", async ({ page }, testInfo) => {
       test.skip(testInfo.project.name === "mobile", "Phone sheets keep Vaul's native gesture motion.");
-      await page.goto("/");
+      await page.goto("/zh");
       const trigger = page.getByRole("button", { name: "关于这次探索", exact: true });
       for (let cycle = 0; cycle < 2; cycle++) {
         await trigger.click();

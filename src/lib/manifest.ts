@@ -4,7 +4,7 @@ import { site, siteCopy } from "@/lib/site";
 
 /**
  * One web app manifest per language. An English visitor who installs the site must not get a
- * Chinese name, description or `lang`, so each locale serves its own: Chinese from the root
+ * Chinese name, description or `lang`, so each locale serves its own: English from the root
  * `app/manifest.ts`, every other locale from `app/[lang]/manifest.webmanifest`.
  * `start_url` also scopes the installed app to that language's pages.
  */

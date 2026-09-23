@@ -10,7 +10,7 @@ import { shareMessages } from "../../src/lib/i18n/messages/share";
 const origin = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 const evidence = "docs/verification/paid-pairing";
 async function result(request: APIRequestContext, en: boolean, balanced = false) {
-  await request.get(en ? "/en" : "/");
+  await request.get(en ? "/" : "/zh");
   const q = getQuestionnaire(en ? "en32-v1" : "standard64-v1")!;
   const response = await request.post("/api/results", { data: { questionnaireId: q.id, answers: q.questions.map(question => ({ questionId: question.id, value: balanced ? 0 : question.reverse ? -2 : 2 })) } });
   expect(response.status()).toBe(201);
@@ -44,7 +44,7 @@ async function recordMotion(page: Page) {
 for (const en of [false, true]) test(`comparison explicit consent, cross-locale privacy and withdrawal ${en ? "en" : "zh"}`, async ({ page, browser }, info) => {
   test.setTimeout(120000);
   const locale = en ? "en" : "zh"; const p = pairingMessages[locale]; const ui = pairingUiMessages[locale]; const m = compareMessages[locale]; const s = shareMessages[locale];
-  const prefix = en ? "/en" : "";
+  const prefix = en ? "" : "/zh";
   const viewport = info.project.name === "mobile" ? { width: 393, height: 852 } : { width: 1363, height: 936 };
   const host = await share(page.request, en);
   await page.goto(`${prefix}/my/pairing`);
@@ -164,7 +164,7 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await expect(guestPage.locator("[data-compare-motion]")).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole("heading", { name: m.unavailable })).toBeVisible();
-  await guestPage.goto(`${!en ? "/en" : ""}/result/${guestResult.id}`);
+  await guestPage.goto(`${en ? "/zh" : ""}/result/${guestResult.id}`);
   await expect(guestPage.locator("[data-share-entry]")).toBeVisible();
   await third.close(); await guest.close();
   void s;

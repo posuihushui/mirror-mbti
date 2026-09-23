@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 const origin = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 async function fixture(request: APIRequestContext) {
-  await request.get("/");
+  await request.get("/zh");
   const result = await request.post("/api/results", { data: { answers: Array(32).fill(0) } });
   expect(result.status()).toBe(201);
   const { id } = (await result.json()).data;
@@ -26,7 +26,7 @@ test("public card reveals once; CTA remains outside animated ancestors", async (
   });
   await page.goto(new URL(share.url).pathname);
   const card = page.locator("[data-share-card]");
-  const cta = page.locator('main a[href="/quiz"]');
+  const cta = page.locator('main a[href="/zh/quiz"]');
   await expect(cta).toBeEnabled();
   expect(await cta.evaluate(node => !!node.closest("[data-share-motion], [data-share-reveal]"))).toBe(false);
   await expect.poll(() => page.evaluate(() => (window as ObservedWindow).shareStarts ?? 0)).toBeGreaterThan(0);
@@ -68,7 +68,7 @@ test("reduced motion, print, no-JS and 320/720/721 layouts retain complete card"
   await staticPage.goto(path);
   await expect(staticPage.locator("[data-share-card] ol li")).toHaveCount(3);
   for (const line of share.snapshot.lines) await expect(staticPage.locator("[data-share-card]")).toContainText(line);
-  await expect(staticPage.locator('main a[href="/quiz"]')).toBeVisible();
+  await expect(staticPage.locator('main a[href="/zh/quiz"]')).toBeVisible();
   await staticPage.screenshot({ path: `docs/verification/share-growth/no-js-${info.project.name}.png`, fullPage: true });
   await noJs.close();
 });

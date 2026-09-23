@@ -47,14 +47,14 @@ for (const en of [false, true]) {
       let eventFailures = 0, joins = 0;
       await page.route("**/api/share-events", async route => { eventFailures++; await route.abort("failed"); });
       page.on("request", request => { if (new URL(request.url()).pathname === "/api/comparisons" && request.method() === "POST") joins++; });
-      await page.goto(`/t/${invitation.token}`);
+      await page.goto(`/zh/t/${invitation.token}`);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await page.getByRole("link", { name: "免费开始测试", exact: true }).click();
       await expect(page).toHaveURL(new RegExp(`/quiz\\?compare=${invitation.token}$`));
       // Both languages may participate in a Chinese invitation. Keep the explicit flow context in the URL.
-      if (en) await page.goto(`/en/quiz?compare=${invitation.token}`);
+      if (en) await page.goto(`/quiz?compare=${invitation.token}`);
       await complete32(page, en, invitation.token);
-      await page.waitForURL(new RegExp(`${en ? "/en" : ""}/result/[A-Za-z0-9_-]{12}\\?compare=${invitation.token}$`));
+      await page.waitForURL(new RegExp(`${en ? "" : "/zh"}/result/[A-Za-z0-9_-]{12}\\?compare=${invitation.token}$`));
       expect(new URL(page.url()).searchParams.get("compare")).toBe(invitation.token);
       await expect(page.getByText(en ? "YOUR PERSONALITY" : "你的人格倾向", { exact: true })).toBeVisible();
       expect(joins).toBe(0);
@@ -64,7 +64,7 @@ for (const en of [false, true]) {
       const order = (await (await guest.request.post("/api/orders", { headers: { origin }, data: { resultId } })).json()).data;
       expect((await guest.request.post(`/api/orders/${order.id}/mock-pay`, { headers: { origin } })).ok()).toBe(true);
       const continueLink = page.getByRole("link", { name: ui.continue, exact: true });
-      await expect(continueLink).toHaveAttribute("href", new RegExp(`^${en ? "/en" : ""}/t/${invitation.token}/join\\?result=[A-Za-z0-9_-]{12}$`));
+      await expect(continueLink).toHaveAttribute("href", new RegExp(`^${en ? "" : "/zh"}/t/${invitation.token}/join\\?result=[A-Za-z0-9_-]{12}$`));
       await continueLink.click();
       await expect(page.locator('[data-compare-consent="guest"]')).toBeVisible();
       // Consent follows the selected result language; the frozen pair uses the host language.

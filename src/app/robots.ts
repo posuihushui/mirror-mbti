@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { href, publishedLocales } from "@/lib/i18n/locale";
 
 const APP_URL = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
@@ -10,9 +11,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        // Private routes exist under every locale prefix; keep both lists in step with `publishedLocales`.
-        allow: ["/", "/result/sample", "/report/sample", "/en/result/sample", "/en/report/sample"],
-        disallow: [...["", "/en", "/zh"].flatMap(prefix => ["/s/", "/t/", "/compare/"].map(path => prefix + path)), "/api/", "/report/", "/pay/", "/my/", "/result/", "/en/report/", "/en/pay/", "/en/my/", "/en/result/"],
+        // Private routes exist in both languages; derive their paths from the published locales.
+        allow: publishedLocales.flatMap(locale => [href(locale, "/"), href(locale, "/result/sample"), href(locale, "/report/sample")]),
+        disallow: ["/api/", ...publishedLocales.flatMap(locale => ["/s/", "/t/", "/compare/", "/report/", "/pay/", "/my/", "/result/"].map(path => href(locale, path)))],
       },
     ],
     sitemap: `${APP_URL}/sitemap.xml`,

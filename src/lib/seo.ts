@@ -3,10 +3,10 @@ import { defaultLocale, href, ogLocale, publishedLocales, type Locale } from "@/
 import { siteCopy } from "@/lib/site";
 
 /** Last substantive update of the public, indexable copy. Bump it with content changes so the sitemap and structured data stay honest. */
-export const contentUpdatedAt = "2026-09-19";
+export const contentUpdatedAt = "2026-09-23";
 
 type PageSeo = {
-  /** Defaults to Chinese, whose URLs are unprefixed. */
+  /** Defaults to English, whose URLs are unprefixed. */
   locale?: Locale;
   title: string;
   description: string;
@@ -30,11 +30,11 @@ export function pageMetadata({ locale = defaultLocale, title, description, path,
   const ogTitle = shareTitle ?? (absoluteTitle ? title : `${title} · ${copy.name}`);
   const ogDescription = shareDescription ?? description;
   // Always name the share image explicitly. Setting `openGraph` drops the inherited root image, and a
-  // segment's own image file would resolve under the internal `/zh` rewrite path, so build the public
+  // segment's own image file would resolve under the internal `/en` rewrite path, so build the public
   // URL here instead; explicit images take precedence over file-based ones.
   const images = { images: [{ url: href(locale, image ?? "/opengraph-image"), width: 1200, height: 630, alt: `${copy.name} — ${copy.tagline}` }] };
   // Every public page exists in each published locale, so hreflang pairs are symmetric.
-  const languages = publishedLocales.length > 1 ? { languages: { "zh-CN": href("zh", path), en: href("en", path), "x-default": href("zh", path) } } : {};
+  const languages = publishedLocales.length > 1 ? { languages: { "zh-CN": href("zh", path), en: href("en", path), "x-default": href(defaultLocale, path) } } : {};
   return {
     title: absoluteTitle ? { absolute: title } : title,
     description,
@@ -44,7 +44,7 @@ export function pageMetadata({ locale = defaultLocale, title, description, path,
   };
 }
 
-/** Absolute URL of a page in a locale. The Chinese home stays bare, as every JSON-LD node writes it. */
+/** Absolute URL of a page in a locale. The English home stays bare, as every JSON-LD node writes it. */
 export function absoluteUrl(baseUrl: string, locale: Locale, path: string) {
   const localized = href(locale, path);
   return localized === "/" ? baseUrl : `${baseUrl}${localized}`;
