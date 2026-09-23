@@ -1,32 +1,43 @@
 import { Badge } from "@/components/ui/badge";
+import { MirrorMark } from "@/components/brand/mirror-mark";
+import { TypeName } from "@/components/result/type-name";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { getLocale } from "@/lib/i18n/server";
-import { hasClearPreference, polesFor, profileMeta, type Letter, type Profile } from "@/lib/personality";
+import { polesFor, profileMeta, type Letter, type Profile } from "@/lib/personality";
+import { preferenceDimensionsFor } from "@/lib/preference-content";
 
-/** `.type-intro`: eyebrow, giant type letters, tagline, summary, tags. */
+/**
+ * `.type-intro`: the result's reveal. The type's own line and summary lead; a near-balanced
+ * dimension gets one named line here and its full reading further down the page.
+ */
 export async function TypeIntro({ profile, sample }: { profile: Profile; sample: boolean }) {
   const locale = await getLocale();
   const t = resultMessages[locale].typeIntro;
   const poles = polesFor(locale);
   const { name, line, summary, letters } = profileMeta(profile, locale);
-  const clear = hasClearPreference(profile);
+  const leaning = letters.filter((_, i) => !profile.balanced[i]);
+  const balancedPairs = preferenceDimensionsFor(locale).filter((_, i) => profile.balanced[i]).map((d) => d.pair);
+  const note = !balancedPairs.length ? null : leaning.length ? t.balancedNote(balancedPairs) : t.allBalanced;
   return (
-    <div className="px-[27px] pt-[17px] pb-[35px] md:p-0">
-      <p className="eyebrow text-[8px] text-[#738087] md:text-[10px]">{sample ? t.sampleEyebrow : t.ownEyebrow}</p>
-      <div className="my-6 flex items-baseline gap-[17px] text-[79px] leading-[1.15] font-medium tracking-[-0.055em] md:mt-6 md:mb-[22px] md:gap-[22px] md:text-[102px]">
-        {clear ? profile.type : "—"}
-        <span className="text-[14px] font-normal tracking-[0.08em] md:text-[16px]">{name}</span>
+    <section className="relative bg-night px-6 py-8 text-paper md:p-10">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="eyebrow text-warm">{sample ? t.sampleEyebrow : t.ownEyebrow}</p>
+          <p className="mt-6 text-7xl leading-none font-medium tracking-tighter md:text-8xl">{profile.type}</p>
+        </div>
+        <MirrorMark profile={profile} tone="paper" size={120} className="size-22 shrink-0 md:size-30" />
       </div>
-      <h1 className="text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[32px]">{line}</h1>
-      <p className="mt-[23px] max-w-[410px] text-[13px] leading-[1.9] text-[#6b777d]">{summary}</p>
-      <div className="mt-6 flex flex-wrap gap-2">
-        {letters.filter((_, i) => !profile.balanced[i]).map((l) => (
-          <Badge key={l}>{t.badge(poles[l as Letter].label)}</Badge>
-        ))}
-      </div>
-      {profile.balanced.some(Boolean) && (
-        <p className="mt-[18px] text-[12px] leading-[1.8] text-mist">{clear ? t.partialBalanced : t.unclearNote}</p>
+      <TypeName name={name} className="mt-3 block text-sm text-night-body md:text-base" />
+      <h1 className="mt-8 max-w-lg text-3xl leading-heading md:text-4xl">{line}</h1>
+      <p className="mt-5 max-w-md text-sm text-night-body md:text-base">{summary}</p>
+      {leaning.length > 0 && (
+        <div className="mt-6 flex flex-wrap gap-2">
+          {leaning.map((l) => (
+            <Badge key={l} className="border-night-line bg-white/5 text-paper">{t.badge(poles[l as Letter].label)}</Badge>
+          ))}
+        </div>
       )}
-    </div>
+      {note && <p className="mt-5 max-w-md text-xs text-night-mist">{note}</p>}
+    </section>
   );
 }

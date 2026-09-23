@@ -1,16 +1,18 @@
 import type { ReactNode } from "react";
 import { Check } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
+import { MirrorMark } from "@/components/brand/mirror-mark";
 import { Radar } from "@/components/result/radar";
+import { TypeName } from "@/components/result/type-name";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import type { Locale } from "@/lib/i18n/locale";
 import { reportMessages } from "@/lib/i18n/messages/report";
 import { getLocale } from "@/lib/i18n/server";
 import { type Profile } from "@/lib/personality";
-import type { Insight } from "@/lib/report-content";
-import { dimensionReading } from "@/lib/preference-content";
+import type { Insight, Need } from "@/lib/report-content";
 import { ChapterFooterNav, ChapterPanel, ChapterSidebarNav, ChapterTabs, StrengthSwitch } from "./chapter-ui";
+import { PracticeCheck, PracticeProgress } from "./practice-check";
 
 export type ReportData = {
   profile: Profile;
@@ -20,6 +22,7 @@ export type ReportData = {
   typeLabel: string;
   sample: boolean;
   demo: boolean;
+  needs: Need[];
   strengths: Insight[];
   blindspots: Insight[];
   relationships: Insight[];
@@ -31,69 +34,80 @@ export type ReportData = {
  * The detailed report. The public sample renders this exact layout with sample data —
  * there is no second reading view. All four chapters are rendered on the server and
  * shipped in the HTML; the client only decides which one is visible.
+ *
+ * Each chapter opens on a dark cover (label, heading, lead) that continues the tabs above it,
+ * then the reading itself sits on paper, where long text is easiest to read.
  */
-export async function ReportBody({ data, banner, footer, relationshipAction }: { data: ReportData; banner?: ReactNode; footer?: ReactNode; relationshipAction?: ReactNode }) {
+export async function ReportBody({ data, reportKey, banner, footer, relationshipAction }: { data: ReportData; reportKey: string; banner?: ReactNode; footer?: ReactNode; relationshipAction?: ReactNode }) {
   const locale = await getLocale();
   const t = reportMessages[locale].aside;
-  const { name, sample, demo, typeLabel } = data;
+  const { name, sample, demo, typeLabel, profile } = data;
 
   return (
     <main
       className={cn(
-        "block md:mx-auto md:grid md:max-w-[1100px] md:grid-cols-[190px_minmax(0,720px)] md:items-start md:gap-x-[30px] md:px-[30px] md:pt-10 md:pb-[70px] xl:grid-cols-[220px_minmax(0,720px)] xl:gap-x-[68px]",
+        "block md:mx-auto md:grid md:max-w-[1100px] md:grid-cols-[200px_minmax(0,720px)] md:items-start md:gap-x-10 md:px-8 md:pt-10 md:pb-20 xl:grid-cols-[220px_minmax(0,720px)] xl:gap-x-16",
         // the sample carries a fixed dock on phones, so the last block needs room above it
-        sample && "pb-[110px] md:pb-[70px]",
+        sample && "pb-[110px] md:pb-20",
       )}
     >
       {banner ? <div className="md:col-span-2">{banner}</div> : null}
       {/* Stretch the sidebar cell to the reading row so sticky content stops before the footer. */}
       <aside className="hidden md:block md:self-stretch">
-        <div className="md:sticky md:top-[35px] md:pt-[15px]">
-          <p className="eyebrow text-[9px] text-[#758289]">{t.eyebrow}</p>
-          <div className="mt-[26px] text-[64px] font-medium tracking-[-0.06em]">{typeLabel}</div>
-          <p className="mt-1 text-[12px] text-[#75828a]">
-            {t.reportOf(name, sample)}
-          </p>
+        <div className="md:sticky md:top-9 md:pt-4">
+          <p className="eyebrow text-mist">{t.eyebrow}</p>
+          <div className="mt-6 flex items-center justify-between gap-3">
+            <div className="text-6xl font-medium tracking-tighter">{typeLabel}</div>
+            <MirrorMark profile={profile} size={56} className="shrink-0" />
+          </div>
+          <p className="mt-2 text-sm text-mist"><TypeName name={t.reportOf(name, sample)} /></p>
           {sample ? (
-            <Badge className="mt-[18px]">{t.sampleBadge}</Badge>
+            <Badge className="mt-4">{t.sampleBadge}</Badge>
           ) : (
-            <Badge variant="unlocked" className="mt-[18px]">
+            <Badge variant="unlocked" className="mt-4">
               <Check size={12} />
               {t.unlocked(demo)}
             </Badge>
           )}
           <ChapterSidebarNav />
-          <p className="mt-20 text-[9px] tracking-[0.1em] text-[#8b999f] whitespace-pre-line">{t.footnote}</p>
         </div>
       </aside>
 
-      <article className="bg-night px-[25px] pt-[25px] pb-[55px] text-[#eff2f4] md:p-[35px] xl:px-[50px] xl:py-11">
-        <div className="mb-[18px] flex justify-between text-[9px] text-[#a5b5bc] md:hidden">
-          <span>
-            {typeLabel} · {name}
-          </span>
-          <span>{t.mobileLabel(sample, demo)}</span>
+      <article className="min-w-0">
+        <div className="bg-night px-6 pt-6 text-paper md:hidden">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <span className="flex min-w-0 items-center gap-3">
+              <MirrorMark profile={profile} tone="paper" size={32} className="shrink-0" />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">{typeLabel}</span>
+                <TypeName name={name} className="block text-xs text-night-body" />
+              </span>
+            </span>
+            <span className="shrink-0 text-xs text-night-body">{t.mobileLabel(sample, demo)}</span>
+          </div>
+          <ChapterTabs />
         </div>
-        <ChapterTabs />
 
         <ChapterPanel index={0}>
-          <ChapterLabel index={0} type={typeLabel} locale={locale} />
-          <ChapterOne data={data} locale={locale} heading="h1" />
+          <Cover index={0} type={typeLabel} locale={locale} heading={reportMessages[locale].one.heading} as="h1" lead={reportMessages[locale].one.lead} />
+          <Reading><ChapterOne data={data} locale={locale} /></Reading>
         </ChapterPanel>
         <ChapterPanel index={1}>
-          <ChapterLabel index={1} type={typeLabel} locale={locale} />
-          <ChapterTwo data={data} locale={locale} />
+          <Cover index={1} type={typeLabel} locale={locale} heading={reportMessages[locale].two.heading} />
+          <Reading><ChapterTwo data={data} locale={locale} /></Reading>
         </ChapterPanel>
-        <ChapterPanel index={2} after={relationshipAction}>
-          <ChapterLabel index={2} type={typeLabel} locale={locale} />
-          <ChapterThree data={data} locale={locale} />
+        <ChapterPanel index={2} after={relationshipAction ? <div className="px-6 md:px-0">{relationshipAction}</div> : undefined}>
+          <Cover index={2} type={typeLabel} locale={locale} heading={reportMessages[locale].three.heading} lead={reportMessages[locale].three.lead} />
+          <Reading><ChapterThree data={data} locale={locale} /></Reading>
         </ChapterPanel>
         <ChapterPanel index={3}>
-          <ChapterLabel index={3} type={typeLabel} locale={locale} />
-          <ChapterFour data={data} locale={locale} />
+          <Cover index={3} type={typeLabel} locale={locale} heading={reportMessages[locale].four.heading} lead={reportMessages[locale].four.lead} />
+          <Reading><ChapterFour data={data} locale={locale} reportKey={reportKey} /></Reading>
         </ChapterPanel>
 
-        <ChapterFooterNav sample={sample} />
+        <div className="px-6 md:px-0">
+          <ChapterFooterNav sample={sample} />
+        </div>
       </article>
       {footer ? <div className="mt-4 md:col-span-2 md:mt-10">{footer}</div> : null}
     </main>
@@ -102,42 +116,60 @@ export async function ReportBody({ data, banner, footer, relationshipAction }: {
 
 type ChapterProps = { data: ReportData; locale: Locale };
 
-function ChapterOne({ data, locale, heading = "h2" }: ChapterProps & { heading?: "h1" | "h2" }) {
+/** The chapter's dark cover: label, heading and an optional lead. Chapter 01 owns the page's `h1`. */
+function Cover({ index, type, locale, heading, lead, as = "h2" }: { index: number; type: string; locale: Locale; heading: string; lead?: string; as?: "h1" | "h2" }) {
+  const Tag = as;
+  return (
+    <header className="bg-night px-6 pt-2 pb-9 text-paper md:px-10 md:pt-9 md:pb-11 xl:px-12">
+      <div className="mb-6 flex justify-between text-xs tracking-widest text-night-mist md:mb-8">
+        <span>{reportMessages[locale].nav.chapter(index)}</span>
+        <span>{type}</span>
+      </div>
+      <Tag className="text-3xl leading-heading md:text-4xl">{heading}</Tag>
+      {lead && <p className="mt-5 max-w-xl text-base text-night-body">{lead}</p>}
+    </header>
+  );
+}
+
+function Reading({ children }: { children: ReactNode }) {
+  return <div className="px-6 pt-8 pb-4 md:px-0 md:pt-10">{children}</div>;
+}
+
+function ChapterOne({ data, locale }: ChapterProps) {
   const t = reportMessages[locale].one;
-  const { profile, line, summary } = data;
-  const letters = profile.type.split("");
+  const { profile, needs } = data;
   return (
     <>
-      <ChapterHeading as={heading}>{line}</ChapterHeading>
-      <p className="mt-5 text-[13px] leading-[2.25] text-[#a9b5b9] md:mt-[22px] md:leading-[2.15]">{summary}</p>
-      <div className="my-7 bg-[#eaf0f2] p-5 text-[#182126] md:mt-[35px] md:mb-[27px] md:p-[22px]">
-        <Radar profile={profile} height={260} className="mb-[25px]" />
-        <div>
-          {letters.map((l, i) => {
-            const reading = dimensionReading(profile, i, locale);
-            return (
-              <div key={l} className="not-first:mt-[22px]">
-                <div className="flex items-center justify-between text-[12px]">
-                  <b className="font-medium">
-                    {reading.label}
-                  </b>
-                  <span>{profile.values[i]}%</span>
-                </div>
-                <Progress
-                  value={profile.values[i]}
-                  max={100}
-                  className="mt-[9px]"
-                  indicatorClassName="bg-[#b89273]"
-                  aria-label={`${reading.label} ${profile.values[i]}%`}
-                />
-                <p className="mt-[6px] text-[12px] leading-[1.9] text-[#73858c]">
-                  {reading.interpretation}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+      <div className="bg-card p-5 md:p-6">
+        <Radar profile={profile} height={260} />
       </div>
+      <h2 className="mt-10 text-xl leading-heading">{t.needsHeading}</h2>
+      <ol className="mt-4 border-t border-line">
+        {needs.map((need) => (
+          <li key={need.letter} className="border-b border-line py-6">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-lg font-medium">{need.label} <span className="text-mist">{need.letter}</span></p>
+              <p className={cn("text-sm", need.balanced ? "text-warm-ink" : "text-mist")}>{need.value}% · {need.degree}</p>
+            </div>
+            <Progress value={need.value} max={100} className="mt-3" indicatorClassName="bg-warm" aria-label={`${need.label} ${need.value}%`} />
+            {need.balanced ? (
+              <div className="mt-4">
+                <p className="eyebrow text-warm-ink">{t.bothLabel}</p>
+                <ul className="mt-2 space-y-2">
+                  {need.both.map((b) => <li key={b.label} className="text-base text-slate"><span className="font-medium text-ink">{b.label}</span>{locale === "en" ? ": " : "："}{b.strength}</li>)}
+                </ul>
+              </div>
+            ) : (
+              <dl className="mt-4 grid gap-x-6 gap-y-2 md:grid-cols-[7rem_minmax(0,1fr)]">
+                <dt className="text-sm text-warm-ink">{t.strengthLabel}</dt>
+                <dd className="text-base text-slate">{need.strength}</dd>
+                <dt className="mt-2 text-sm text-warm-ink md:mt-0">{t.growthLabel}</dt>
+                <dd className="text-base text-slate">{need.growth}</dd>
+              </dl>
+            )}
+          </li>
+        ))}
+      </ol>
       <Quote>{t.quote}</Quote>
       <Body>{t.body}</Body>
     </>
@@ -148,7 +180,6 @@ function ChapterTwo({ data, locale }: ChapterProps) {
   const t = reportMessages[locale].two;
   return (
     <>
-      <ChapterHeading>{t.heading}</ChapterHeading>
       <StrengthSwitch strengths={<InsightList items={data.strengths} />} blindspots={<InsightList items={data.blindspots} />} />
       <Quote>{t.quote}</Quote>
     </>
@@ -159,78 +190,70 @@ function ChapterThree({ data, locale }: ChapterProps) {
   const t = reportMessages[locale].three;
   return (
     <>
-      <ChapterHeading>{t.heading}</ChapterHeading>
-      <Lead>{t.lead}</Lead>
-      <InsightList items={data.relationships} />
+      <InsightList items={data.relationships} variant="cards" />
       <Quote>{t.quote}</Quote>
       <Body>{t.body}</Body>
     </>
   );
 }
 
-function ChapterFour({ data, locale }: ChapterProps) {
+function ChapterFour({ data, locale, reportKey }: ChapterProps & { reportKey: string }) {
   const t = reportMessages[locale].four;
   return (
     <>
-      <ChapterHeading>{t.heading}</ChapterHeading>
-      <Lead>{t.lead}</Lead>
       <InsightList items={data.work} />
-      <h3 className="mt-9 text-[20px]">{t.weekHeading}</h3>
-      <p className="mt-3 text-[12px] leading-[2] text-[#a9b7bc]">{t.weekIntro}</p>
-      <InsightList items={data.actionPlan} />
-      <div className="my-[33px] bg-[#243034] p-[25px]">
-        <p className="eyebrow text-[9px] text-[#b1bfc4]">{t.stepEyebrow}</p>
-        <p className="mt-5 text-[20px] leading-[1.7] font-normal whitespace-pre-line md:text-[21px]">{t.stepHeading}</p>
-        <p className="mt-[15px] text-[11px] text-[#a9b7bc] whitespace-pre-line">{t.stepQuestions}</p>
+      <h3 className="mt-12 text-2xl leading-heading">{t.weekHeading}</h3>
+      <p className="mt-3 text-base text-slate">{t.weekIntro}</p>
+      <ol className="mt-6 border-t border-line">
+        {data.actionPlan.map((item, i) => (
+          <li key={item.title} className="flex gap-4 border-b border-line py-5">
+            <PracticeCheck reportKey={reportKey} day={i + 1} label={t.dayDone(item.title)} />
+            <div className="min-w-0">
+              <h4 className="text-base font-medium">{item.title}</h4>
+              <p className="mt-2 text-base text-slate">{item.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-3"><PracticeProgress reportKey={reportKey} total={data.actionPlan.length} /></div>
+      <div className="warm-panel my-10 p-6 md:p-8">
+        <p className="eyebrow">{t.stepEyebrow}</p>
+        <p className="mt-4 text-2xl leading-heading whitespace-pre-line">{t.stepHeading}</p>
+        <p className="mt-4 text-sm whitespace-pre-line">{t.stepQuestions}</p>
       </div>
       <Body>{t.closing}</Body>
     </>
   );
 }
 
-function ChapterLabel({ index, type, locale }: { index: number; type: string; locale: Locale }) {
+function InsightList({ items, variant = "lines" }: { items: Insight[]; variant?: "lines" | "cards" }) {
   return (
-    <div className="mb-[23px] flex justify-between text-[9px] tracking-[0.12em] text-[#95a5a9] md:mb-[31px]">
-      <span>{reportMessages[locale].nav.chapter(index)}</span>
-      <span>{type}</span>
-    </div>
-  );
-}
-
-/** Chapter 01 owns the report page's `h1`; everywhere else the chapters are `h2`. */
-function ChapterHeading({ as = "h2", children }: { as?: "h1" | "h2"; children: string }) {
-  const Tag = as;
-  return <Tag className="text-[27px] leading-[1.6] tracking-[-0.03em] md:text-[31px]">{children}</Tag>;
-}
-
-function InsightList({ items }: { items: Insight[] }) {
-  return (
-    <>
+    <div className={cn(variant === "cards" ? "space-y-3" : "border-t border-line")}>
       {items.map((item, i) => (
-        <section key={item.title} className="flex gap-[13px] border-b border-night-line py-[25px] md:gap-5 md:py-7">
-          <span className="pt-[5px] text-[9px] text-[#a38f7a]">0{i + 1}</span>
-          <div>
-            <h3 className="text-[15px] leading-[1.7] font-medium md:text-[14px]">{item.title}</h3>
-            <p className="mt-[10px] text-[13px] leading-[2.1] text-[#a6b6bc] md:text-[12px]">{item.body}</p>
+        <section key={item.title} className={cn(
+          "flex gap-4",
+          variant === "lines" && "border-b border-line py-6 md:gap-5",
+          variant === "cards" && "bg-card p-5 md:p-6",
+        )}>
+          <span aria-hidden className="pt-1 text-xs text-warm-ink">0{i + 1}</span>
+          <div className="min-w-0">
+            <h3 className="text-base font-medium">{item.title}</h3>
+            <p className="mt-2 text-base text-slate">{item.body}</p>
           </div>
         </section>
       ))}
-    </>
+    </div>
   );
 }
 
 function Quote({ children }: { children: string }) {
   return (
-    <blockquote className="my-[30px] border-l border-[#bc9c7f] py-[26px] pl-[15px] text-[20px] leading-[1.7] font-normal tracking-[-0.02em] whitespace-pre-line text-[#d4b99f] md:my-10 md:pl-5 md:text-[23px]">
+    <blockquote className="my-10 border-l-2 border-warm py-1 pl-5 text-xl leading-heading whitespace-pre-line text-ink md:text-2xl">
       {children}
     </blockquote>
   );
 }
 
-function Lead({ children }: { children: ReactNode }) {
-  return <p className="mt-5 text-[13px] leading-[2.25] text-[#a9b5b9] md:mt-[22px] md:leading-[2.15]">{children}</p>;
-}
-
 function Body({ children }: { children: ReactNode }) {
-  return <p className="mt-[22px] text-[13px] leading-[2.15] text-[#a9b5b9] md:text-[12px]">{children}</p>;
+  return <p className="mt-6 text-base text-slate">{children}</p>;
 }

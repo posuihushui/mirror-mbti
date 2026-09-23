@@ -67,9 +67,10 @@ export default async function ReportPage({ params }: Params) {
       <AppHeader variant="page" title={data.sample ? t.sampleHeader : t.ownTitle} backHref={href(locale, `/result/${id}`)} path={data.sample ? "/report/sample" : undefined} />
       <ReportBody
         data={data}
-        banner={<>{data.sample && <SampleNotice />}<p className="mx-[25px] my-5 text-[12px] leading-[1.9] text-mist md:mx-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>{!data.sample && <div className="mx-[25px] md:mx-0"><PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker></div>}</>}
-        relationshipAction={!data.sample ? <PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact dark /></PairingTracker> : undefined}
-        footer={data.sample ? <SampleCta /> : <div className="mx-[25px] md:mx-0"><ContinuationList items={continuations} locale={locale} surface="report" /></div>}
+        reportKey={data.sample ? "sample" : id}
+        banner={<>{data.sample && <SampleNotice />}<p className="mx-6 my-4 text-xs text-mist md:mx-0 md:mt-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>{!data.sample && <div className="mx-6 md:mx-0 md:mb-6"><PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker></div>}</>}
+        relationshipAction={!data.sample ? <PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker> : undefined}
+        footer={data.sample ? <SampleCta /> : <div className="mx-6 md:mx-0"><ContinuationList items={continuations} locale={locale} surface="report" /></div>}
       />
       {data.sample && (
         <Dock>

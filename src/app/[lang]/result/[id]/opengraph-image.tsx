@@ -4,7 +4,7 @@ import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
 import type { Locale } from "@/lib/i18n/locale";
 import { OG_FONT_FAMILY, ogFonts } from "@/lib/og/fonts";
 import { OgRadar } from "@/lib/og/radar";
-import { hasClearPreference, profileMeta } from "@/lib/personality";
+import { profileMeta } from "@/lib/personality";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
 
 export const size = { width: 1200, height: 630 };
@@ -34,7 +34,7 @@ export default async function ResultOgImage({ params }: { params: Promise<{ lang
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 14, letterSpacing: 3, color: "#738087" }}>{sample ? copy[locale].sample : copy[locale].own}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 24, marginTop: 20 }}>
-              <span style={{ fontSize: hasClearPreference(profile) ? 150 : 74, lineHeight: 1, fontWeight: 500, letterSpacing: -4 }}>{typeLabel}</span>
+              <span style={{ fontSize: 150, lineHeight: 1, fontWeight: 500, letterSpacing: -4 }}>{typeLabel}</span>
               {!en && <span style={{ fontSize: 24, letterSpacing: 4 }}>{name}</span>}
             </div>
             {/* The English label is four words long, so it sits on its own line under the letters. */}

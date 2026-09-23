@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { calculate, hasClearPreference, profileMeta, publicProfile, TYPES } from "@/lib/personality";
+import { calculate, clarityOf, profileMeta, publicProfile, TYPES, typeMeta, uniformAnswers } from "@/lib/personality";
+import { dimensionReading, preferenceDimensions } from "@/lib/preference-content";
 import { dimensions, LEGACY_QUESTIONNAIRE_ID, parseSubmission, questionnaires, STANDARD_QUESTIONNAIRE_ID } from "@/lib/questionnaires";
 import { buildReportData } from "@/lib/report-content";
 import { emptyProgress, migrateLegacyProgress, normalizeProgress } from "@/lib/quiz-progress";
@@ -25,13 +26,18 @@ for (const q of questionnaires) {
       expect(parseSubmission({ questionnaireId: q.id, answers: [answers[0], ...answers.slice(0, -1)] })).toBeNull();
       expect(parseSubmission({ questionnaireId: q.id, answers: [...answers.slice(0, -1), { questionId: "foreign", value: 1 }] })).toBeNull();
     });
-    it("returns no determinate type for neutral or fully cancelling answers", () => {
+    it("still names a type when every answer cancels out, breaking ties to I / N / F / P", () => {
       for (const value of [0, 1, 2, -1, -2]) {
         const profile = calculate(Array(q.count).fill(value), q.id);
-        expect(hasClearPreference(profile)).toBe(false);
-        expect(publicProfile(profile)).toMatchObject({ type: null, clear: false });
-        expect(profileMeta(profile).name).toBe("倾向待探索");
+        expect(profile).toMatchObject({ type: "INFP", values: [50, 50, 50, 50], balanced: [true, true, true, true] });
+        expect(publicProfile(profile)).toMatchObject({ type: "INFP", clarity: ["even", "even", "even", "even"] });
+        expect(profileMeta(profile).summary).toContain("四个维度都接近中间位置");
+        expect(profileMeta(profile, "en").summary).toContain("close to the middle");
       }
+    });
+    it("flags a straight-lined questionnaire without withholding anything", () => {
+      expect(uniformAnswers(Array(q.count).fill(2))).toBe(true);
+      expect(uniformAnswers(q.questions.map((item, i) => (i % 3) - 1))).toBe(false);
     });
   });
 }
@@ -42,12 +48,18 @@ it("keeps the unversioned legacy API while refusing unidentifiable standard answ
   expect(parseSubmission({ questionnaireId: "unknown", answers: Array(32).fill(0) })).toBeNull();
 });
 
-it("keeps meaningful partial preferences and explains the remaining balanced axes", () => {
+it("keeps the type's own copy when only some axes are balanced, and names those axes where they are read", () => {
   const answers = questionnaires[0].questions.map((q) => q.dimension === "EI" ? q.reverse ? -2 : 2 : 0);
   const profile = calculate(answers);
-  expect(hasClearPreference(profile)).toBe(true);
+  expect(profile.type).toBe("ENFP");
+  expect(clarityOf(profile.values[0])).toBe("marked");
   expect(profile.balanced).toEqual([false, true, true, true]);
-  expect(profileMeta(profile).summary).toContain("暂不做单侧判断");
+  // The result leads with the type's own line and summary, in both languages.
+  expect(profileMeta(profile)).toMatchObject({ line: typeMeta("ENFP").line, summary: typeMeta("ENFP").summary });
+  expect(profileMeta(profile, "en")).toMatchObject({ line: typeMeta("ENFP", "en").line, summary: typeMeta("ENFP", "en").summary });
+  // Each balanced axis says so in its own reading instead.
+  expect(dimensionReading(profile, 1).degree).toBe("几乎均衡");
+  expect(dimensionReading(profile, 1).interpretation).toBe(preferenceDimensions[1].balanced);
 });
 
 it("migrates only valid frozen legacy drafts and rejects reordered or malformed drafts", () => {
@@ -68,7 +80,7 @@ it("changes paid guidance for strength and balance without recycling the public 
   const balanced = buildReportData({ type: "INFJ", values: [55, 55, 55, 55], balanced: [true, true, true, true] }, options);
   expect(strong.strengths[0].body).not.toEqual(mild.strengths[0].body);
   expect(strong.relationships[0].body).not.toEqual(mild.relationships[0].body);
-  expect(balanced.typeLabel).toBe("待探索");
+  expect(balanced.typeLabel).toBe("INFJ");
   expect(balanced.strengths[0].body).toContain("不是“两边都擅长”");
   expect(strong.actionPlan).toHaveLength(7);
   expect(strong.actionPlan[1].body).not.toEqual(balanced.actionPlan[1].body);

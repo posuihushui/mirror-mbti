@@ -4,7 +4,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
   test.describe(`interaction motion: ${reducedMotion}`, () => {
     test.use({ reducedMotion });
 
-    test("question navigation preserves answers and keeps the phone dock inside the viewport", async ({ page }, testInfo) => {
+    test("answers move on by themselves, back preserves them, and the phone dock stays inside the viewport", async ({ page }, testInfo) => {
       if (testInfo.project.name === "mobile") await page.setViewportSize({ width: 320, height: 852 });
       await page.goto("/zh/quiz");
       await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
@@ -14,9 +14,8 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       const next = page.getByRole("button", { name: "下一题", exact: true }).filter({ visible: true });
       const back = page.getByRole("button", { name: "上一题", exact: true }).filter({ visible: true });
       await expect(next).toBeDisabled();
+      // An answer confirms, then moves on by itself; the next question starts unanswered.
       await page.getByRole("button", { name: "非常符合", exact: true }).click();
-      await expect(title).toHaveText(firstTitle);
-      await next.click();
       await expect(title).not.toHaveText(firstTitle);
       await expect(question).toHaveAttribute("data-direction", "forward");
       await expect(next).toBeDisabled();

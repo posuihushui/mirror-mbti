@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- Satori renders a static PNG, not a browser image. */
 import { ImageResponse } from "next/og";
 import QRCode from "qrcode";
-import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
+import { BrandLogo, BrandMark, brandLogoWidth } from "@/components/brand/brand-logo";
 import type { CompareContent } from "@/lib/compare-types";
 import type { Locale } from "@/lib/i18n/locale";
 import { compareMessages } from "@/lib/i18n/messages/compare";
@@ -35,24 +35,27 @@ export async function renderCompareImage(content: CompareContent, locale: Locale
     QRCode.toDataURL(publicUrl, { width: 160, margin: 4, errorCorrectionLevel: "M", color: { dark: "#171b1c", light: "#edf2f3" } }),
   ]);
   return new ImageResponse(
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", padding: 64, background: "#edf2f3", color: "#171b1c", fontFamily: OG_FONT_FAMILY }}>
-      <div style={{ display: "flex", height: 44, flexShrink: 0 }}>{BrandLogo({ locale, width: brandLogoWidth(locale, 194) })}</div>
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: 34, justifyContent: "center" }}>
-        <div style={{ display: "flex", fontSize: 19, letterSpacing: 2, color: "#8d7259" }}>{m.highlightLabel}</div>
-        <div style={{ display: "flex", marginTop: 20, fontSize: en ? 50 : 58, fontWeight: 500, lineHeight: 1.25 }}>{title}</div>
-        <div style={{ display: "flex", marginTop: 24, fontSize: en ? 26 : 30, lineHeight: 1.7, color: "#3d4a4e" }}>{body}</div>
-        {quote && <div style={{ display: "flex", flexDirection: "column", marginTop: 48, paddingLeft: 28, borderLeft: "2px solid #c49473" }}>
-          <div style={{ display: "flex", fontSize: 19, color: "#627176" }}>{m.openingLineLabel}</div>
-          <div style={{ display: "flex", marginTop: 14, fontSize: en ? 34 : 40, lineHeight: 1.6 }}>{quote}</div>
-        </div>}
-        {practice && <div style={{ display: "flex", flexDirection: "column", marginTop: 36, paddingLeft: 28, borderLeft: "1px solid #ccd5d7" }}>
-          <div style={{ display: "flex", fontSize: 19, color: "#627176" }}>{m.practiceLabel}</div>
-          <div style={{ display: "flex", marginTop: 14, fontSize: en ? 24 : 27, lineHeight: 1.6 }}>{practice}</div>
-        </div>}
+    <div style={{ display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", width: "100%", height: "100%", background: "#edf2f3", color: "#171b1c", fontFamily: OG_FONT_FAMILY }}>
+      <div style={{ display: "flex", position: "relative", overflow: "hidden", flexDirection: "column", height: 590, flexShrink: 0, padding: 64, background: "#121718", color: "#edf2f3" }}>
+        <div style={{ display: "flex", position: "absolute", right: -155, bottom: -185, opacity: .1 }}>{BrandMark({ tone: "paper", monochrome: true, size: 560 })}</div>
+        <div style={{ display: "flex", height: 44 }}>{BrandLogo({ locale, tone: "paper", width: brandLogoWidth(locale, 194) })}</div>
+        <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", width: 760 }}>
+          <div style={{ display: "flex", fontSize: 19, letterSpacing: 2, color: "#c49473" }}>{m.highlightLabel}</div>
+          <div style={{ display: "flex", marginTop: 20, fontSize: en ? 52 : 62, fontWeight: 500, lineHeight: 1.2 }}>{title}</div>
+          <div style={{ display: "flex", marginTop: 24, fontSize: en ? 25 : 29, lineHeight: 1.65, color: "#cbd6d8" }}>{body}</div>
+        </div>
       </div>
-      <div style={{ display: "flex", marginTop: 28, height: 196, flexShrink: 0, borderTop: "1px solid #ccd5d7", paddingTop: 24, justifyContent: "space-between", gap: 36, alignItems: "center" }}>
-        <div style={{ display: "flex", flex: 1, flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "flex", fontSize: 21, lineHeight: 1.5 }}>{m.note}</div>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "42px 64px 32px" }}>
+        {quote && <div style={{ display: "flex", flexDirection: "column", paddingLeft: 28, borderLeft: "2px solid #c49473" }}>
+          <div style={{ display: "flex", fontSize: 19, color: "#627176" }}>{m.openingLineLabel}</div>
+          <div style={{ display: "flex", marginTop: 14, fontSize: en ? 34 : 40, lineHeight: 1.55 }}>{quote}</div>
+        </div>}
+        <div style={{ display: "flex", marginTop: "auto", fontSize: 18, lineHeight: 1.5, color: "#627176" }}>{m.note}</div>
+      </div>
+      <div style={{ display: "flex", height: 268, flexShrink: 0, padding: "32px 64px", justifyContent: "space-between", gap: 36, alignItems: "center", background: "#c49473" }}>
+        <div style={{ display: "flex", flex: 1, flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", fontSize: 18, opacity: .7 }}>{m.practiceLabel}</div>
+          {practice && <div style={{ display: "flex", fontSize: en ? 25 : 28, lineHeight: 1.55 }}>{practice}</div>}
           <div style={{ display: "flex", fontSize: 17 }}>{m.imageScan}</div>
         </div>
         <img src={qr} alt="" width={160} height={160} />

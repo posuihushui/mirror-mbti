@@ -25,10 +25,11 @@ describe("share-v1 public content", () => {
     expect(JSON.stringify(snapshot)).not.toMatch(/INFJ|share-v1:EI|values|balanced|resultId/);
     expect(snapshot.lines).toHaveLength(3);
   });
-  it("gives unclear types no determinate letters and notes partial balance", () => {
+  it("publishes a balanced profile's letters only as a reference, always with a note", () => {
     for (const locale of ["zh", "en"] as const) {
       const snapshot = buildPublicShareSnapshot(balanced, locale, defaultShareSelection(balanced), true, true);
-      expect(snapshot.typeLabel).not.toMatch(/ESTJ|INFP/);
+      expect(snapshot.typeLabel).toBe("ESTJ");
+      expect(snapshot.typeNote).toBeTruthy();
       expect(snapshot.dimensions).toHaveLength(4);
       const partial = { ...clear, balanced: [false, false, false, true] };
       expect(buildPublicShareSnapshot(partial, locale, defaultShareSelection(partial), true, false).typeNote).toBeTruthy();

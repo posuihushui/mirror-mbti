@@ -34,27 +34,27 @@ export default async function AboutPage() {
   return (
     <>
       <AppHeader variant="page" title={t.headerTitle} backHref={href(locale, "/")} path="/about" />
-      <main className="mx-auto max-w-[560px] px-[27px] pt-4 pb-[135px] md:px-10 md:pt-[60px] md:pb-[80px]">
-        <p className="eyebrow text-[#738087]">{t.eyebrow}</p>
-        <h1 className="mt-[18px] text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[32px]">
+      <main className="mx-auto max-w-2xl px-6 pt-8 pb-[135px] md:px-10 md:pt-14 md:pb-20">
+        <p className="eyebrow text-mist">{t.eyebrow}</p>
+        <h1 className="mt-4 text-3xl leading-heading md:text-4xl">
           {t.headerTitle}
         </h1>
-        <p className="mt-[27px] text-[14px] leading-[2] text-[#78878e] whitespace-pre-line">
+        <p className="mt-5 text-base text-slate whitespace-pre-line">
           {siteMessages[locale].about.intro}
         </p>
-        <dl className="mt-2">
+        <dl className="mt-8 border-t border-line">
           {items.map(([q, a]) => (
-            <div key={q} className="border-t border-line">
-              <dt className="py-[15px] text-[14px] leading-[1.7]">{q}</dt>
-              <dd className="m-0 pb-5 text-[13px] leading-[2.1] text-[#6d7f88]">{a}</dd>
+            <div key={q} className="border-b border-line py-6">
+              <dt className="text-lg leading-heading font-medium">{q}</dt>
+              <dd className="m-0 mt-2 text-base text-slate">{a}</dd>
             </div>
           ))}
         </dl>
-        <p className="mt-6 text-[10px] leading-[1.8] text-[#829094]">
+        <p className="mt-6 text-xs text-mist">
           {t.disclaimer}
         </p>
-        <div className="mt-6 hidden md:block">
-          <PrimaryButton href={href(locale, "/quiz")} className="max-w-[246px]" {...trackAttrs("start_quiz", "page_cta")}>
+        <div className="mt-8 hidden md:block">
+          <PrimaryButton href={href(locale, "/quiz")} className="max-w-xs" {...trackAttrs("start_quiz", "page_cta")}>
             {t.start}
           </PrimaryButton>
         </div>

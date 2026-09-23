@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { questions } from "../../src/lib/questionnaires";
+import { answerQuestion } from "./quiz-helpers";
 
 type TrackedEvent = { name: string; params: Record<string, unknown> };
 
@@ -54,10 +55,8 @@ test.describe("analytics", () => {
     await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
     await expectEvent(page, "quiz_start", { questionnaire_id: "legacy32-v1", question_count: 32, resumed: "false" });
 
-    for (const question of questions) {
-      await expect(page.getByRole("group")).toBeVisible();
-      await page.getByRole("group").getByRole("button").nth(question.reverse ? 4 : 0).click();
-      await page.getByRole("button", { name: /下一题|查看我的结果|查看结果/ }).first().click();
+    for (const [index, question] of questions.entries()) {
+      await answerQuestion(page, question.reverse ? 4 : 0, index === questions.length - 1);
     }
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     const resultId = new URL(page.url()).pathname.split("/").pop()!;
@@ -67,7 +66,7 @@ test.describe("analytics", () => {
     await expectEvent(page, "quiz_submit", { questionnaire_id: "legacy32-v1" });
     await expectEvent(page, "quiz_complete", { questionnaire_id: "legacy32-v1", question_count: 32 });
     await expectEvent(page, "page_view", { page_type: "result", page_location: `${origin}/zh/result/[id]` });
-    await expectEvent(page, "result_view", { is_sample: "false", result_owner: "true", result_clear: "true", result_unlocked: "false" });
+    await expectEvent(page, "result_view", { is_sample: "false", result_owner: "true", result_even: "false", result_uniform: "false", result_unlocked: "false" });
     await expectEvent(page, "view_item", { currency: "CNY", value: 6.9 });
 
     await page.getByRole("button", { name: /解锁报告与/ }).first().click();

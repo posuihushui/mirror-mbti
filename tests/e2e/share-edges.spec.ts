@@ -22,7 +22,7 @@ for (const locale of ["zh", "en"] as const) test(`guide generated image, copy, a
  const response=page.waitForResponse(x=>x.url().endsWith('/api/shares')&&x.request().method()==="POST");
  await dialog.getByRole("button",{name:t.publish,exact:true}).click();
  const share=(await(await response).json()).data;
- expect(share.snapshot.typeLabel).toBe(locale==="en"?"Unfolding":"待探索");
+ expect(share.snapshot.typeLabel).toBe("INFP"); expect(share.snapshot.typeNote).toBeTruthy();
  expect(share.snapshot.dimensions.every((x:{state:string})=>x.state==="balanced")).toBe(true);
  expect(JSON.stringify(share.snapshot)).not.toMatch(/ESTJ|INFJ|resultId|answers|values/);
  await expect(dialog.locator('img')).toBeVisible();

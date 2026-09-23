@@ -1,6 +1,5 @@
-import Link from "next/link";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { PrimaryButton } from "@/components/site/primary-button";
+import { TextLink } from "@/components/site/text-link";
 import { trackAttrs } from "@/lib/analytics/events";
 import { href } from "@/lib/i18n/locale";
 import { resultMessages } from "@/lib/i18n/messages/result";
@@ -20,40 +19,39 @@ export async function SampleCta({ secondary }: Props) {
   const t = resultMessages[locale].sampleCta;
 
   return (
-    <section className="mx-4 block bg-night-deep px-[27px] py-8 text-[#eff3f4] md:mx-0 md:grid md:grid-cols-2 md:items-center md:gap-[45px] md:p-10 xl:gap-[90px] xl:px-[60px] xl:py-14">
+    <section className="mx-4 block bg-night-deep px-6 py-8 text-paper md:mx-0 md:grid md:grid-cols-2 md:items-center md:gap-12 md:p-10 xl:gap-20 xl:px-14 xl:py-14">
       <div>
-        <p className="eyebrow text-[9px] text-[#99a6a9]">{t.eyebrow}</p>
-        <h2 className="mt-[25px] text-[29px] leading-[1.55] md:text-[35px]">{t.heading}</h2>
-        <p className="mt-[27px] text-[11px] leading-[2] text-[#a1afb2] md:text-[12px]">
+        <p className="eyebrow text-night-mist">{t.eyebrow}</p>
+        <h2 className="mt-5 text-3xl leading-heading md:text-4xl">{t.heading}</h2>
+        <p className="mt-5 text-sm text-night-body">
           {t.body}
         </p>
       </div>
-      <div className="mt-[30px] md:mt-0">
-        <div className="flex items-center gap-[13px] xl:gap-6">
+      <div className="mt-8 md:mt-0">
+        <div className="flex items-center gap-4 xl:gap-6">
           {t.meta.map(([value, label], i) => (
             <span
               key={label}
               className={
-                "flex items-center gap-1 text-[14px] font-medium whitespace-nowrap md:gap-[5px] md:text-[20px]" +
-                (i > 0 ? " border-l border-[#33403f] pl-[13px] xl:pl-6" : "")
+                "flex items-baseline gap-1.5 text-lg font-medium whitespace-nowrap md:text-xl" +
+                (i > 0 ? " border-l border-night-line pl-4 xl:pl-6" : "")
               }
             >
-              {value} <small className="text-[8px] font-normal text-[#9eacb0] md:text-[11px]">{label}</small>
+              {value} <small className="text-xs font-normal text-night-mist">{label}</small>
             </span>
           ))}
         </div>
-        <div className="mt-[30px] hidden md:block">
+        <div className="mt-8 hidden md:block md:max-w-sm">
           <PrimaryButton href={href(locale, "/quiz")} light {...trackAttrs("start_quiz", "sample_cta")}>
             {t.start}
           </PrimaryButton>
         </div>
         {secondary && (
-          <Link href={secondary.href} className="text-link mt-[18px] text-[12px] text-[#d8e0e2]" {...trackAttrs("read_sample_report", "sample_cta")}>
+          <TextLink href={secondary.href} className="mt-4 text-night-body hover:text-paper" {...trackAttrs("read_sample_report", "sample_cta")}>
             {secondary.label}
-            <ArrowUpRight size={15} />
-          </Link>
+          </TextLink>
         )}
-        <p className="mt-[22px] text-[9px] leading-[1.9] text-[#86999f] md:mt-[15px] md:text-[10px]">
+        <p className="mt-4 text-xs text-night-mist">
           {t.footnote}
         </p>
       </div>

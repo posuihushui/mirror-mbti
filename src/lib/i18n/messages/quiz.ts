@@ -5,7 +5,7 @@ const zh = {
   versions: {
     eyebrow: "MBTI 测试体验 · 选择版本",
     heading: "按你的节奏，开始探索。",
-    intro: "回想最近一段时间的日常状态，而非理想中的自己。原创自我探索问卷，非官方 MBTI 量表；两个版本均未经过心理测量学验证，题量更多不代表更准确。",
+    intro: "回想最近一段时间的日常状态，而非理想中的自己。原创自我探索问卷，非官方 MBTI 量表。",
     sectionLabel: (count: number, name: string) => `${count} 题${name}`,
     title: (count: number, name: string) => `${count} 题 · ${name}`,
     badgeMore: "更多场景",
@@ -14,7 +14,7 @@ const zh = {
     saved: (answered: number, count: number) => `已保存 ${answered}/${count} 题，可接着上次的位置继续。`,
     resume: (count: number, name: string) => `继续 ${count} 题${name}`,
     start: (count: number, name: string) => `开始 ${count} 题${name}`,
-    footnote: `各版本进度分别保存，可暂停、检查已答题或重新开始。预计用时为初步估计，跨版本分数不宜直接比较。测试与概览免费。`,
+    footnote: `各版本进度分别保存，可暂停、检查已答题或重新开始。两个版本均未经过心理测量学验证，题量更多不代表更准确；预计用时为初步估计，跨版本分数不宜直接比较。测试与概览免费。`,
   },
   runner: {
     incomplete: "请先补全未回答的题目",
@@ -56,7 +56,7 @@ const en: typeof zh = {
   versions: {
     eyebrow: "MBTI®-STYLE TEST · CHOOSE A VERSION",
     heading: "Explore at your own pace.",
-    intro: "Think about your everyday life lately, not your ideal self. These are original self-exploration questionnaires, not the official MBTI® instrument; neither version has been psychometrically validated, and more items don’t mean more accuracy.",
+    intro: "Think about your everyday life lately, not your ideal self. An original self-exploration questionnaire — not the official MBTI® instrument.",
     sectionLabel: (count: number, name: string) => `${count}-item ${name}`,
     title: (count: number, name: string) => `${count} items · ${name}`,
     badgeMore: "More situations",
@@ -65,7 +65,7 @@ const en: typeof zh = {
     saved: (answered: number, count: number) => `${answered}/${count} answered and saved — pick up where you left off.`,
     resume: (count: number, name: string) => `Continue ${count}-item ${name}`,
     start: (count: number, name: string) => `Start ${count}-item ${name}`,
-    footnote: `Progress is saved per version, so you can pause, review answers or start over. Times are rough estimates, and scores across versions aren’t directly comparable. The test and overview are free.`,
+    footnote: `Progress is saved per version, so you can pause, review answers or start over. Neither version has been psychometrically validated, and more items don’t mean more accuracy; times are rough estimates, and scores across versions aren’t directly comparable. The test and overview are free.`,
   },
   runner: {
     incomplete: "Please answer the remaining questions first",

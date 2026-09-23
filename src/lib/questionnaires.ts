@@ -9,7 +9,8 @@ export const LEGACY_QUESTIONNAIRE_ID = "legacy32-v1";
 export const STANDARD_QUESTIONNAIRE_ID = "standard64-v1";
 export const EN_QUICK_QUESTIONNAIRE_ID = "en32-v1";
 export const EN_STANDARD_QUESTIONNAIRE_ID = "en64-v1";
-export const SCORING_VERSION = "preference-v1";
+// v2 assigns four letters to every completed questionnaire: an exact tie now goes to I / N / F / P.
+export const SCORING_VERSION = "preference-v2";
 export const REPORT_VERSION = "context-v2";
 
 // Frozen legacy items and order. Edits belong to a new questionnaire version.

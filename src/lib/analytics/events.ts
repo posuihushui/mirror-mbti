@@ -54,7 +54,8 @@ export type CtaLocation =
   | "sample_notice"
   | "unlock_panel"
   | "result_panel"
-  | "unclear_result"
+  | "result_bar"
+  | "home_sample"
   | "history_item"
   | "payment_sheet"
   | "payment_success"
@@ -119,11 +120,12 @@ export type AnalyticsEvents = {
   quiz_storage_unavailable: Quiz;
 
   // Result, report and history
-  result_view: Quiz & { is_sample: boolean; result_owner: boolean; result_clear: boolean; result_unlocked: boolean };
+  result_view: Quiz & { is_sample: boolean; result_owner: boolean; result_even: boolean; result_uniform: boolean; result_unlocked: boolean };
   result_answers_review: { outcome: "loaded" | "failed" };
   report_view: Quiz & { is_sample: boolean };
   report_chapter_view: { chapter_number: number; nav_method: "tab" | "sidebar" | "next" };
   report_tab_switch: { tab: "strengths" | "blindspots" };
+  report_practice_check: { day_number: number; checked: boolean };
   my_report_view: { record_count: number; unlocked_count: number };
   recover_submit: Empty;
   recover_success: Empty;

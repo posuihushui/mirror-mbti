@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
 
 /**
+ * This page never renders — it only throws `notFound()` — so dev-time instant-navigation validation,
+ * which renders every page, reported it as a blocked segment. It has nothing to validate.
+ */
+export const instant = false;
+
+/**
  * Catch-all for URLs that match no page in this language. Without it an unknown `/zh/...` URL falls
  * through to `app/global-not-found.tsx`, which sits outside `[lang]` and is written in Chinese;
  * here `[lang]/not-found.tsx` answers in the language of the URL instead.

@@ -16,7 +16,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         unstyled: true,
         classNames: {
           toast:
-            "flex w-max max-w-[90vw] items-center justify-center rounded-[5px] bg-[#192427] px-5 py-3 text-[11px] leading-[1.5] whitespace-nowrap text-white",
+            "flex w-max max-w-[90vw] items-center justify-center rounded-[5px] bg-[#192427] px-5 py-3 text-xs whitespace-nowrap text-white",
         },
       }}
       {...props}

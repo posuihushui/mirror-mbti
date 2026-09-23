@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import type { TrackAttrs } from "@/lib/analytics/events";
@@ -11,18 +11,21 @@ type Props = ButtonProps &
   Partial<TrackAttrs> & {
     children: ReactNode;
     light?: boolean;
+    /** → moves within the site (default); ↗ only when the button leaves it, e.g. for a hosted checkout. */
+    icon?: "next" | "external" | "none";
     /** Render as a `<Link>`; usable from Server Components. */
     href?: string;
     prefetch?: boolean;
   };
 
-/** `.primary` pill with the trailing arrow. Spread `trackAttrs(...)` to count clicks as `cta_click`. */
-export function PrimaryButton({ children, light = false, href, prefetch, className, ...props }: Props) {
+/** `.primary` pill with a trailing arrow. Spread `trackAttrs(...)` to count clicks as `cta_click`. */
+export function PrimaryButton({ children, light = false, icon = "next", href, prefetch, className, ...props }: Props) {
   const variant = light ? "pillLight" : "pill";
+  const Icon = icon === "external" ? ArrowUpRight : ArrowRight;
   const content = (
     <>
       {children}
-      <ArrowUpRight size={19} weight="light" />
+      {icon === "none" ? null : <Icon size={19} weight="light" />}
     </>
   );
   if (href) {

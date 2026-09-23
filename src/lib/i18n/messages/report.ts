@@ -4,13 +4,18 @@ import type { Locale } from "@/lib/i18n/locale";
 const zh = {
   aside: {
     eyebrow: "你的内在世界",
-    footnote: "你不只是\n四个字母。",
     reportOf: (name: string, sample: boolean) => `${name} · ${sample ? "示例" : "本次"}人格报告`,
     sampleBadge: "示例报告",
     unlocked: (demo: boolean) => `已解锁${demo ? " · 演示" : ""}`,
     mobileLabel: (sample: boolean, demo: boolean) => (sample ? "示例报告" : `完整报告${demo ? " · 演示" : ""}`),
   },
   one: {
+    heading: "先看清偏好，\n再慢慢理解自己。",
+    lead: "这一章把四个维度逐一展开：你常用的长处，和可以试试的一步。接近均衡的维度，两端都会写到。",
+    needsHeading: "四个维度，四种需要",
+    strengthLabel: "常用的长处",
+    growthLabel: "可以试试",
+    bothLabel: "两端都可能出现",
     quote: "你不需要符合一个类型，\n你只需要更了解自己。",
     body: "这些倾向来自你本次的回答。环境、角色和最近的经历，都可能影响你的表达方式。把它当作观察自己的起点，看看哪些描述与你的生活相呼应。",
   },
@@ -32,6 +37,8 @@ const zh = {
     weekIntro: "每天只做一个小尝试。以下安排根据本次四维作答选择，不是效果保证；不符合你的部分可以跳过或调整。",
     stepHeading: "记录一次让你感到\n“这很像我”的时刻。",
     stepQuestions: "当时你在做什么？和谁在一起？\n哪一个需要被满足了？",
+    dayDone: (day: string) => `标记“${day}”为已完成`,
+    dayProgress: (done: number, total: number) => `已完成 ${done}/${total} 天 · 进度只保存在这个浏览器`,
     closing: "一周后再回看这段记录。真实的生活体验，比任何四个字母都更能帮助你理解自己。",
   },
   nav: {
@@ -49,13 +56,18 @@ const zh = {
 const en: typeof zh = {
   aside: {
     eyebrow: "YOUR INNER WORLD",
-    footnote: "YOU ARE MORE\nTHAN FOUR LETTERS.",
     reportOf: (name: string, sample: boolean) => `${sample ? "Sample report" : "Your report"} · ${name}`,
     sampleBadge: "Sample report",
     unlocked: (demo: boolean) => `Unlocked${demo ? " · Demo" : ""}`,
     mobileLabel: (sample: boolean, demo: boolean) => (sample ? "Sample report" : `Full report${demo ? " · Demo" : ""}`),
   },
   one: {
+    heading: "See your preferences clearly first,\nthen get to know yourself slowly.",
+    lead: "This chapter opens each of your four dimensions: the strength you tend to use, and one thing to try. Where a dimension sits near the middle, both ends are covered.",
+    needsHeading: "Four dimensions, four needs",
+    strengthLabel: "A strength you use",
+    growthLabel: "Something to try",
+    bothLabel: "Either end may show up",
     quote: "You don’t need to fit a type.\nYou only need to know yourself better.",
     body: "These leanings come from your answers this time. Your environment, roles and recent experiences can all shape how you show up. Treat this as a starting point for observing yourself, and notice which descriptions echo your life.",
   },
@@ -77,6 +89,8 @@ const en: typeof zh = {
     weekIntro: "Try just one small thing each day. These were chosen from your answers on the four dimensions and are not a guarantee of results; skip or adjust anything that doesn’t fit.",
     stepHeading: "Note one moment that made you think,\n“That’s so me.”",
     stepQuestions: "What were you doing? Who were you with?\nWhich need was being met?",
+    dayDone: (day: string) => `Mark “${day}” as done`,
+    dayProgress: (done: number, total: number) => `${done}/${total} days done · saved in this browser only`,
     closing: "Look back at this note in a week. Real life experience helps you understand yourself more than any four letters can.",
   },
   nav: {

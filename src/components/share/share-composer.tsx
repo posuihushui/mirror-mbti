@@ -1,5 +1,6 @@
 "use client";
 
+import { TextLink } from "@/components/site/text-link";
 import { useEffect, useRef, useState } from "react";
 import { Check } from "@phosphor-icons/react";
 import { href, type Locale } from "@/lib/i18n/locale";
@@ -66,23 +67,23 @@ export function ShareComposer({ resultId, locale, options, onRequest }: { result
     <p role="status" className={styles.success}><Check className={styles.check} size={18} aria-hidden="true" />{m.created}</p>
     <p className="text-xs leading-relaxed">{m.publicScope}：{m.linesOnly}{created.snapshot.typeLabel ? ` · ${m.referenceType}` : ""}{created.snapshot.dimensions ? ` · ${m.qualitativeDimensions}` : ""}</p>
     <ShareActions key={created.id} url={created.url} imageUrl={created.imageUrl} token={created.token} locale={locale} fallback={<ShareCard snapshot={created.snapshot} draft />} />
-    <div className="flex flex-wrap items-center gap-4"><button type="button" className="text-link min-h-11" onClick={() => { setCreated(null); setAdjusting(true); edit(); }}>{m.adjust}</button><a href={href(locale, "/my/shares")} className="text-link min-h-11">{m.myShares}</a></div>
+    <div className="flex flex-wrap items-center gap-4"><button type="button" className="text-link min-h-11" onClick={() => { setCreated(null); setAdjusting(true); edit(); }}>{m.adjust}</button><TextLink href={href(locale, "/my/shares")} prefetch={false}>{m.myShares}</TextLink></div>
   </div>;
   return <div className="mt-5 space-y-5" data-share-state={pending ? "submitting" : "editing"}>
     {adjusting && <p className="text-xs leading-relaxed">{m.newShareNotice}</p>}
     <fieldset disabled={pending} className="space-y-3">
       <legend className="mb-3 text-sm">{m.chooseThree} · {m.selected} <NumberMotion value={selected.length} /> / 3</legend>
-      {options.candidates.map((item) => <label key={item.id} className={`${styles.candidate} flex cursor-pointer items-start gap-3 rounded-[4px] border border-line p-3 text-sm leading-[1.8]`} data-checked={selected.includes(item.id)}>
+      {options.candidates.map((item) => <label key={item.id} className={`${styles.candidate} flex cursor-pointer items-start gap-3 rounded-[4px] border border-line p-3 text-sm`} data-checked={selected.includes(item.id)}>
         <input type="checkbox" checked={selected.includes(item.id)} onChange={() => choose(item.id)} className="mt-1 size-4 shrink-0 accent-ink" />
         <span className="min-w-0 flex-1">{item.text}</span>{selected.includes(item.id) && <Check aria-hidden="true" size={16} className={`${styles.check} mt-1 shrink-0`} />}
       </label>)}
       <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={showType} onChange={(event) => { edit(); setShowType(event.target.checked); }} className="size-4 shrink-0 accent-ink" />{m.showType}</label>
       <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={showDimensions} onChange={(event) => { edit(); setShowDimensions(event.target.checked); }} className="size-4 shrink-0 accent-ink" />{m.showDimensions}</label>
     </fieldset>
-    <p className="text-xs leading-[1.8] text-mist">{m.publicWarning}</p>
+    <p className="text-xs text-mist">{m.publicWarning}</p>
     <section aria-label={m.preview} className="space-y-3"><ShareCard snapshot={snapshot} draft /><p className="rounded border border-dashed border-line p-4 text-center text-xs text-mist">{m.previewPlaceholder}</p></section>
     <p role="status" className="text-sm leading-relaxed">{error || (pending ? m.publishing : "")}</p>
     <button type="button" onClick={publish} disabled={selected.length !== 3 || pending} className="pill min-h-11 w-full disabled:opacity-40">{pending ? m.publishing : m.publish}</button>
-    {options.recentShares.length > 0 && <a href={href(locale, "/my/shares")} className="text-link inline-flex min-h-11 items-center">{m.myShares}</a>}
+    {options.recentShares.length > 0 && <TextLink href={href(locale, "/my/shares")} prefetch={false}>{m.myShares}</TextLink>}
   </div>;
 }

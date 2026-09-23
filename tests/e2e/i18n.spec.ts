@@ -1,15 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
 import { EN_QUICK_QUESTIONNAIRE_ID, getQuestionnaire } from "../../src/lib/questionnaires";
+import { answerQuestion } from "./quiz-helpers";
 
 const enQuick = getQuestionnaire(EN_QUICK_QUESTIONNAIRE_ID)!;
 
 /** A consistent first-pole preference on the English 32-item version, including reverse-scored items. */
 async function answerAllEnglish(page: Page) {
   await page.getByRole("button", { name: "Start 32-item Quick" }).click();
-  for (const question of enQuick.questions) {
-    await expect(page.getByRole("group")).toBeVisible();
-    await page.getByRole("group").getByRole("button").nth(question.reverse ? 4 : 0).click();
-    await page.getByRole("button", { name: /^(Next|See my result|See result)$/ }).first().click();
+  for (const [index, question] of enQuick.questions.entries()) {
+    await answerQuestion(page, question.reverse ? 4 : 0, index === enQuick.questions.length - 1);
   }
 }
 

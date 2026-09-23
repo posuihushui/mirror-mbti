@@ -1,7 +1,7 @@
 "use client";
 
+import { TextLink } from "@/components/site/text-link";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { AccessActions } from "@/components/pairing/access-actions";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
@@ -63,24 +63,24 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between border-b border-line pb-5">
-        <span className="text-[14px] font-medium">
+        <span className="text-sm font-medium">
           {t.productLabel}
-          <small className="mt-2 block text-[10px] font-normal text-[#7c8b93]">{order.provider === "mock" ? t.demoOrder : t.oneTime}</small>
+          <small className="mt-2 block text-xs font-normal text-mist">{order.provider === "mock" ? t.demoOrder : t.oneTime}</small>
         </span>
-        <strong className="text-[39px] font-medium tracking-[-2px]">
-          <small className="mr-1 text-[20px]">{messages.currency}</small>
+        <strong className="text-4xl font-medium tracking-tight">
+          <small className="mr-1 text-xl">{messages.currency}</small>
           {priceLabel}
         </strong>
       </div>
-      <p className="mt-4 text-xs leading-[1.8] text-mist">{pairingMessages[locale].feeRule}</p>
-      <p role="status" className="mt-6 text-[13px] text-[#4f5c61]">
+      <p className="mt-4 text-xs text-mist">{pairingMessages[locale].feeRule}</p>
+      <p role="status" className="mt-6 text-sm text-mist">
         {t.labels[order.status]}
         {pending ? "…" : ""}
       </p>
       {pending && qr && (
         <div className="mt-5 flex flex-col items-center gap-3">
           <div className="size-[200px] bg-white p-2 [&_svg]:size-full" dangerouslySetInnerHTML={{ __html: qr }} />
-          <p className="text-[10px] text-[#7e8d93]">{t.scanHint}</p>
+          <p className="text-xs text-mist">{t.scanHint}</p>
         </div>
       )}
       <div className="mt-8">
@@ -92,12 +92,14 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
           </PrimaryButton>
         )}
       </div>
-      <p className="mt-4 text-[10px] leading-[1.8] text-[#829094]">
+      <p className="mt-4 text-xs text-mist">
         {t.note}
       </p>
       <div className="mt-6 border-t border-line pt-5"><OrderReceipt orderId={order.id} /></div>
-      <Link href={href(locale, "/my/report")} prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center" {...trackAttrs("my_report", "pay_status")}>{t.allRecords}</Link>
-      <Link href={href(locale, "/help#contact")} className="text-link mt-3 flex min-h-11" {...trackAttrs("view_help", "pay_status")}>{t.help}</Link>
+      <div className="mt-3 flex flex-col">
+        <TextLink href={href(locale, "/my/report")} prefetch={false} {...trackAttrs("my_report", "pay_status")}>{t.allRecords}</TextLink>
+        <TextLink href={href(locale, "/help#contact")} {...trackAttrs("view_help", "pay_status")}>{t.help}</TextLink>
+      </div>
     </div>
   );
 }

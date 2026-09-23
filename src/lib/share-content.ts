@@ -104,7 +104,8 @@ export function buildPublicShareSnapshot(profile: Profile, locale: Locale, selec
   const snapshot: PublicShareSnapshot = { version: SHARE_CONTENT_VERSION, locale, lines: candidates.filter(candidate => selectedIds.includes(candidate.id)).map(candidate => candidate.text) as [string, string, string], disclaimer: t.disclaimer };
   if (showType) {
     snapshot.typeLabel = profileMeta(profile, locale).typeLabel;
-    if (profile.balanced.some(Boolean) && !profile.balanced.every(Boolean)) snapshot.typeNote = t.partialBalanced;
+    if (profile.balanced.every(Boolean)) snapshot.typeNote = t.allBalanced;
+    else if (profile.balanced.some(Boolean)) snapshot.typeNote = t.partialBalanced;
   }
   if (showDimensions) snapshot.dimensions = buildPublicDimensions(profile, locale);
   return snapshot;

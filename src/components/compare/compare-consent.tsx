@@ -1,4 +1,5 @@
 "use client";
+import { TextLink } from "@/components/site/text-link";
 import { useEffect, useRef, useState } from "react";
 import { href, type Locale } from "@/lib/i18n/locale";
 
@@ -42,20 +43,20 @@ export function CompareConsent(props: Props) {
     } catch { if (active.current) setError(m.failed); }
     finally { clearTimeout(timeout); busy.current = false; if (active.current) setPending(false); }
   }
-  if (invitation) return <div className="mt-5 space-y-4"><p role="status" className={styles.status}>{m.created}</p><InvitationActions url={invitation.url} locale={props.locale} /><a href={href(props.locale, "/my/pairing")} className="text-link inline-flex min-h-11 text-sm">{pairingUiMessages[props.locale].center}</a></div>;
+  if (invitation) return <div className="mt-5 space-y-4"><p role="status" className={styles.status}>{m.created}</p><InvitationActions url={invitation.url} locale={props.locale} /><TextLink href={href(props.locale, "/my/pairing")} prefetch={false}>{pairingUiMessages[props.locale].center}</TextLink></div>;
   return <div className="space-y-5" data-compare-consent={props.kind}>
     <PreferenceSummary snapshot={props.snapshot} locale={props.locale} title={m.you} />
-    <p className="text-sm leading-[1.8]">{props.kind === "host" ? m.hostConsent : m.guestConsent}</p><p className="text-xs leading-[1.8] text-mist">{props.kind === "host" ? m.hostConsentDetail : m.guestConsentDetail}</p>
+    <p className="text-sm">{props.kind === "host" ? m.hostConsent : m.guestConsent}</p><p className="text-xs text-mist">{props.kind === "host" ? m.hostConsentDetail : m.guestConsentDetail}</p>
     {props.kind === "host" && <div>
-      <label htmlFor="host-note" className="block text-sm leading-[1.8]">{m.hostNoteLabel}</label>
+      <label htmlFor="host-note" className="block text-sm">{m.hostNoteLabel}</label>
       <input id="host-note" type="text" value={note} disabled={pending} maxLength={HOST_NOTE_MAX}
         onChange={(event) => setNote(event.target.value)} placeholder={m.hostNotePlaceholder}
         className="mt-2 block min-h-11 w-full rounded-[4px] border border-line bg-card px-4 text-sm outline-none placeholder:text-mist focus-visible:border-warm" />
-      <p className="mt-2 text-xs leading-[1.8] text-mist">{m.hostNoteHint(HOST_NOTE_MAX)}</p>
+      <p className="mt-2 text-xs text-mist">{m.hostNoteHint(HOST_NOTE_MAX)}</p>
     </div>}
-    <label className="flex min-h-11 items-start gap-3 text-sm leading-[1.8]"><input type="checkbox" checked={consent} disabled={pending} onChange={(event) => setConsent(event.target.checked)} className="mt-1 size-4 shrink-0 accent-ink" />{m.agree}</label>
+    <label className="flex min-h-11 items-start gap-3 text-sm"><input type="checkbox" checked={consent} disabled={pending} onChange={(event) => setConsent(event.target.checked)} className="mt-1 size-4 shrink-0 accent-ink" />{m.agree}</label>
     <p role="status" className="text-sm">{error || (pending ? m.generating : "")}</p><button type="button" className="pill min-h-11 w-full disabled:opacity-40" disabled={!consent || pending} onClick={submit}>{pending ? m.generating : props.kind === "host" ? pairingMessages[props.locale].hostAgree : pairingMessages[props.locale].guestAgree}</button>
-    <a className="text-link inline-flex min-h-11 text-sm" href={href(props.locale, "/my/pairing")}>{pairingUiMessages[props.locale].center}</a>
+    <TextLink href={href(props.locale, "/my/pairing")} prefetch={false}>{pairingUiMessages[props.locale].center}</TextLink>
     <noscript><p>{share.noJs}</p></noscript>
   </div>;
 }

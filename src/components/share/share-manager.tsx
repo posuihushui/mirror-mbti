@@ -1,5 +1,6 @@
 "use client";
 
+import { TextLink } from "@/components/site/text-link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { href, type Locale } from "@/lib/i18n/locale";
@@ -54,14 +55,14 @@ export function ShareManager({ items, nextCursor, locale }: { items: OwnerShareI
     finally { clearTimeout(timer); if (alive.current) setClosing(false); }
   }
   return <div className="space-y-8" data-share-manager>
-    {!list.length && <p>{m.empty} <a className="text-link" href={href(locale, "/my/report")}>{m.myReports}</a></p>}
+    {!list.length && <p>{m.empty} <TextLink href={href(locale, "/my/report")} prefetch={false}>{m.myReports}</TextLink></p>}
     {list.map((item) => {
       const revoked = !!item.revokedAt || closed.includes(item.id);
       return <article key={item.id} id={`share-row-${item.id}`} tabIndex={-1} className="space-y-4 border-b border-line pb-8" data-share-status={revoked ? "closed" : "active"}>
         <div className="flex flex-wrap justify-between gap-3 text-xs"><time dateTime={item.createdAt}>{new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(item.createdAt))}</time><span className={revoked ? styles.status : undefined}>{revoked ? m.revoked : m.active}</span></div>
         <ShareCard snapshot={item.snapshot} />
         <p className="text-xs leading-relaxed">{m.publicScope}：{m.linesOnly}{item.snapshot.typeLabel ? ` · ${m.referenceType}` : ""}{item.snapshot.dimensions ? ` · ${m.qualitativeDimensions}` : ""}</p>
-        {!revoked && <div className="flex flex-wrap gap-4 print:hidden"><button type="button" className="pill min-h-11" onClick={(event) => { trigger.current = event.currentTarget; setPreview(item); }}>{m.preview} · {m.copy}</button><button type="button" className="text-link min-h-11" disabled={closing} onClick={(event) => { trigger.current = event.currentTarget; setError(""); setConfirm(item); }}>{m.closeShare}</button><a href={href(locale, `/my/pairing?result=${encodeURIComponent(item.resultId)}&share=${encodeURIComponent(item.id)}`)} className="text-link min-h-11 text-sm">{pairingUiMessages[locale].center}</a></div>}
+        {!revoked && <div className="flex flex-wrap gap-4 print:hidden"><button type="button" className="pill min-h-11" onClick={(event) => { trigger.current = event.currentTarget; setPreview(item); }}>{m.preview} · {m.copy}</button><button type="button" className="text-link min-h-11" disabled={closing} onClick={(event) => { trigger.current = event.currentTarget; setError(""); setConfirm(item); }}>{m.closeShare}</button><TextLink href={href(locale, `/my/pairing?result=${encodeURIComponent(item.resultId)}&share=${encodeURIComponent(item.id)}`)} prefetch={false}>{pairingUiMessages[locale].center}</TextLink></div>}
       </article>;
     })}
     <p role="status" className="text-sm">{!confirm && error}</p>

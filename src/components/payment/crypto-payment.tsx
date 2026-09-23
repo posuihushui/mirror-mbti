@@ -124,7 +124,7 @@ export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }:
 
   return (
     <div className="mt-[18px] md:mt-[25px]">
-      <p className="text-[12px] text-mist">{t.choose}</p>
+      <p className="text-xs text-mist">{t.choose}</p>
       <div role="tablist" aria-label={t.networkLabel} className="mt-3 grid grid-cols-2 gap-2">
         {networks.map((n) => (
           <button
@@ -134,15 +134,15 @@ export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }:
             aria-selected={network === n}
             disabled={creating}
             onClick={() => choose(n)}
-            className={cn("flex min-h-[58px] min-w-0 flex-col items-start justify-center rounded-[3px] border border-[#cdd9dc] px-[15px] text-left", network === n && "border-ink")}
+            className={cn("flex min-h-[58px] min-w-0 flex-col items-start justify-center rounded-[3px] border border-line px-[15px] text-left", network === n && "border-ink")}
           >
-            <span className="text-[13px] font-medium">{t.networks[n]}</span>
-            <small className="mt-1 text-[9px] text-[#7e8d93]">{t.networkNotes[n]}</small>
+            <span className="text-sm font-medium">{t.networks[n]}</span>
+            <small className="mt-1 text-xs text-mist">{t.networkNotes[n]}</small>
           </button>
         ))}
       </div>
       {creating && (
-        <p role="status" className="mt-4 flex items-center gap-2 text-[11px] text-mist">
+        <p role="status" className="mt-4 flex items-center gap-2 text-xs text-mist">
           <CircleNotch className="animate-spin" size={16} />
           {t.creating}
         </p>
@@ -153,8 +153,8 @@ export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }:
       )}
       {order && (
         <>
-          <p role="status" className="mt-5 text-[11px] leading-[1.9] text-[#4f5c61]">{expired ? t.expired : t.waiting}</p>
-          <p className="mt-2 text-[10px] leading-[1.8] text-[#8c775f]">{t.final}</p>
+          <p role="status" className="mt-5 text-xs text-mist">{expired ? t.expired : t.waiting}</p>
+          <p className="mt-2 text-xs text-warm-ink">{t.final}</p>
         </>
       )}
     </div>
@@ -171,7 +171,7 @@ function TokenToggle({ symbols, value, onChange }: { symbols: string[]; value: n
           role="radio"
           aria-checked={value === i}
           onClick={() => onChange(i)}
-          className={cn("min-h-11 rounded-[50px] border border-[#cdd9dc] px-5 text-[12px]", value === i && "border-ink bg-ink text-paper")}
+          className={cn("min-h-11 rounded-[50px] border border-line px-5 text-xs", value === i && "border-ink bg-ink text-paper")}
         >
           {symbol}
         </button>
@@ -193,9 +193,9 @@ function CopyField({ value, label, target }: { value: string; label?: string; ta
   };
   return (
     <div className="mt-2 flex flex-col gap-1">
-      {label && <span className="text-[11px] text-mist">{label}</span>}
-      <code className="block break-all text-[12px] leading-[1.8] select-all">{value}</code>
-      <Button variant="link" onClick={copy} className="min-h-11 self-start text-[12px]">
+      {label && <span className="text-xs text-mist">{label}</span>}
+      <code className="block break-all text-xs select-all">{value}</code>
+      <Button variant="link" onClick={copy} className="min-h-11 self-start text-xs">
         <Copy size={16} data-icon="inline-start" />
         {t.copy}
       </Button>
@@ -208,18 +208,18 @@ function SolanaPanel({ payload, token, onToken, compact }: { payload: SolanaPayl
   return (
     <div className="mt-5">
       <TokenToggle symbols={payload.tokens.map((x) => x.symbol)} value={token} onChange={onToken} />
-      <p className="mt-4 text-[12px] leading-[1.9]">{t.atLeast(payload.amount, current.symbol, t.networks.solana)}</p>
+      <p className="mt-4 text-xs">{t.atLeast(payload.amount, current.symbol, t.networks.solana)}</p>
       {!compact && (
         <div className="mt-4 flex flex-col items-center gap-3">
           <div className="size-[180px] bg-white p-2 [&_svg]:size-full" dangerouslySetInnerHTML={{ __html: current.qrSvg }} />
-          <p className="text-center text-[10px] text-[#7e8d93]">{t.solana.scan}</p>
+          <p className="text-center text-xs text-mist">{t.solana.scan}</p>
         </div>
       )}
       <a href={current.url} className="pill mt-4 min-h-[54px]" onClick={() => track("crypto_wallet_open", { network: "solana", token_symbol: current.symbol })}>
         {t.solana.open}
         <ArrowSquareOut size={18} />
       </a>
-      <p className="mt-3 text-[10px] leading-[1.8] text-mist">{t.solana.manual}</p>
+      <p className="mt-3 text-xs text-mist">{t.solana.manual}</p>
     </div>
   );
 }
@@ -301,11 +301,11 @@ function EthereumPanel({ order, payload, token, onToken, onOrder }: { order: Ord
   return (
     <div className="mt-5">
       <TokenToggle symbols={payload.tokens.map((x) => x.symbol)} value={token} onChange={onToken} />
-      <p className="mt-4 text-[11px] leading-[1.8] text-[#997c60]">{t.ethereum.gas}</p>
+      <p className="mt-4 text-xs text-warm-ink">{t.ethereum.gas}</p>
       {!payload.payer ? (
         wallets.length > 0 ? (
           <div className="mt-4 flex flex-col gap-2">
-            <p className="text-[12px] text-mist">{t.ethereum.wallets}</p>
+            <p className="text-xs text-mist">{t.ethereum.wallets}</p>
             {wallets.map((w) => (
               <Button key={w.info.uuid} variant="pill" className="min-h-[54px]" disabled={busy} onClick={() => connect(w)}>
                 {busy ? stepLabel : t.ethereum.connectWith(w.info.name)}
@@ -313,14 +313,14 @@ function EthereumPanel({ order, payload, token, onToken, onOrder }: { order: Ord
                 {w.info.icon ? <img src={w.info.icon} alt="" width={20} height={20} /> : null}
               </Button>
             ))}
-            <p className="text-[10px] leading-[1.8] text-mist">{t.ethereum.signNote}</p>
+            <p className="text-xs text-mist">{t.ethereum.signNote}</p>
           </div>
         ) : (
           <WalletLinks orderId={order.id} />
         )
       ) : (
         <div className="mt-4">
-          <p className="flex items-center gap-2 text-[12px]">
+          <p className="flex items-center gap-2 text-xs">
             <Check size={15} />
             {t.ethereum.confirmed(payload.payer)}
           </p>
@@ -336,14 +336,14 @@ function EthereumPanel({ order, payload, token, onToken, onOrder }: { order: Ord
             ))
           )}
           {txHash && (
-            <p className="mt-3 text-[11px] leading-[1.9]">
+            <p className="mt-3 text-xs">
               {t.ethereum.sent}{" "}
               <a href={`${payload.explorer}${txHash}`} target="_blank" rel="noreferrer" className="underline">
                 {t.ethereum.viewTx}
               </a>
             </p>
           )}
-          <p className="mt-4 text-[11px] leading-[1.9] text-mist">{t.ethereum.manual(payload.amount, current.symbol)}</p>
+          <p className="mt-4 text-xs text-mist">{t.ethereum.manual(payload.amount, current.symbol)}</p>
           <CopyField value={payload.recipient} target="recipient_address" />
         </div>
       )}
@@ -365,16 +365,16 @@ function WalletLinks({ orderId }: { orderId: string }) {
   ];
   return (
     <div className="mt-4">
-      <p className="text-[12px] leading-[1.9] text-mist">{t.ethereum.noWallet}</p>
+      <p className="text-xs text-mist">{t.ethereum.noWallet}</p>
       <div className="mt-2 flex flex-col">
         {links.map(([name, link]) => (
-          <a key={name} href={link} className="text-link min-h-11 text-[13px]" onClick={() => track("crypto_wallet_link", { wallet_name: name })}>
+          <a key={name} href={link} className="text-link min-h-11 text-sm" onClick={() => track("crypto_wallet_link", { wallet_name: name })}>
             {name}
             <ArrowSquareOut size={15} />
           </a>
         ))}
       </div>
-      <p className="mt-3 text-[11px] leading-[1.9] text-mist">{t.ethereum.handoff}</p>
+      <p className="mt-3 text-xs text-mist">{t.ethereum.handoff}</p>
       <CopyField value={orderId} label={t.ethereum.orderNumber} target="order_id" />
     </div>
   );

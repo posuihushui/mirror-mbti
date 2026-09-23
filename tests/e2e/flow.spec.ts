@@ -1,14 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { questions } from "../../src/lib/questionnaires";
+import { answerQuestion } from "./quiz-helpers";
 
 /** A consistent first-pole preference, including reverse-scored items. */
 async function answerAll(page: Page) {
   await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
-  for (const question of questions) {
-    await expect(page.getByRole("group")).toBeVisible();
-    await page.getByRole("group").getByRole("button").nth(question.reverse ? 4 : 0).click();
-    const next = page.getByRole("button", { name: /下一题|查看我的结果|查看结果/ }).first();
-    await next.click();
+  for (const [index, question] of questions.entries()) {
+    await answerQuestion(page, question.reverse ? 4 : 0, index === questions.length - 1);
   }
 }
 
@@ -31,19 +29,35 @@ test.describe("core flow", () => {
     await expect(page.getByText("第一章")).toBeVisible();
   });
 
-  test("quiz gates next until an answer is chosen and persists progress across reload", async ({ page }) => {
+  test("an answer moves on by itself, next waits for an answer, and progress survives reload", async ({ page }) => {
     await page.goto("/zh/quiz");
     await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
-    const next = page.getByRole("button", { name: /下一题/ }).first();
+    const next = page.getByRole("button", { name: /下一题/ }).filter({ visible: true }).first();
     await expect(next).toBeDisabled();
+    const first = await page.locator("#question-title").innerText();
     await page.getByRole("group").getByRole("button").first().click();
-    await expect(next).toBeEnabled();
-    await next.click();
+    // No second tap: the answer confirms, then question 02 replaces it.
+    await expect(page.locator("#question-title")).not.toHaveText(first);
     await expect(page.getByText(/^02/).filter({ visible: true }).first()).toBeVisible();
+    await expect(next).toBeDisabled();
     await page.reload();
     await expect(page.getByText(/^02/).filter({ visible: true }).first()).toBeVisible();
     await page.goto("/zh");
     await expect(page.getByRole("link", { name: "继续测试 · 1/32 题" }).first()).toBeVisible();
+  });
+
+  test("the last answer waits for an explicit tap before the result is created", async ({ page }) => {
+    await page.goto("/zh/quiz");
+    await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
+    for (const [index, question] of questions.entries()) {
+      if (index === questions.length - 1) break;
+      await answerQuestion(page, question.reverse ? 4 : 0);
+    }
+    await page.getByRole("group").getByRole("button").first().click();
+    await page.waitForTimeout(800);
+    await expect(page).toHaveURL(/\/quiz$/);
+    await page.getByRole("button", { name: /查看我的结果|查看结果/ }).filter({ visible: true }).first().click();
+    await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
   });
 
   test("complete quiz → result → mock pay → report chapters", async ({ page }) => {
@@ -52,7 +66,8 @@ test.describe("core flow", () => {
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     await expect(page.getByText("你的人格倾向", { exact: true })).toBeVisible();
     await expect(page.getByText(/^100/).first()).toBeVisible();
-    await expect(page.getByText("ESTJ总经理", { exact: true })).toBeVisible();
+    await expect(page.getByText("ESTJ", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("总经理", { exact: true }).first()).toBeVisible();
 
     await page.getByRole("button", { name: /解锁报告与/ }).first().click();
     await expect(page.getByText("更完整地，认识自己。")).toBeVisible();

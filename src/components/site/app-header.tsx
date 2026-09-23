@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
 import { LanguageMenu, type LanguageOption } from "@/components/site/language-menu";
@@ -28,9 +28,9 @@ const moreGroups: readonly (readonly MenuLink[])[] = [
 /** Phones only fit the language code and 更多, so that menu starts with the primary items. History is never prefetched. */
 const phonePrimary: readonly MenuLink[] = [["/quiz", "start_quiz", "quiz"], ["/my/report", "my_report", "myReport", false]];
 
-const navItem = "flex min-h-11 items-center gap-[9px] text-[12px] text-[#5d696d] hover:text-ink";
+const navItem = "flex min-h-11 items-center gap-2 text-sm text-mist hover:text-ink";
 const menuItem =
-  "flex min-h-11 items-center rounded-[3px] px-3 text-[12px] whitespace-nowrap text-[#5d696d] hover:bg-paper hover:text-ink focus-visible:bg-paper focus-visible:text-ink focus-visible:-outline-offset-2";
+  "flex min-h-11 items-center rounded-[3px] px-3 text-sm whitespace-nowrap text-mist hover:bg-paper hover:text-ink focus-visible:bg-paper focus-visible:text-ink focus-visible:-outline-offset-2";
 
 /**
  * `.app-header`: brand or back link, the desktop nav (人格测试 · 我的报告 · 更多信息 · language), and on phones the
@@ -76,7 +76,6 @@ export async function AppHeader(props: Props) {
         </Link>
         <MyReportLink href={myReport} className={navItem} {...trackAttrs("my_report", "header_nav")}>
           {t.myReport}
-          <ArrowUpRight size={14} />
         </MyReportLink>
         <MoreMenu label={t.more} location="header_nav">
           <MoreLinks locale={locale} location="header_nav" groups={moreGroups} />

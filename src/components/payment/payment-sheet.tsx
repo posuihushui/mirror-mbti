@@ -2,16 +2,15 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import { ArrowUpRight, Check, CircleNotch, CreditCard, WechatLogo } from "@phosphor-icons/react";
+import { ArrowRight, ArrowUpRight, Check, CircleNotch, CreditCard, WechatLogo } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { ResponsiveSheet } from "@/components/site/responsive-sheet";
 import { Button } from "@/components/ui/button";
 import { OrderReceipt } from "@/components/payment/order-receipt";
+import { TextLink } from "@/components/site/text-link";
 import { currencyFor, paymentTypeOf, priceLabelToMinor, reportCommerce } from "@/lib/analytics/commerce";
 import { AccessActions } from "@/components/pairing/access-actions";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
-import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { emitPairingEvent } from "@/lib/pairing-tracking";
 import { trackAttrs } from "@/lib/analytics/events";
 import { track, trackPurchase } from "@/lib/analytics/track";
@@ -23,11 +22,12 @@ import { cryptoMessages } from "@/lib/i18n/messages/crypto";
 import type { CryptoNetwork, OrderView, PaymentPayload } from "@/lib/payments/types";
 import { unlockBulletsFor, type PaymentMode } from "@/lib/site";
 import { isWeChat } from "@/lib/ua";
+import { TypeName } from "@/components/result/type-name";
 
 // The stablecoin checkout (viem, wallet discovery) ships only to buyers who open it.
 const CryptoPayment = dynamic(() => import("@/components/payment/crypto-payment").then((m) => m.CryptoPayment), {
   ssr: false,
-  loading: () => <p role="status" className="mt-5 text-[11px] text-mist">{cryptoMessages.loading}</p>,
+  loading: () => <p role="status" className="mt-5 text-xs text-mist">{cryptoMessages.loading}</p>,
 });
 
 type Props = {
@@ -250,37 +250,38 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
   return (
     <>
       {state === "success" ? (
-        <div className="pt-[22px] pb-[15px] text-center md:pt-[35px]">
-          <Check size={44} weight="light" className="mx-auto mb-[22px] text-[#748777]" />
-          <p className="eyebrow text-[9px] tracking-[0.16em] text-[#8a9a9c]">{t.readyEyebrow}</p>
-          <h3 className="mt-[25px] mb-[18px] text-[26px] leading-[1.5] font-normal whitespace-pre-line">{t.readyHeading}</h3>
-          <p className="text-[11px] text-[#7e8b91]">{mode === "mock" ? t.demoSuccess : t.paidSuccess}</p>
+        <div className="pt-5 pb-4 text-center md:pt-8">
+          <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-full bg-warm text-ink"><Check size={24} weight="bold" /></span>
+          <p className="eyebrow text-mist">{t.readyEyebrow}</p>
+          <h3 className="mt-4 mb-3 text-3xl leading-heading font-normal whitespace-pre-line">{t.readyHeading}</h3>
+          <p className="text-sm text-mist">{mode === "mock" ? t.demoSuccess : t.paidSuccess}</p>
           <AccessActions resultId={resultId} locale={locale} surface="payment_sheet" onReady={onUnlocked} />
-          {orderId && <div className="mt-6 border-t border-line pt-5"><OrderReceipt orderId={orderId} /></div>}
-          <Link href={href(locale, "/my/report")} prefetch={false} className="text-link mt-4 inline-flex min-h-11 items-center" {...trackAttrs("my_report", "payment_success")}>{t.allRecords}</Link>
+          {orderId && <div className="mt-6 border-t border-line pt-5 text-left"><OrderReceipt orderId={orderId} /></div>}
+          <TextLink href={href(locale, "/my/report")} prefetch={false} className="mt-3" {...trackAttrs("my_report", "payment_success")}>{t.allRecords}</TextLink>
         </div>
       ) : (
         <div>
-          <div className="mt-0 flex items-center justify-between border-b border-line pt-[13px] pb-[22px] md:mt-[10px] md:pt-[26px]">
-            <span className="text-[14px] font-medium">
-              {type} · {name}
-              <small className="mt-2 block text-[10px] font-normal text-[#7c8b93]">{t.productLabel}</small>
+          <div className="flex items-center justify-between gap-4 border-b border-line pt-3 pb-5 md:pt-6">
+            <span className="min-w-0 text-base font-medium">
+              <TypeName name={`${type} · ${name}`} />
+              <small className="mt-1 block text-xs font-normal text-mist">{t.productLabel}</small>
             </span>
-            <strong className="text-[39px] font-medium tracking-[-2px] md:text-[45px]">
-              <small className="mr-1 text-[20px]">{messages.currency}</small>
+            <strong className="shrink-0 text-4xl font-medium tracking-tight md:text-5xl">
+              <small className="mr-1 text-xl">{messages.currency}</small>
               {priceLabel}
             </strong>
           </div>
-          <p className="mt-5 text-sm leading-[1.8]">{pairingUiMessages[locale].priceNote}</p>
-          <p className="mt-3 text-sm leading-[1.8]">{pairingMessages[locale].feeRule} {pairingMessages[locale].delayedGeneration}</p>
-          <ul className="my-[18px] list-none p-0 md:my-[22px]">
+          {/* What the reader gets comes first; the purchase terms follow as one quiet paragraph. */}
+          <ul className="mt-5 list-none space-y-2.5 p-0">
             {unlockBulletsFor(locale).map((l) => (
-              <li key={l} className="my-3 flex items-center gap-[9px] text-[11px] text-[#5d707a]">
-                <Check size={15} className="text-[#8d9c8b]" />
+              <li key={l} className="flex items-start gap-3 text-base">
+                <Check size={17} className="mt-1 shrink-0 text-warm-ink" />
                 {l}
               </li>
             ))}
           </ul>
+          {/* Said once: no subscription, each person unlocks their own report, the guide waits for consent. */}
+          <p className="mt-5 text-xs text-mist">{t.terms} {pairingMessages[locale].feeRule} {pairingMessages[locale].delayedGeneration}</p>
           {mode === "crypto" ? (
             <CryptoPayment
               resultId={resultId}
@@ -294,11 +295,11 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
           ) : (
             <>
               {(locale === "zh" || mode === "waffo") && (
-                <div className="mt-[18px] flex items-center gap-3 rounded-[3px] border border-[#cdd9dc] px-[15px] py-4 md:mt-[25px]">
+                <div className="mt-5 flex items-center gap-3 rounded-[3px] border border-line bg-card px-4 py-3.5">
                   {mode === "waffo" ? <CreditCard size={25} weight="light" /> : <WechatLogo size={25} weight="fill" className="text-[#299c63]" />}
-                  <span className="text-[13px] font-medium">
+                  <span className="text-sm font-medium">
                     {mode === "waffo" ? t.methodCard : methodTitle}
-                    <small className="mt-[5px] block text-[9px] font-normal text-[#7e8d93]">{mode === "waffo" ? t.methodCardSub : methodSub}</small>
+                    <small className="mt-1 block text-xs font-normal text-mist">{mode === "waffo" ? t.methodCardSub : methodSub}</small>
                   </span>
                   <Check size={17} className="ml-auto" />
                 </div>
@@ -306,14 +307,14 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
               {qrSvg && (
                 <div className="mt-4 flex flex-col items-center gap-3">
                   <div className="size-[180px] bg-white p-2 [&_svg]:size-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
-                  <p className="text-[10px] text-[#7e8d93]">{t.scanHint}</p>
+                  <p className="text-xs text-mist">{t.scanHint}</p>
                 </div>
               )}
-              <p className="mt-[18px] mb-3 text-center text-[10px] text-[#8c775f] md:mt-6">
+              <p className="mt-5 mb-3 text-center text-xs text-warm-ink">
                 {mode === "mock" ? t.demoNote : mode === "waffo" ? t.cardSecureNote : t.secureNote}
               </p>
               {state === "cancelled" && (
-                <p role="status" className="my-[10px] text-[11px] text-[#997c60]">
+                <p role="status" className="my-2 text-sm text-warm-ink">
                   {t.cancelledStatus}
                 </p>
               )}
@@ -326,23 +327,23 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
                 ) : (
                   <>
                     {mode === "mock" ? t.demoPay(priceLabel) : mode === "waffo" ? t.payCard(priceLabel) : t.pay(priceLabel)}
-                    <ArrowUpRight size={18} />
+                    {/* ↗ only for the hosted card checkout, which leaves the site. */}
+                    {mode === "waffo" ? <ArrowUpRight size={18} /> : <ArrowRight size={18} />}
                   </>
                 )}
               </Button>
             </>
           )}
-          <button type="button" onClick={cancel} className="block min-h-11 w-full text-center text-[11px] text-[#78888d]">
+          <button type="button" onClick={cancel} className="mt-1 block min-h-11 w-full text-center text-sm text-mist hover:text-ink">
             {t.notNow}
           </button>
-          <p className="mt-[6px] text-center text-[9px] text-[#92a1a6]">{t.oneTime}</p>
           {mode === "waffo" && (
-            <p className="mt-3 text-[12px] leading-[1.9] text-mist">
+            <p className="mt-3 text-xs text-mist">
               {t.cardTaxNote} {t.cardRefundNote}
             </p>
           )}
-          <p className="mt-3 text-[12px] leading-[1.9] text-mist">{t.keepOrder}</p>
-          <Link href={href(locale, "/help")} className="text-link mt-2 min-h-11" {...trackAttrs("view_help", "payment_sheet")}>{t.help}</Link>
+          <p className="mt-3 text-xs text-mist">{t.keepOrder}</p>
+          <TextLink href={href(locale, "/help")} className="mt-1" {...trackAttrs("view_help", "payment_sheet")}>{t.help}</TextLink>
         </div>
       )}
     </>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { TextLink } from "@/components/site/text-link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { trackAttrs } from "@/lib/analytics/events";
@@ -19,7 +19,7 @@ export function AboutContent({ onStart }: { onStart?: () => void }) {
   const items = faqsFor(locale);
   return (
     <div>
-      <p className="my-[27px] text-[14px] leading-[2] text-[#78878e] whitespace-pre-line">
+      <p className="my-6 text-base text-slate whitespace-pre-line">
         {t.intro}
       </p>
       <Accordion
@@ -34,12 +34,12 @@ export function AboutContent({ onStart }: { onStart?: () => void }) {
           <AccordionItem key={q} value={String(i)}>
             <AccordionTrigger>{q}</AccordionTrigger>
             <AccordionContent>
-              <p className="text-[13px] leading-[2.1] text-[#6d7f88]">{a}</p>
+              <p className="text-sm text-slate">{a}</p>
             </AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
-      <Link href={href(locale, "/help")} className="text-link mt-5 min-h-11" onClick={onStart} {...trackAttrs("view_help", "about_overlay")}>{t.help}</Link>
+      <TextLink href={href(locale, "/help")} className="mt-4" onClick={onStart} {...trackAttrs("view_help", "about_overlay")}>{t.help}</TextLink>
       <PrimaryButton
         className="mt-6"
         onClick={() => {

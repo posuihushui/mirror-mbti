@@ -31,7 +31,7 @@ export function ReviewAnswers({ resultId }: { resultId: string }) {
     } catch (error) { track("result_answers_review", { outcome: "failed" }); toast(error instanceof Error ? error.message : t.readFailed); setPending(false); }
   };
   return <div className="max-w-[560px]">
-    <p className="mb-4 text-[12px] leading-[2] text-mist">{t.note}</p>
-    <PrimaryButton disabled={pending} onClick={review} {...trackAttrs("review_answers", "unclear_result")}>{pending ? t.pending : t.action}</PrimaryButton>
+    <p className="mb-4 text-xs text-mist">{t.note}</p>
+    <PrimaryButton disabled={pending} onClick={review} {...trackAttrs("review_answers", "result_panel")}>{pending ? t.pending : t.action}</PrimaryButton>
   </div>;
 }

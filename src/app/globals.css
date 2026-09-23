@@ -5,6 +5,9 @@
    shadcn's `dark:` utilities inert under the OS dark preference. */
 @custom-variant dark (&:is(.dark *));
 
+/* Phones whose visible height is small (WeChat with its toolbars, 360×640): compact the quiz. */
+@custom-variant short (@media (max-height: 760px));
+
 @theme {
   /* Breakpoints mirror the prototype's three media queries: ≤720 phone, ≤1100 tablet, ≥1450 wide. */
   --breakpoint-*: initial;
@@ -12,14 +15,42 @@
   --breakpoint-xl: 1101px;
   --breakpoint-2xl: 1450px;
 
+  /* One neutral scale per surface. On paper: ink (primary), slate (reading), mist (secondary, 5:1).
+     On night: paper (primary), night-body (reading), night-mist (secondary). Nothing lighter carries text. */
   --color-paper: #edf2f3;
   --color-ink: #171b1c;
-  --color-mist: #758084;
+  --color-slate: #3f4b50;
+  --color-mist: #5d696d;
   --color-line: #d2dcdf;
   --color-warm: #c49473;
+  /* Warm text on light surfaces; `warm` itself is only 2.4:1 on paper, so it marks, never labels. */
+  --color-warm-ink: #8f6242;
   --color-night: #121718;
   --color-night-deep: #141919;
   --color-night-line: #354147;
+  --color-night-body: #b4c1c5;
+  --color-night-mist: #8d9ca1;
+
+  /* Reading rhythm follows the language: see `html:lang(en)` below. */
+  --leading-body: 1.75;
+  --leading-heading: 1.45;
+  --tracking-heading: -0.02em;
+
+  /* Page headings scale down on narrow phones so an 11-character Chinese clause still fits one line
+     at 320px (24px there, 26px at 393px, the full 30px from 500px up). */
+  --text-3xl: clamp(1.5rem, 0.9rem + 3vw, 1.875rem);
+
+  /* Size utilities carry the reading rhythm instead of Tailwind's tight defaults (1.43 for text-sm),
+     which would otherwise override the paragraph leading above. `leading-*` still wins where set. */
+  --text-xs--line-height: var(--leading-body);
+  --text-sm--line-height: var(--leading-body);
+  --text-base--line-height: var(--leading-body);
+  --text-lg--line-height: var(--leading-body);
+  --text-xl--line-height: 1.5;
+  --text-2xl--line-height: var(--leading-heading);
+  --text-3xl--line-height: var(--leading-heading);
+  --text-4xl--line-height: var(--leading-heading);
+  --text-5xl--line-height: var(--leading-heading);
 
   --font-sans:
     var(--font-manrope), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
@@ -84,7 +115,7 @@
   --secondary: #f2f5f6;
   --secondary-foreground: #171b1c;
   --muted: #e3e9ea;
-  --muted-foreground: #758084;
+  --muted-foreground: #5d696d;
   --accent: #e3e9ea;
   --accent-foreground: #171b1c;
   --destructive: #a8503b;
@@ -112,12 +143,37 @@
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
   }
+  html:lang(en) {
+    --leading-body: 1.6;
+    --leading-heading: 1.2;
+    --tracking-heading: -0.025em;
+    /* English headlines run about twice as many characters as Chinese ones, so they sit a step smaller. */
+    --text-3xl: clamp(1.375rem, 0.95rem + 2.2vw, 1.75rem);
+  }
   h1,
   h2 {
-    @apply font-medium tracking-[-0.055em] whitespace-pre-line;
+    @apply font-medium whitespace-pre-line;
+    letter-spacing: var(--tracking-heading);
   }
-  p {
-    line-height: 1.9;
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  /* The site's own headings break at punctuation, never inside a Chinese word (“延/伸”); a phrase too
+     long for its line still wraps rather than overflowing. English is unaffected (it breaks at spaces).
+     Quiz items and published share lines are left to normal breaking: their clauses can outrun a
+     narrow line, and an emergency break there could start a line with “，”. */
+  :where(h1, h2, h3):not(#question-title, [data-share-card] *) {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  p,
+  li,
+  dd,
+  blockquote {
+    line-height: var(--leading-body);
+    text-wrap: pretty;
   }
   button {
     touch-action: manipulation;
@@ -137,28 +193,40 @@
 }
 
 /* Repeated prototype patterns. Exact values from `prototype.css`. */
+/* Nothing on the site is set below 12px. Letter-spaced labels read as labels only in capitals, so English ones are set in capitals. */
 @utility eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.14em;
+  font-size: 12px;
+  letter-spacing: 0.12em;
   line-height: 1.5;
-  font-weight: 600;
+  font-weight: 500;
+  &:lang(en) {
+    text-transform: uppercase;
+  }
 }
 
+/* A text link always carries an arrow (see `TextLink`) and underlines under a fine pointer. */
 @utility text-link {
   display: inline-flex;
   align-items: center;
-  gap: 13px;
-  font-size: 13px;
-  min-height: 40px;
+  gap: 8px;
+  font-size: 14px;
+  min-height: 44px;
   padding: 0;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 1px;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      text-decoration-line: underline;
+    }
+  }
 }
 
 @utility back-button {
   display: inline-flex;
   align-items: center;
-  gap: 13px;
+  gap: 12px;
   min-height: 44px;
-  font-size: 13px;
+  font-size: 14px;
   padding: 0;
 }
 
@@ -196,6 +264,12 @@
   }
 }
 
+/* The single warm moment a page may have; everything else uses a warm rule, never a fill. */
+.warm-panel {
+  background: #c49473;
+  color: #171b1c;
+}
+
 /* Bottom safe-area helpers for fixed docks and sheets inside WeChat / iOS Safari. */
 @utility pb-safe-4 {
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
@@ -216,6 +290,9 @@
 .number-current { display: block; }
 .number-current::before, .number-previous::before { content: attr(data-digit); }
 .number-previous { display: none; }
+
+.chapter-bar-motion { opacity: 0; transform: scaleY(0.4); }
+[aria-current="true"] > .chapter-bar-motion { opacity: 1; transform: none; }
 
 [data-slot="dropdown-menu-trigger"][data-state="open"] .language-caret,
 .more-menu [aria-expanded="true"] .more-menu-caret { transform: rotate(180deg); }
@@ -247,15 +324,10 @@
     transition: color var(--motion-duration-detail) ease-out;
   }
 
-  .chapter-arrow-motion {
-    transform: translate(-2px, 2px);
+  .chapter-bar-motion {
     transition:
       opacity var(--motion-duration-detail) ease-out,
       transform var(--motion-duration-detail) var(--motion-ease-out);
-  }
-
-  [aria-current="true"] .chapter-arrow-motion {
-    transform: translate(0, 0);
   }
 
   .quiz-question-motion {

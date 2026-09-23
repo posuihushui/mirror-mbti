@@ -21,11 +21,11 @@ export default async function NotFound() {
     <>
       <AppHeader variant="page" title={t.title} backHref={home} />
       <main className="mx-auto max-w-[480px] px-[27px] pt-6 pb-[120px] md:pt-[60px]">
-        <p className="eyebrow text-[#738087]">404</p>
-        <h1 className="mt-[18px] text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[32px]">{t.heading}</h1>
-        <p className="mt-[23px] text-[13px] leading-[1.9] text-[#6b777d]">{t.body}</p>
+        <p className="eyebrow text-mist">404</p>
+        <h1 className="mt-4 text-3xl leading-heading md:text-4xl">{t.heading}</h1>
+        <p className="mt-5 text-sm text-mist">{t.body}</p>
         <div className="mt-8 hidden md:block">
-          <PrimaryButton href={home} className="max-w-[246px]" {...trackAttrs("home", "page_cta")}>
+          <PrimaryButton href={home} className="max-w-xs" {...trackAttrs("home", "page_cta")}>
             {t.home}
           </PrimaryButton>
         </div>

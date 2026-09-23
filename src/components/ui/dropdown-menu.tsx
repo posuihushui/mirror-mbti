@@ -35,7 +35,7 @@ function DropdownMenuItem({ className, ...props }: React.ComponentProps<typeof D
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
       className={cn(
-        "flex min-h-11 cursor-pointer items-center justify-between gap-6 rounded-[3px] px-3 text-[12px] text-[#5d696d] outline-none select-none data-highlighted:bg-paper data-highlighted:text-ink aria-[current=true]:text-ink",
+        "flex min-h-11 cursor-pointer items-center justify-between gap-6 rounded-[3px] px-3 text-xs text-mist outline-none select-none data-highlighted:bg-paper data-highlighted:text-ink aria-[current=true]:text-ink",
         className,
       )}
       {...props}

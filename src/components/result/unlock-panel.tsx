@@ -1,54 +1,99 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { BookOpen, ChatsCircle, Compass, LockSimple } from "@phosphor-icons/react/dist/ssr";
+import { TextLink } from "@/components/site/text-link";
 import { trackAttrs } from "@/lib/analytics/events";
 import { href } from "@/lib/i18n/locale";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { getLocale } from "@/lib/i18n/server";
 
-const icons = [ChatsCircle, BookOpen, ChatsCircle, Compass];
+const icons = [BookOpen, Compass, ChatsCircle];
 
-/** `.unlock-panel`: the black paywall block. `action` is the desktop-only CTA slot. */
-export async function UnlockPanel({ priceLabel, action, secureNote }: { priceLabel: string; action: ReactNode; secureNote: string }) {
+type Props = {
+  priceLabel: string;
+  secureNote: string;
+  /** How each chapter opens, already cut to a teaser on the server. */
+  preview: { label: string; opening: string }[];
+  /** The desktop CTA; phones use the fixed dock. */
+  action: ReactNode;
+};
+
+/**
+ * `.unlock-panel`: the page's one conversion moment. It shows what the report actually says —
+ * each chapter's first lines, fading out — rather than a list of promises.
+ */
+export async function UnlockPanel({ priceLabel, action, secureNote, preview }: Props) {
   const locale = await getLocale();
   const messages = resultMessages[locale];
   const t = messages.unlock;
   return (
-    <section className="mx-4 block bg-night-deep px-[27px] py-8 text-[#eff3f4] md:mx-0 md:grid md:grid-cols-2 md:gap-[45px] md:p-10 xl:gap-[90px] xl:px-[60px] xl:py-14">
+    <section aria-labelledby="unlock-heading" className="mx-4 bg-night-deep px-6 py-8 text-paper md:mx-0 md:grid md:grid-cols-[1.15fr_1fr] md:gap-12 md:p-10 xl:gap-20 xl:p-14">
       <div>
-        <p className="eyebrow text-[9px] text-[#99a6a9]">{t.eyebrow}</p>
-        <h2 className="mt-[25px] text-[29px] leading-[1.55] md:text-[35px]">{t.heading}</h2>
-        <p className="mt-[27px] text-[11px] text-[#a1afb2] md:text-[12px]">{t.sub}</p>
-        <Link href={href(locale, "/report/sample")} className="text-link mt-5 min-h-11 text-[12px] text-[#d8e0e2]" {...trackAttrs("read_sample_report", "unlock_panel")}>{t.sampleLink}</Link>
+        <p className="eyebrow text-night-mist">{t.eyebrow}</p>
+        <h2 id="unlock-heading" className="mt-5 text-3xl leading-heading md:text-4xl">{t.heading}</h2>
+        <p className="mt-4 text-sm text-night-body">{t.sub}</p>
+        <ol aria-label={t.previewLabel} className="mt-6 border-t border-night-line">
+          {preview.map(({ label, opening }, i) => (
+            <li key={label} className="border-b border-night-line py-4">
+              <p className="flex items-baseline gap-3 text-sm">
+                <span aria-hidden className="text-xs text-warm">0{i + 1}</span>
+                <span className="font-medium">{label}</span>
+              </p>
+              <p className="mt-1 line-clamp-2 pl-7 text-sm text-night-body [mask-image:linear-gradient(to_bottom,#000_40%,transparent_115%)]">{opening}</p>
+            </li>
+          ))}
+        </ol>
+        <TextLink href={href(locale, "/report/sample")} className="mt-3 text-night-body hover:text-paper" {...trackAttrs("read_sample_report", "unlock_panel")}>{t.sampleLink}</TextLink>
       </div>
-      <div className="mt-[30px] md:mt-0">
-        <ul className="m-0 list-none p-0">
-          {t.items.map((label, i) => {
+      <div className="mt-8 md:mt-0">
+        <div className="flex items-end justify-between gap-5">
+          <strong className="text-5xl leading-none font-normal tracking-tight text-warm">
+            <small className="mr-1 text-2xl">{messages.currency}</small>
+            {priceLabel}
+          </strong>
+          <span className="pb-1 text-xs text-night-mist">{t.priceNote}</span>
+        </div>
+        <ul className="mt-6 space-y-3">
+          {t.includes.map((label, i) => {
             const Icon = icons[i];
             return (
-              <li key={label} className="mb-[18px] flex items-center gap-4 text-[11px] text-[#d8e0e2] md:text-[12px]">
-                <Icon size={20} weight="light" className="text-[#c6a68c]" />
+              <li key={label} className="flex items-center gap-3 text-sm text-night-body">
+                <Icon size={20} weight="light" className="shrink-0 text-warm" />
                 <span>{label}</span>
               </li>
             );
           })}
         </ul>
-        <div className="mt-[30px] mb-5 flex items-center justify-between gap-5">
-          <strong className="text-[46px] leading-none font-normal tracking-[-2px]">
-            <small className="mr-[3px] text-[22px]">{messages.currency}</small>
-            {priceLabel}
-          </strong>
-          <span className="text-[10px] leading-[1.9] text-[#9eacb0] whitespace-pre-line">{t.priceNote}</span>
-        </div>
-        <p className="mb-5 text-xs leading-[1.9] text-[#d8e0e2]">{pairingMessages[locale].feeRule}</p>
-        <div className="hidden md:block">{action}</div>
-        <p className="mt-4 text-[12px] leading-[1.9] text-[#a1afb2]">{t.after}</p>
-        <Link href={href(locale, "/help")} className="text-link mt-3 min-h-11 text-[12px] text-[#d8e0e2]" {...trackAttrs("view_help", "unlock_panel")}>{t.help}</Link>
-        <p className="mt-[15px] hidden items-center justify-center gap-[5px] text-[9px] text-[#86999f] md:flex">
-          <LockSimple size={12} />
+        <p className="mt-5 text-xs text-night-mist">{pairingMessages[locale].feeRule}</p>
+        <div className="mt-6 hidden md:block">{action}</div>
+        <p className="mt-4 hidden items-center gap-1.5 text-xs text-night-mist md:flex">
+          <LockSimple size={13} aria-hidden />
           {secureNote}
         </p>
+        <p className="mt-5 text-xs text-night-mist">{t.after}</p>
+        <TextLink href={href(locale, "/help")} className="mt-1 text-night-body hover:text-paper" {...trackAttrs("view_help", "unlock_panel")}>{t.help}</TextLink>
+      </div>
+    </section>
+  );
+}
+
+/** Desktop only: the report offer directly under the result, so the first screen has a next step. */
+export async function UnlockBar({ priceLabel, action }: { priceLabel: string; action: ReactNode }) {
+  const locale = await getLocale();
+  const messages = resultMessages[locale];
+  const t = messages.unlockBar;
+  return (
+    <section className="mb-12 hidden items-center justify-between gap-8 border border-line bg-card px-8 py-5 md:flex">
+      <div className="min-w-0">
+        <p className="text-base font-medium">{t.title}</p>
+        <p className="mt-1 text-sm text-mist">{t.sub}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-6">
+        <strong className="text-3xl font-normal tracking-tight">
+          <small className="mr-0.5 text-base">{messages.currency}</small>
+          {priceLabel}
+        </strong>
+        <div className="w-60">{action}</div>
       </div>
     </section>
   );
