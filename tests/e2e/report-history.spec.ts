@@ -92,6 +92,9 @@ test.describe("report history and order recovery", () => {
     await page.goto("/zh/my/report");
     await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(0);
     await expect(page.getByRole("link", { name: /开始.*测试|开始认识自己/ }).filter({ visible: true }).first()).toHaveAttribute("href", "/zh/quiz");
+    // Recovery is one tap away, folded so a first-time visitor sees the test first.
+    await expect(page.getByLabel("订单号", { exact: true })).toBeHidden();
+    await page.getByRole("button", { name: "换了设备？用订单号找回之前的探索", exact: true }).click();
     await expect(page.getByLabel("订单号", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "找回测试记录", exact: true })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("report-empty.png"), fullPage: true, animations: "disabled" });
@@ -106,7 +109,8 @@ test.describe("report history and order recovery", () => {
 
     await page.evaluate(() => localStorage.clear());
     await context.clearCookies();
-    await page.goto("/zh/my/report");
+    // `/help` sends people who came to recover straight to the open form.
+    await page.goto("/zh/my/report?recover=1");
     await expect(page.getByRole("article", { name: /测试记录$/ })).toHaveCount(0);
     await page.getByLabel("订单号", { exact: true }).fill(orderId);
     await page.getByRole("button", { name: "找回测试记录", exact: true }).click();

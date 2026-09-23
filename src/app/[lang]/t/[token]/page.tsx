@@ -1,3 +1,4 @@
+import { TextLink } from "@/components/site/text-link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/site/app-header";
@@ -14,6 +15,7 @@ import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { appUrl } from "@/lib/env";
 import { siteCopy } from "@/lib/site";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -53,7 +55,7 @@ export default async function InvitationPage({ params }: Props) {
   const joinHref = href(locale, `/t/${token}/join`);
   const quizHref = href(locale, `/quiz?compare=${token}`);
   const startQuiz = <ShareQuizLink token={token} surface="invitation" locale={locale} href={quizHref} className={hasResults ? "text-link min-h-11 shrink-0 text-sm" : "pill min-h-11 md:w-auto"}>{ui.start}</ShareQuizLink>;
-  const useExisting = <a href={joinHref} className={hasResults ? "pill min-h-11 md:w-auto" : "text-link min-h-11 shrink-0 text-sm"}>{m.chooseExisting}</a>;
+  const useExisting = <a href={joinHref} className={hasResults ? "pill min-h-11 md:w-auto" : "text-link min-h-11 shrink-0 text-sm"}>{m.chooseExisting}<ArrowRight size={hasResults ? 19 : 15} weight={hasResults ? "light" : "regular"} aria-hidden className="shrink-0" /></a>;
   return <>
     <AppHeader variant="page" title={p.title} backHref={href(locale, "/")} />
     <main data-share-static className="mx-auto max-w-[1060px] px-6 py-8 md:py-14">
@@ -61,14 +63,14 @@ export default async function InvitationPage({ params }: Props) {
         <section className="md:col-start-1 md:row-start-1">
           <p className="eyebrow text-mist">{ui.introEyebrow}</p>
           {invitation.hostNote && <figure className="warm-panel mt-5 p-5">
-            <blockquote className="text-[17px] leading-[1.7]">{invitation.hostNote}</blockquote>
+            <blockquote className="text-lg">{invitation.hostNote}</blockquote>
             <figcaption className="mt-2 text-xs text-mist">{m.hostNoteFrom}</figcaption>
           </figure>}
-          <h1 className="mt-5 text-[29px] leading-[1.4] md:text-[38px]">{m.invitationHeading}</h1>
-          <p className="mt-5 text-sm leading-[1.9]">{p.summary}</p>
+          <h1 className="mt-5 text-3xl md:text-4xl">{m.invitationHeading}</h1>
+          <p className="mt-5 text-sm">{p.summary}</p>
           <ol className="mt-7 border-y border-line">{ui.outputs.map((text, index) => <li key={text} className={`flex gap-4 py-4 ${index ? "border-t border-line" : ""}`}>
-            <span aria-hidden="true" className="eyebrow pt-1.5 text-[#8d7259]">{`0${index + 1}`}</span>
-            <span className="text-[15px] leading-[1.7]">{text}</span>
+            <span aria-hidden="true" className="eyebrow pt-1.5 text-warm-ink">{`0${index + 1}`}</span>
+            <span className="text-base">{text}</span>
           </li>)}</ol>
         </section>
         {/* The preview and the host's agreed scope: the proof, above the decision on a phone. */}
@@ -78,13 +80,13 @@ export default async function InvitationPage({ params }: Props) {
         </div>
         <section className="md:col-start-1 md:row-start-2">
           <div className="flex flex-col gap-4 md:flex-row md:items-center">{hasResults ? <>{useExisting}{startQuiz}</> : <>{startQuiz}{useExisting}</>}</div>
-          <p className="mt-5 text-xs leading-[1.9] text-mist">{ui.noConsentYet}</p>
-          {hasResults && <p className="mt-2 text-xs leading-[1.9] text-mist">{p.feeRule}</p>}
+          <p className="mt-5 text-xs text-mist">{ui.noConsentYet}</p>
+          {hasResults && <p className="mt-2 text-xs text-mist">{p.feeRule}</p>}
           <div className="mt-4 flex flex-wrap gap-x-6 text-xs">
-            <a className="text-link min-h-11" href={href(locale === "zh" ? "en" : "zh", `/quiz?compare=${token}`)}>{locale === "zh" ? "English" : "中文"}</a>
-            <a className="text-link min-h-11" href={href(locale, "/pairing")}>{ui.learn}</a>
+            <TextLink href={href(locale === "zh" ? "en" : "zh", `/quiz?compare=${token}`)} prefetch={false} hrefLang={locale === "zh" ? "en" : "zh-CN"}>{locale === "zh" ? "English" : "中文"}</TextLink>
+            <TextLink href={href(locale, "/pairing")}>{ui.learn}</TextLink>
           </div>
-          <p className="mt-3 text-xs leading-[1.8] text-mist">{m.invitationEnd} <time dateTime={invitation.expiresAt}>{new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(invitation.expiresAt))}</time></p>
+          <p className="mt-3 text-xs text-mist">{m.invitationEnd} <time dateTime={invitation.expiresAt}>{new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(invitation.expiresAt))}</time></p>
         </section>
       </div>
       <ShareVisit token={token} locale={locale} surface="invitation" />

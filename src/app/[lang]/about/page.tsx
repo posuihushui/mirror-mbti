@@ -34,31 +34,27 @@ export default async function AboutPage() {
   return (
     <>
       <AppHeader variant="page" title={t.headerTitle} backHref={href(locale, "/")} path="/about" />
-      <main className="mx-auto max-w-xl px-6 pt-6 pb-[135px] md:px-10 md:pt-14 md:pb-20">
-        <section className="surface-texture bg-card p-6 md:p-8">
-        <div className="surface-content">
-        <p className="eyebrow text-[#738087]">{t.eyebrow}</p>
-        <h1 className="mt-5 text-3xl leading-normal tracking-[-0.035em] md:text-4xl">
+      <main className="mx-auto max-w-2xl px-6 pt-8 pb-[135px] md:px-10 md:pt-14 md:pb-20">
+        <p className="eyebrow text-mist">{t.eyebrow}</p>
+        <h1 className="mt-4 text-3xl leading-heading md:text-4xl">
           {t.headerTitle}
         </h1>
-        <p className="mt-6 text-sm leading-8 text-[#78878e] whitespace-pre-line">
+        <p className="mt-5 text-base text-slate whitespace-pre-line">
           {siteMessages[locale].about.intro}
         </p>
-        </div>
-        </section>
-        <dl className="mt-6 space-y-3">
+        <dl className="mt-8 border-t border-line">
           {items.map(([q, a]) => (
-            <div key={q} className="border-l-2 border-warm bg-card px-5 py-4">
-              <dt className="text-sm leading-7">{q}</dt>
-              <dd className="m-0 mt-2 text-[13px] leading-7 text-[#6d7f88]">{a}</dd>
+            <div key={q} className="border-b border-line py-6">
+              <dt className="text-lg leading-heading font-medium">{q}</dt>
+              <dd className="m-0 mt-2 text-base text-slate">{a}</dd>
             </div>
           ))}
         </dl>
-        <p className="mt-6 text-[10px] leading-[1.8] text-[#829094]">
+        <p className="mt-6 text-xs text-mist">
           {t.disclaimer}
         </p>
         <div className="mt-8 hidden md:block">
-          <PrimaryButton href={href(locale, "/quiz")} className="max-w-[246px]" {...trackAttrs("start_quiz", "page_cta")}>
+          <PrimaryButton href={href(locale, "/quiz")} className="max-w-xs" {...trackAttrs("start_quiz", "page_cta")}>
             {t.start}
           </PrimaryButton>
         </div>

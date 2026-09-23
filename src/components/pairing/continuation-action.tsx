@@ -21,5 +21,5 @@ export function ContinuationAction({ invitationToken, resultId, resultLocale, lo
     } catch (error) { if (!controller.signal.aborted) setError(error instanceof Error ? error.message : compareMessages[locale].failed); else setError(compareMessages[locale].failed); }
     finally { clearTimeout(timeout); busy.current = false; setPending(false); }
   }
-  return <div><button type="button" disabled={pending} onClick={proceed} className="pill min-h-11 disabled:opacity-50">{pending ? m.saving : children ?? m.registerContinue}</button><p role="status" className="mt-3 text-sm">{error}</p><noscript><p className="mt-3 text-xs leading-[1.8]">{m.noJs}</p></noscript></div>;
+  return <div><button type="button" disabled={pending} onClick={proceed} className="pill min-h-11 disabled:opacity-50">{pending ? m.saving : children ?? m.registerContinue}</button><p role="status" className="mt-3 text-sm">{error}</p><noscript><p className="mt-3 text-xs">{m.noJs}</p></noscript></div>;
 }

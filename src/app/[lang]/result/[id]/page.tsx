@@ -17,7 +17,7 @@ import { ResultActions } from "@/components/result/result-actions";
 import { ResultChart } from "@/components/result/result-chart";
 import { SampleCta } from "@/components/result/sample-cta";
 import { TypeIntro } from "@/components/result/type-intro";
-import { UnlockPanel } from "@/components/result/unlock-panel";
+import { UnlockBar, UnlockPanel } from "@/components/result/unlock-panel";
 import { PreferenceReading } from "@/components/result/preference-reading";
 import { ReviewAnswers } from "@/components/result/review-answers";
 import { RecoverReports } from "@/components/report/recover-reports";
@@ -31,6 +31,7 @@ import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
 import { profileMeta, typeMeta } from "@/lib/personality";
+import { reportPreview } from "@/lib/report-content";
 import { questionnaireLocale, questionnaireName } from "@/lib/questionnaires";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
 import { cryptoNetworks } from "@/lib/payments/crypto/config";
@@ -86,6 +87,9 @@ export default async function ResultPage({ params, searchParams }: Params) {
   const mode = paymentModeFor(locale);
   const secureNote = mode === "mock" ? t.secureMock : mode === "waffo" ? t.secureCard : t.secureLive;
 
+  // The desktop bar offers the report only where the panel would: a real, owned, still-locked result.
+  const offer = !sample && result.owner && !result.unlocked && eligibility !== "syncing";
+
   const actionProps = {
     resultId: result.id,
     type: profile.type,
@@ -114,29 +118,43 @@ export default async function ResultPage({ params, searchParams }: Params) {
       <AppHeader variant="page" title={sample ? t.sampleHeader : t.ownTitle} backHref={href(locale, "/")} path={sample ? "/result/sample" : undefined} />
       <main className="pb-[110px] md:mx-auto md:max-w-6xl md:px-10 md:pb-0">
         <p className="mx-6 my-5 text-xs text-mist md:mx-0 md:my-6">{t.versionLine(questionnaireName(result.questionnaireId, locale) ?? t.legacyVersion, result.questionCount, sample)}</p>
-        <section className="grid gap-4 md:grid-cols-2 md:items-stretch md:gap-6 md:pb-12">
+        <section className="grid gap-4 md:grid-cols-2 md:items-stretch md:gap-6 md:pb-6">
           <TypeIntro profile={profile} sample={sample} />
           <ResultChart profile={profile} />
         </section>
+        {/* Desktop has no dock, so the report offer sits right under the result instead of four screens down. */}
+        {offer && (
+          <UnlockBar
+            priceLabel={price}
+            action={
+              <Suspense fallback={null}>
+                <ResultActions {...actionProps} slot="bar" />
+              </Suspense>
+            }
+          />
+        )}
+        {!offer && <div className="hidden md:block md:pb-6" />}
         {!sample && result.owner && result.uniform && (
           <section className="mx-[27px] mb-7 border border-line px-5 py-6 md:mx-0">
-            <p className="mb-4 text-[13px] leading-[1.9]">{t.uniformNotice}</p>
+            <p className="mb-4 text-sm">{t.uniformNotice}</p>
             <ReviewAnswers resultId={id} />
           </section>
         )}
         <PreferenceReading profile={profile} />
         {!sample && result.owner && <>
           <ContinuationList items={continuations} locale={locale} />
-          {compare && !continuations.some(item => item.invitationToken === compare) && <section className="mx-6 my-7 border-t border-line pt-5 md:mx-0"><h2 className="text-xl">{ui.continue}</h2><p className="my-4 text-sm leading-[1.8]">{invitation ? ui.continuationNote : ui.continuationExpired}</p>{invitation && <ContinuationAction invitationToken={compare} resultId={id} resultLocale={locale} locale={locale} />}</section>}
-          {eligibility === "syncing" ? <section className="mx-6 md:mx-0"><AccessActions resultId={id} locale={locale} surface="result" /></section> : <PairingTracker resultId={id} surface="result"><PairingBenefit locale={locale} resultId={id} unlocked={result.unlocked} /></PairingTracker>}
+          {compare && !continuations.some(item => item.invitationToken === compare) && <section className="mx-6 my-7 border-t border-line pt-5 md:mx-0"><h2 className="text-xl">{ui.continue}</h2><p className="my-4 text-sm">{invitation ? ui.continuationNote : ui.continuationExpired}</p>{invitation && <ContinuationAction invitationToken={compare} resultId={id} resultLocale={locale} locale={locale} />}</section>}
+          {eligibility === "syncing" && <section className="mx-6 md:mx-0"><AccessActions resultId={id} locale={locale} surface="result" /></section>}
         </>}
+        {/* The report is the offer; the guide for two comes with it, so it follows rather than leads. */}
         {sample ? (
           /* Nothing is locked on the sample, so it closes by inviting the test, not by quoting a price. */
           <SampleCta secondary={{ href: href(locale, `/report/${SAMPLE_RESULT_ID}`), label: t.readSample }} />
-        ) : result.owner && result.unlocked ? <div className="mx-6 mb-8 md:mx-0"><PrimaryButton href={href(locale, `/report/${id}`)} className="max-w-[320px]">{t.readPurchased}</PrimaryButton></div> : eligibility === "syncing" ? null : (
+        ) : result.owner && result.unlocked ? <div className="mx-6 mb-8 md:mx-0"><PrimaryButton href={href(locale, `/report/${id}`)} className="md:max-w-xs">{t.readPurchased}</PrimaryButton></div> : eligibility === "syncing" ? null : (
           <UnlockPanel
             priceLabel={price}
             secureNote={secureNote}
+            preview={reportPreview(profile, locale)}
             action={
               <Suspense fallback={null}>
                 <ResultActions {...actionProps} slot="panel" />
@@ -144,16 +162,17 @@ export default async function ResultPage({ params, searchParams }: Params) {
             }
           />
         )}
+        {!sample && result.owner && eligibility !== "syncing" && <PairingTracker resultId={id} surface="result"><PairingBenefit locale={locale} resultId={id} unlocked={result.unlocked} /></PairingTracker>}
         {!sample && result.owner && <ShareEntry resultId={id} locale={locale} />}
         {/* A buyer who reopened this page inside a wallet app has no visitor cookie; the order number restores it. */}
         {!sample && !result.owner && mode === "crypto" && (
           <section className="mx-[27px] mb-8 max-w-[560px] border-t border-line pt-6 md:mx-0" aria-labelledby="wallet-handoff">
-            <h2 id="wallet-handoff" className="text-[20px] leading-[1.6]">{t.handoffHeading}</h2>
-            <p className="mt-3 mb-5 text-[12px] leading-[2] text-mist">{t.handoffBody}</p>
+            <h2 id="wallet-handoff" className="text-xl leading-heading">{t.handoffHeading}</h2>
+            <p className="mt-3 mb-5 text-sm text-mist">{t.handoffBody}</p>
             <RecoverReports returnTo={href(locale, `/result/${id}?unlock=1`)} />
           </section>
         )}
-        <p className="mx-[25px] my-[25px] text-center text-[9px] text-[#829094] md:mx-0 md:mt-[25px] md:mb-[35px] md:text-[10px]">
+        <p className="mx-6 my-8 text-center text-xs text-mist md:mx-0 md:mb-10">
           {t.closing}
         </p>
       </main>

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { answerQuestion } from "./quiz-helpers";
 
 for (const reducedMotion of ["no-preference", "reduce"] as const) {
   test.describe(`number motion: ${reducedMotion}`, () => {
@@ -38,8 +39,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     test("switching 32 and 64 items animates the total and restores each draft", async ({ page }) => {
       await page.goto("/zh/quiz");
       await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
-      await page.getByRole("button", { name: "非常符合", exact: true }).click();
-      await page.getByRole("button", { name: "下一题", exact: true }).filter({ visible: true }).click();
+      await answerQuestion(page, 0);
       const title = await page.locator("#question-title").innerText();
       await page.getByRole("button", { name: "切换版本", exact: true }).click();
       await expect(page.locator(".quiz-version-motion").first()).toHaveCSS("animation-name", reducedMotion === "reduce" ? "none" : "chapter-enter");
@@ -49,7 +49,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       await expect(total).toHaveText("64");
       await expect(total).toHaveAttribute("data-direction", "up");
       await expect(total.locator(".number-previous")).toHaveCount(2);
-      await page.getByRole("button", { name: "比较符合", exact: true }).click();
+      await answerQuestion(page, 1);
       await page.getByRole("button", { name: "切换版本", exact: true }).click();
       await page.getByRole("button", { name: "继续 32 题轻量版" }).click();
       await expect(page.locator("#question-title")).toHaveText(title);
@@ -58,6 +58,8 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       await expect(page.locator("main section .number-motion[data-value='32']").first()).toHaveAttribute("data-direction", "down");
       await page.getByRole("button", { name: "切换版本", exact: true }).click();
       await page.getByRole("button", { name: "继续 64 题标准版" }).click();
+      // The 64-item draft resumes on its second question; its first answer is kept.
+      await page.getByRole("button", { name: "上一题", exact: true }).filter({ visible: true }).click();
       await expect(page.getByRole("button", { name: "比较符合", exact: true })).toHaveAttribute("aria-pressed", "true");
     });
   });

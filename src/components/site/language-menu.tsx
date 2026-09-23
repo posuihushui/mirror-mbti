@@ -37,7 +37,7 @@ export function LanguageMenu({
     >
       <DropdownMenuTrigger
         className={cn(
-          "flex min-h-11 items-center text-[12px] text-[#5d696d] outline-none hover:text-ink focus-visible:text-ink data-[state=open]:text-ink",
+          "flex min-h-11 items-center text-sm text-mist outline-none hover:text-ink focus-visible:text-ink data-[state=open]:text-ink",
           className,
         )}
       >

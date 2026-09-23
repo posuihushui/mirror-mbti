@@ -32,19 +32,18 @@ export function dimensionReading(profile: Profile, index: number, locale: Locale
   const firstPercent = letter === dimension[0] ? profile.values[index] : 100 - profile.values[index];
   const clarity = clarityOf(profile.values[index]);
   const balanced = clarity === "even" || clarity === "balanced";
-  const strong = clarity === "marked";
   if (locale === "en") {
     const copy = enPreferenceDimensions[index];
     const pole = enPoles[letter as Letter];
     return { ...copy, dimension, letter, firstPercent, secondPercent: 100 - firstPercent,
       degree: enDegrees[clarity],
       label: balanced ? copy.pair : `${pole.label} ${letter}`,
-      interpretation: balanced ? copy.balanced : enInterpretation(pole.label, pole.need, strong),
+      interpretation: balanced ? copy.balanced : enInterpretation(pole.label, pole.need),
     };
   }
   const degree = zhDegrees[clarity];
   return { ...preferenceDimensions[index], dimension, letter, firstPercent, secondPercent: 100 - firstPercent, degree,
     label: balanced ? preferenceDimensions[index].pair : `${poles[letter].label} ${letter}`,
-    interpretation: balanced ? preferenceDimensions[index].balanced : `本次更偏向${poles[letter].label}一侧：${poles[letter].need}。${strong ? "这种方式可能是你较常使用的起点，但不代表另一端的能力较弱。" : "偏向幅度不大，换一个情境时，也可能使用另一种方式。"}`,
+    interpretation: balanced ? preferenceDimensions[index].balanced : `本次更偏向${poles[letter].label}一侧：${poles[letter].need}。`,
   };
 }

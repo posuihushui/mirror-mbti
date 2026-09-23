@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { MirrorMark } from "@/components/brand/mirror-mark";
 import portrait from "@/assets/portrait.jpg";
 import portraitZh from "@/assets/portrait-zh.jpg";
 import { AppHeader } from "@/components/site/app-header";
 import { Dock } from "@/components/site/dock";
 import { OverlayButton } from "@/components/site/overlay-button";
 import { StartButton } from "@/components/site/start-button";
+import { TextLink } from "@/components/site/text-link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { trackAttrs } from "@/lib/analytics/events";
 import { appUrl } from "@/lib/env";
@@ -15,7 +17,9 @@ import { href, htmlLang, type Locale } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
 import { organizationId, pageMetadata } from "@/lib/seo";
+import { sampleProfile, typeMeta } from "@/lib/personality";
 import { siteCopy } from "@/lib/site";
+import { TypeName } from "@/components/result/type-name";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -58,63 +62,59 @@ export default async function HomePage() {
               placeholder="blur"
               className="home-portrait-motion object-cover object-[48%_35%] md:object-[50%_50%]"
             />
-            {/* Desktop captions sit on the photo; a short ink fade keeps them legible without dimming the portrait above. */}
-            <div aria-hidden className="absolute inset-x-0 bottom-0 hidden h-[160px] bg-[linear-gradient(to_top,#1217188c,#1217186b_30px,#12171826_90px,#12171800)] md:block" />
-            <div className="absolute right-[30px] bottom-[27px] left-[30px] hidden items-center justify-between gap-[10px] text-[10px] tracking-[0.06em] text-paper md:flex">
-              <span className="text-[9px] tracking-[0.14em]">{t.caption}</span>
-              <span>{t.closer}</span>
-            </div>
+            {/* Desktop: what a result looks like, on the photo, clear of the face (she looks right in Chinese, left in English). */}
+            <SampleCard locale={locale} label={t.sampleCard} className={locale === "en" ? "right-6" : "left-6"} />
           </div>
 
           {/* Phones: the copy overlaps the portrait on short screens. A paper scrim hides the photo's top edge (220px),
               eases to 82% under the last line and fades out over 120px so the portrait rises out of the page. */}
           <div className="relative z-1 px-[27px] pt-[98px] before:absolute before:inset-x-0 before:top-0 before:-bottom-[120px] before:-z-1 before:bg-[linear-gradient(to_bottom,#e8eff1_220px,#e8eff1d1_calc(100%-120px),#e8eff19e_calc(100%-96px),#e8eff15c_calc(100%-68px),#e8eff124_calc(100%-36px),#e8eff100)] md:col-start-1 md:row-start-1 md:self-center md:px-0 md:pt-5 md:pb-[45px] md:before:hidden">
-            <p className="eyebrow text-[8px] tracking-[0.17em] text-[#627176] md:text-[10px] md:tracking-[0.14em] md:text-ink">
+            <p className="eyebrow text-mist md:text-ink">
               {t.eyebrow}
             </p>
-            <h1 className="mt-[18px] text-[36px] leading-[1.4] tracking-[-0.055em] md:mt-[34px] md:text-[53px] md:leading-[1.32] md:tracking-[-0.065em] xl:text-[68px] 2xl:text-[77px]">
+            <h1 className="mt-4 text-4xl leading-[1.3] md:mt-8 md:text-5xl md:leading-[1.25] xl:text-[68px] 2xl:text-[76px]">
               <span className="home-title-motion inline-block">{t.titleLine1}</span>
               <br />
               <span className="home-title-motion home-title-motion-later inline-block">{t.titleLine2}<span className="text-warm">{t.titleStop}</span></span>
             </h1>
-            <p className="home-description-motion mt-[17px] text-[12px] leading-[1.9] text-[#677276] md:mt-[26px] md:text-[14px] md:leading-[2]">
+            <p className="home-description-motion mt-4 text-sm text-mist md:mt-6 md:text-base">
               {t.descLine1}
               <br />
               {t.descLine2}
             </p>
-            <div className="mt-[17px] flex items-center gap-[13px] md:mt-[42px] md:gap-[14px] xl:gap-6">
+            <div className="mt-4 flex items-center gap-3 md:mt-10 md:gap-4 xl:gap-6">
               {t.stats.map(([n, l], i) => (
                 <span
                   key={l}
                   className={
-                    "flex items-center gap-1 text-[14px] font-medium whitespace-nowrap md:gap-[5px] md:text-[20px]" +
-                    (i > 0 ? " border-l border-line pl-[13px] md:pl-[14px] xl:pl-6" : "")
+                    "flex items-baseline gap-1 text-base font-medium whitespace-nowrap md:gap-1.5 md:text-xl" +
+                    (i > 0 ? " border-l border-line pl-3 md:pl-4 xl:pl-6" : "")
                   }
                 >
-                  {n} <small className="text-[8px] font-normal text-[#5e7078] md:text-[11px] md:text-[#798286]">{l}</small>
+                  {n} <small className="text-xs font-normal text-mist">{l}</small>
                 </span>
               ))}
             </div>
             <div className="mt-[41px] hidden grid-cols-[210px_1fr] items-center gap-x-4 gap-y-[13px] md:grid xl:grid-cols-[246px_1fr] xl:gap-x-7 xl:gap-y-3">
               <StartButton className="min-h-[58px]" trackLocation="hero" />
-              <Link href={href(locale, "/result/sample")} className="text-link" {...trackAttrs("view_sample_result", "hero")}>
-                {t.sampleLink} <ArrowUpRight size={16} />
-              </Link>
-              <p className="col-span-full mt-[2px] text-[10px] text-[#707c80]">{t.freeLine}</p>
+              <TextLink href={href(locale, "/result/sample")} {...trackAttrs("view_sample_result", "hero")}>
+                {t.sampleLink}
+              </TextLink>
+              <p className="col-span-full text-xs text-mist">{t.freeLine}</p>
             </div>
           </div>
-          <p className="absolute bottom-[7px] left-0 hidden text-[10px] tracking-[0.04em] text-[#899498] md:block">{t.bottomLine}</p>
+          <p className="absolute bottom-2 left-0 hidden text-xs text-mist md:block">{t.bottomLine}</p>
         </section>
 
-        <section className="mt-8 hidden items-center justify-between gap-5 bg-night px-6 py-7 text-[11px] text-paper md:flex">
-          <span className="text-[9px] tracking-[0.1em] text-[#91a0a5]">{t.stepsLabel}</span>
+        <section className="mt-8 hidden items-center justify-between gap-5 bg-night px-6 py-6 text-sm text-paper md:flex">
+          <span className="text-xs tracking-widest text-night-mist">{t.stepsLabel}</span>
           {t.steps.map((s, i) => (
             <div key={s}>
-              <b className="mr-3 font-normal text-warm">0{i + 1}</b> {s}
+              <b className="mr-3 text-xs font-normal text-warm">0{i + 1}</b> {s}
             </div>
           ))}
-          <OverlayButton overlay="about" className="flex items-center gap-4 text-[11px] text-paper" {...trackAttrs("open_about", "steps_bar")}>
-            {t.aboutLink} <ArrowUpRight size={15} />
+          <OverlayButton overlay="about" className="flex min-h-11 items-center gap-3 text-sm text-paper" {...trackAttrs("open_about", "steps_bar")}>
+            {t.aboutLink} <ArrowRight size={15} />
           </OverlayButton>
         </section>
       </main>
@@ -122,8 +122,8 @@ export default async function HomePage() {
       {/* The dock's price and sample link sit on the photo; a paper fade that deepens behind the button keeps them legible on any portrait. */}
       <Dock variant="home" className="before:absolute before:inset-0 before:-z-1 before:bg-[linear-gradient(to_bottom,#e8eff100,#e8eff140_30px,#e8eff199_60px,#e8eff1d9_86px,#e8eff1eb)]">
         <StartButton className="border-[3px] border-[#3e4343]" trackLocation="dock" />
-        <div className="flex items-center justify-between px-[3px] pt-[11px] text-[8px] text-[#b7c4c7]">
-          <span className="text-[9px] text-[#52656e]">{t.dockFree}</span>
+        <div className="flex items-center justify-between px-1 pt-2">
+          <span className="text-xs text-[#52656e]">{t.dockFree}</span>
           <PrimaryLink locale={locale} label={t.dockSample} />
         </div>
       </Dock>
@@ -134,9 +134,41 @@ export default async function HomePage() {
 
 function PrimaryLink({ locale, label }: { locale: Locale; label: string }) {
   return (
-    <Link href={href(locale, "/result/sample")} className="flex items-center gap-[3px] py-[2px] text-[9px] text-[#52656e]" {...trackAttrs("view_sample_result", "dock")}>
+    <Link href={href(locale, "/result/sample")} className="flex min-h-8 items-center gap-1 text-xs text-[#52656e]" {...trackAttrs("view_sample_result", "dock")}>
       {label}
-      <ArrowUpRight size={12} />
+      <ArrowRight size={13} />
+    </Link>
+  );
+}
+
+/** A small, real preview of what the test gives back: the sample's type, its mirror and four scores. */
+function SampleCard({ locale, label, className }: { locale: Locale; label: string; className: string }) {
+  const { name } = typeMeta(sampleProfile.type, locale);
+  return (
+    <Link
+      href={href(locale, "/result/sample")}
+      className={`group absolute bottom-6 hidden w-[272px] bg-paper/90 p-5 text-ink shadow-[0_18px_40px_rgba(18,23,24,0.16)] backdrop-blur-md md:block ${className}`}
+      {...trackAttrs("view_sample_result", "home_sample")}
+    >
+      <span className="flex items-center justify-between">
+        <span className="eyebrow text-mist">{label}</span>
+        <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+      </span>
+      <span className="mt-3 flex items-center gap-4">
+        <MirrorMark profile={sampleProfile} size={52} className="shrink-0" />
+        <span className="min-w-0">
+          <span className="block text-3xl leading-none font-medium tracking-tighter">{sampleProfile.type}</span>
+          <TypeName name={name} className="mt-1.5 block text-xs text-mist" />
+        </span>
+      </span>
+      <span className="mt-4 grid grid-cols-4 border-t border-line pt-3 text-center">
+        {sampleProfile.type.split("").map((letter, i) => (
+          <span key={letter} className="text-xs text-mist not-first:border-l not-first:border-line">
+            <b className="block text-sm font-medium text-ink">{letter}</b>
+            {sampleProfile.values[i]}%
+          </span>
+        ))}
+      </span>
     </Link>
   );
 }

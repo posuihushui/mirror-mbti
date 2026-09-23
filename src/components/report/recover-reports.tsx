@@ -55,7 +55,7 @@ export function RecoverReports({ returnTo }: { returnTo?: string } = {}) {
         </Field>
         <PrimaryButton type="submit" disabled={pending}>{pending ? t.pending : t.submit}</PrimaryButton>
       </FieldGroup>
-      <p className="mt-4 text-[11px] leading-[1.9] text-mist">{t.footnote}</p>
+      <p className="mt-4 text-xs text-mist">{t.footnote}</p>
     </form>
   );
 }

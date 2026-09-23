@@ -85,7 +85,7 @@
 | 示例是否带来测试 | `page_view`(result_sample / report_sample) 之后的 `cta_click`(start_quiz) |
 | 支付为什么失败 | `payment_error` 按 `error_code` × `payment_type`；`payment_cancel` 按 `stage`；`checkout_close`(completed=false) |
 | 微信内外差异 | 以用户属性 `wechat_browser` 细分上述漏斗 |
-| 报告读到哪一章 | `report_chapter_view` 按 `chapter_number`、`nav_method`；`report_tab_switch` |
+| 报告读到哪一章 | `report_chapter_view` 按 `chapter_number`、`nav_method`；`report_tab_switch`；七天练习的完成情况看 `report_practice_check` |
 | 分享回流 | `page_view` 的 `page_location` 含 `from=singlemessage` / `groupmessage` / `timeline` |
 | 找回记录 | `recover_submit` → `recover_success` / `recover_error`(error_code) |
 | 断链 | `page_not_found` 按 `page_referrer` |
@@ -130,6 +130,7 @@
 | `report_view` | 报告页（含示例） | `questionnaire_id` `question_count` `is_sample` |
 | `report_chapter_view` | 切换到另一章 | `chapter_number` `nav_method`（tab / sidebar / next） |
 | `report_tab_switch` | 第二章「优势 / 容易忽略的」切换 | `tab`（strengths / blindspots） |
+| `report_practice_check` | 第四章七天练习里勾选或取消某一天（勾选状态只存在本浏览器） | `day_number`（1–7）、`checked` |
 | `my_report_view` | 「我的报告」页 | `record_count` `unlocked_count` |
 | `recover_submit` / `recover_success` / `recover_error` | 用订单号找回记录 | `recover_error`：`error_code` |
 
@@ -182,7 +183,7 @@
 | `pairing_info` / `invite_pairing` / `my_pairing` | 双人指南介绍 / 邀请入口 / 我的双人指南；仅通用名称，不附带结果或邀请编号 |
 | `home` | 回到首页（报告结尾、404） |
 
-`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`、`pairing_benefit`、`pairing_center`。
+`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`result_bar`（桌面结果首屏下方的报告入口）、`home_sample`（桌面首页照片上的示例结果卡）、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`、`pairing_benefit`、`pairing_center`。
 
 ## 新增埋点
 

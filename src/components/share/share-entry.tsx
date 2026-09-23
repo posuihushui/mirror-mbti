@@ -6,6 +6,7 @@ import { shareMessages } from "@/lib/i18n/messages/share";
 import { ResponsiveSheet } from "@/components/site/responsive-sheet";
 import { ShareComposer, type ShareOptions } from "./share-composer";
 import { ShareReveal } from "./share-reveal";
+import { ArrowRight } from "@phosphor-icons/react";
 
 export function ShareEntry({ resultId, locale }: { resultId: string; locale: Locale }) {
   const m = shareMessages[locale];
@@ -39,8 +40,8 @@ export function ShareEntry({ resultId, locale }: { resultId: string; locale: Loc
     else { sequence.current++; request.current?.abort(); requestAnimationFrame(() => trigger.current?.focus()); }
   }
   return <section className="border-t border-line px-[27px] py-6 md:px-0 md:py-8" data-share-entry>
-    <ShareReveal mode="entry"><h2 data-share-reveal className="text-xl font-medium leading-snug">{m.entryTitle}</h2><p data-share-reveal className="mt-3 text-sm leading-[1.8] text-mist">{m.entryDescription}</p></ShareReveal>
-    <button ref={trigger} type="button" onClick={() => changeOpen(true)} className="pill mt-5 min-h-11 max-w-full">{m.create}</button>
+    <ShareReveal mode="entry"><h2 data-share-reveal className="text-xl font-medium leading-snug">{m.entryTitle}</h2><p data-share-reveal className="mt-3 text-sm text-mist">{m.entryDescription}</p></ShareReveal>
+    <button ref={trigger} type="button" onClick={() => changeOpen(true)} className="pill mt-5 min-h-[52px] max-w-full md:max-w-sm">{m.create}<ArrowRight size={19} weight="light" aria-hidden /></button>
     <noscript><p className="mt-3 text-xs">{m.noJs}</p></noscript>
     <ResponsiveSheet open={open} onOpenChange={changeOpen} title={m.title} description={m.entryDescription} closeLabel={m.close}>
       {open && (options ? <ShareComposer resultId={resultId} locale={locale} options={options} onRequest={(id) => { if (!submittedRequests.current.includes(id)) submittedRequests.current = [...submittedRequests.current.slice(-9), id]; }} /> : <div className="py-6"><p role="status" className="text-sm">{error || m.loading}</p>{error && <button type="button" className="pill mt-4 min-h-11" onClick={() => void load()}>{m.retry}</button>}</div>)}

@@ -1,34 +1,33 @@
-import Link from "next/link";
+import { TextLink } from "@/components/site/text-link";
 import { href, type Locale } from "@/lib/i18n/locale";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
-import { PairingExample } from "./pairing-example";
 import { PairingReveal } from "./pairing-reveal";
 
-export function PairingBenefit({ locale, resultId, unlocked = false, compact = false, dark = false }: { locale: Locale; resultId?: string; unlocked?: boolean; compact?: boolean; dark?: boolean }) {
+/**
+ * The guide for two, as something the report brings along. The full-width variant follows the result's
+ * report offer and says what the guide gives and what both people unlock; `compact` is the report's
+ * one-line strip. The fictional example lives on `/pairing`, which both link to.
+ */
+export function PairingBenefit({ locale, resultId, unlocked = false, compact = false }: { locale: Locale; resultId?: string; unlocked?: boolean; compact?: boolean }) {
   const m = pairingMessages[locale]; const ui = pairingUiMessages[locale];
-  if (compact) return <section data-pairing-benefit={unlocked ? "unlocked" : "preview"} className={`${dark ? "border-[#59676c] text-paper" : "border-line"} my-6 border p-5 md:p-7`}>
-    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-7">
-      <div className="min-w-0 flex-1"><PairingReveal><h2 className="text-xl leading-[1.5]">{unlocked ? ui.included : m.title}</h2><p className="mt-2 text-xs leading-[1.9] text-mist">{ui.noConsentYet}</p></PairingReveal></div>
-      <div className="flex shrink-0 flex-wrap items-center gap-4">
-        {unlocked && resultId && <Link prefetch={false} className={`pill min-h-11 w-auto ${dark ? "bg-paper text-ink hover:bg-paper" : ""}`} href={href(locale, `/my/pairing?result=${encodeURIComponent(resultId)}`)}>{ui.invite}</Link>}
-        <Link className="text-link min-h-11 text-sm" href={href(locale, "/pairing")}>{ui.learn}</Link>
-      </div>
-    </div>
-    <p className="mt-3 text-xs leading-[1.9] text-mist">{m.feeRule}</p>
+  const invite = unlocked && resultId
+    ? <TextLink prefetch={false} className="font-medium" href={href(locale, `/my/pairing?result=${encodeURIComponent(resultId)}`)}>{ui.invite}</TextLink>
+    : null;
+  if (compact) return <section data-pairing-benefit={unlocked ? "unlocked" : "preview"} className="my-4 flex flex-col gap-1 border-y border-line py-3 md:flex-row md:items-center md:justify-between md:gap-8">
+    <p className="text-sm"><span className="font-medium">{unlocked ? ui.included : m.title}</span><span className="hidden text-mist md:inline"> · {ui.noConsentYet}</span></p>
+    <div className="flex shrink-0 flex-wrap items-center gap-x-6">{invite}<TextLink className="text-mist hover:text-ink" href={href(locale, "/pairing")}>{ui.learn}</TextLink></div>
   </section>;
-  return <section data-pairing-benefit={unlocked ? "unlocked" : "preview"} className={`${dark ? "border-[#59676c] text-paper" : "border-line"} border p-5 md:p-7 ${compact ? "my-6" : "mx-6 my-7 md:mx-0 md:my-10"}`}>
-    <div className={!compact && !unlocked ? "grid gap-5 md:grid-cols-2 md:gap-7" : ""}>
-      <div>
-        <PairingReveal><p className="eyebrow text-mist">{unlocked ? ui.included : ui.benefit}</p><h2 className={`${compact ? "text-xl" : "text-[27px] md:text-[30px]"} mt-4 leading-[1.5]`}>{unlocked ? m.title : m.heading}</h2><p className="mt-4 text-sm leading-[1.8]">{m.summary}</p>{!compact && <ul className="mt-5 space-y-2 text-sm leading-[1.8]">{ui.outputs.map(item => <li key={item}>— {item}</li>)}</ul>}</PairingReveal>
-        <p className="mt-5 text-xs leading-[1.9] text-mist">{m.feeRule}</p>
-        <p className="mt-3 text-xs leading-[1.9] text-mist">{ui.noConsentYet}</p>
-        <div className="mt-5 flex flex-wrap items-center gap-4">
-          {unlocked && resultId && <Link prefetch={false} className={`pill min-h-11 ${dark ? "bg-paper text-ink hover:bg-paper" : ""}`} href={href(locale, `/my/pairing?result=${encodeURIComponent(resultId)}`)}>{ui.invite}</Link>}
-          <Link className="text-link min-h-11 text-sm" href={href(locale, "/pairing")}>{ui.learn}</Link>
-        </div>
-      </div>
-      {!compact && !unlocked && <PairingExample locale={locale} />}
+  return <section data-pairing-benefit={unlocked ? "unlocked" : "preview"} className="mx-6 my-10 border-t border-line pt-8 md:mx-0">
+    <div className="md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:gap-12">
+      <PairingReveal>
+        <p className="eyebrow text-warm-ink">{unlocked ? ui.included : ui.benefit}</p>
+        <h2 className="mt-3 text-2xl leading-heading">{unlocked ? m.title : m.heading}</h2>
+        <p className="mt-3 max-w-2xl text-sm text-mist">{m.summary}</p>
+        <ul className="mt-4 space-y-1.5 text-sm">{ui.outputs.map(item => <li key={item} className="flex gap-3"><span aria-hidden className="text-warm">—</span>{item}</li>)}</ul>
+      </PairingReveal>
+      <div className="mt-5 flex flex-wrap items-center gap-x-6 md:mt-0 md:flex-col md:items-end">{invite}<TextLink href={href(locale, "/pairing")}>{ui.learn}</TextLink></div>
     </div>
+    <p className="mt-5 text-xs text-mist">{m.feeRule} {ui.noConsentYet}</p>
   </section>;
 }

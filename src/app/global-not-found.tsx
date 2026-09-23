@@ -7,6 +7,7 @@ import { trackAttrs } from "@/lib/analytics/events";
 import { siteMessages } from "@/lib/i18n/messages/site";
 import { siteCopy } from "@/lib/site";
 import "./globals.css";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 
 const manrope = localFont({
   src: "../fonts/manrope-latin-wght.woff2",
@@ -33,11 +34,12 @@ export default function GlobalNotFound() {
           </Link>
         </header>
         <main className="mx-auto max-w-[480px] px-[27px] pt-6 pb-[120px] md:pt-[60px]">
-          <p className="eyebrow text-[#738087]">404</p>
-          <h1 className="mt-[18px] text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[32px]">{copy.heading}</h1>
-          <p className="mt-[23px] text-[13px] leading-[1.9] text-[#6b777d]">{copy.body}</p>
-          <Link href="/" className="pill mt-8 max-w-[246px]" {...trackAttrs("home", "page_cta")}>
+          <p className="eyebrow text-mist">404</p>
+          <h1 className="mt-4 text-3xl leading-heading md:text-4xl">{copy.heading}</h1>
+          <p className="mt-5 text-sm text-mist">{copy.body}</p>
+          <Link href="/" className="pill mt-8 max-w-xs" {...trackAttrs("home", "page_cta")}>
             {copy.home}
+            <ArrowRight size={19} weight="light" aria-hidden />
           </Link>
         </main>
         <TrackView event="page_not_found" />

@@ -73,6 +73,8 @@ export const storageKeys = {
   quiz: "mirror.quiz.v1",
   quizVersions: "mirror.quiz.v2",
   lastResult: "mirror.lastResult.v1",
+  /** Days of the report's seven-day practice a reader has ticked, per report. A convenience, never a record. */
+  practice: "mirror.practice.v1",
 } as const;
 
 export type PaymentMode = "mock" | "wechat" | "crypto" | "waffo";

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
+import { TextLink } from "@/components/site/text-link";
 import { PaymentSheet } from "@/components/payment/payment-sheet";
 import { trackAttrs } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
@@ -26,8 +27,11 @@ type Props = {
   owner: boolean;
   unlocked: boolean;
   syncing?: boolean;
-  /** Which slot this instance renders: the desktop panel button or the phone dock. */
-  slot: "panel" | "dock";
+  /**
+   * Which slot this instance renders: the desktop button in the dark panel, the desktop bar under the
+   * result, or the phone dock. Only the dock instance owns the payment sheet.
+   */
+  slot: "panel" | "bar" | "dock";
 };
 
 /**
@@ -66,8 +70,8 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
     if (unlockedNow && !unlocked) router.refresh();
   };
 
-  const dockClass = slot === "dock" ? "min-h-[51px] px-[17px] text-[12px]" : undefined;
-  const trackLocation = slot === "panel" ? "result_panel" : "dock";
+  const dockClass = slot === "dock" ? "min-h-[52px] px-5 text-sm" : undefined;
+  const trackLocation = slot === "panel" ? "result_panel" : slot === "bar" ? "result_bar" : "dock";
   let button: React.ReactNode;
   if (isUnlocked) {
     button = (
@@ -91,21 +95,21 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
     );
   }
 
-  if (slot === "panel") return button;
+  if (slot !== "dock") return button;
 
   return (
     <>
       <Dock>
         <div className="flex w-full min-w-0 items-center gap-3">
-          {!isUnlocked && !syncing && <div className="min-w-[80px]">
-            <small className="block text-[9px] text-[#839199]">{t.dockLabel}</small>
-            <strong className="mt-[3px] block text-[25px] leading-[1.1] font-medium tracking-[-1px]">
+          {!isUnlocked && !syncing && <div className="min-w-[88px]">
+            <small className="block text-xs text-mist">{t.dockLabel}</small>
+            <strong className="mt-0.5 block text-2xl leading-tight font-medium tracking-tight">
               {messages.currency}{priceLabel}
-              <span className="text-[10px] font-normal tracking-normal text-[#8a989e]">{t.perTime}</span>
+              <span className="text-xs font-normal tracking-normal text-mist">{t.perTime}</span>
             </strong>
           </div>}
           <div className="min-w-0 flex-1">{button}</div>
-          {isUnlocked && <a className="text-link min-h-11 shrink-0 text-xs" href={href(locale, `/my/pairing?result=${resultId}`)}>{pairingUiMessages[locale].inviteShort}</a>}
+          {isUnlocked && <TextLink prefetch={false} className="shrink-0 text-sm" href={href(locale, `/my/pairing?result=${resultId}`)}>{pairingUiMessages[locale].inviteShort}</TextLink>}
         </div>
       </Dock>
       {owner && !syncing && (

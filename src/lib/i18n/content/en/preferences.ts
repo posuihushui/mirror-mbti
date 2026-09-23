@@ -43,7 +43,7 @@ export const enPreferenceNotes = [
 
 export const enDegrees = { even: "Almost even", balanced: "Close to balanced", slight: "Slight lean", marked: "Clear lean" } as const;
 
-export function enInterpretation(label: string, need: string, strong: boolean): string {
+export function enInterpretation(label: string, need: string): string {
   const lowered = need.charAt(0).toLowerCase() + need.slice(1);
-  return `This time you leaned toward the ${label.toLowerCase()} side: ${lowered}. ${strong ? "This may be a common starting point for you, but it does not mean the other side is weaker." : "The lean is small — in a different situation, you may well use the other approach."}`;
+  return `This time you leaned toward the ${label.toLowerCase()} side: ${lowered}.`;
 }

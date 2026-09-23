@@ -1,9 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { getQuestionnaire, STANDARD_QUESTIONNAIRE_ID } from "../../src/lib/questionnaires";
+import { answerQuestion } from "./quiz-helpers";
 
-async function answerAndNext(page: Page, option = 0) {
-  await page.getByRole("group").getByRole("button").nth(option).click();
-  await page.getByRole("button", { name: /下一题|查看我的结果|查看结果/ }).first().click();
+/** Answers the current question; answers move on by themselves, and the last one is submitted. */
+async function answerAndNext(page: Page, option = 0, last = false) {
+  await answerQuestion(page, option, last);
 }
 
 test.describe("review improvements", () => {
@@ -54,7 +55,7 @@ test.describe("review improvements", () => {
     await page.goto("/zh/quiz");
     await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
     await expect(page.getByText("当前进度仅保存在本页")).toBeVisible();
-    for (let i = 0; i < 32; i++) await answerAndNext(page, 2);
+    for (let i = 0; i < 32; i++) await answerAndNext(page, 2, i === 31);
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     await expect(page.getByText("调停者", { exact: true })).toBeVisible();
     await page.goto("/zh/my/report");
@@ -65,9 +66,9 @@ test.describe("review improvements", () => {
     await page.goto("/zh/quiz");
     await page.getByRole("button", { name: "开始 64 题标准版" }).click();
     const questionnaire = getQuestionnaire(STANDARD_QUESTIONNAIRE_ID)!;
-    for (const question of questionnaire.questions) {
-      await expect(page.getByRole("heading", { level: 2 })).toHaveText(question.text);
-      await answerAndNext(page, question.reverse ? 4 : 0);
+    for (const [index, question] of questionnaire.questions.entries()) {
+      await expect(page.locator("#question-title")).toHaveText(question.text);
+      await answerAndNext(page, question.reverse ? 4 : 0, index === questionnaire.questions.length - 1);
     }
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     const resultId = new URL(page.url()).pathname.split("/").at(-1)!;

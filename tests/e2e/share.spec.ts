@@ -49,7 +49,9 @@ for (const en of [false, true]) test(`share public capability privacy, ownership
   expect(raw.headers()["cache-control"]).toContain("no-store");
   const viewer = await stranger.newPage();
   await viewer.goto(path);
-  await expect(viewer.locator("[data-share-card] ol li")).toHaveCount(3);
+  // The first prompt leads the card's cover; the other two are the numbered list.
+  await expect(viewer.locator("[data-share-card] h2")).toHaveText(share.snapshot.lines[0]);
+  await expect(viewer.locator("[data-share-card] ol li")).toHaveCount(2);
   for (const line of share.snapshot.lines) await expect(viewer.locator("[data-share-card]")).toContainText(line);
   await mkdir(evidence, { recursive: true });
   await viewer.setViewportSize(info.project.name === "mobile" ? { width: 393, height: 852 } : { width: 1363, height: 936 });

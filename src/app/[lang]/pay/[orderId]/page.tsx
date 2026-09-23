@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/site/app-header";
 import { PayStatus } from "@/components/payment/pay-status";
-import { SurfaceMark } from "@/components/brand/surface-mark";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
@@ -34,14 +33,9 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
     <>
       <AppHeader variant="page" title={t.title} backHref={href(locale, `/result/${order.resultId}`)} />
       <main className="mx-auto max-w-lg px-6 pt-8 pb-20 md:pt-14">
-        <section className="surface-texture surface-texture-dark relative overflow-hidden bg-night p-6 text-paper md:p-8">
-          <SurfaceMark className="-right-28 -bottom-28 w-64 opacity-[0.06]" />
-          <div className="surface-content">
-            <p className="eyebrow text-warm">{t.eyebrow}</p>
-            <h1 className="mt-5 text-3xl leading-normal tracking-[-0.035em]">{t.heading}</h1>
-          </div>
-        </section>
-        <section className="bg-card px-6 pb-6 md:px-8 md:pb-8">
+        <p className="eyebrow text-warm-ink">{t.eyebrow}</p>
+        <h1 className="mt-4 text-3xl leading-heading">{t.heading}</h1>
+        <section className="mt-6 border border-line bg-card px-6 pb-6 md:px-8 md:pb-8">
           <PayStatus initial={toOrderView(fresh)} priceLabel={formatPriceFen(fresh.amountFen)} />
         </section>
       </main>

@@ -2,9 +2,24 @@ import { enReportCopy, enScenes } from "@/lib/i18n/content/en/report";
 import type { Locale } from "@/lib/i18n/locale";
 import { dimensions, polesFor, profileMeta, type Letter, type Profile } from "@/lib/personality";
 import { dimensionReading } from "@/lib/preference-content";
-import { blindspotTitles } from "@/lib/site";
+import { blindspotTitles, chapterLabelsFor } from "@/lib/site";
 
 export type Insight = { title: string; body: string };
+
+/**
+ * Chapter 01's reading of one dimension. A clear lean gets its usual strength and one thing to try;
+ * a near-balanced one gets the strengths of both ends, since either may show up.
+ */
+export type Need = {
+  letter: string;
+  label: string;
+  value: number;
+  degree: string;
+  balanced: boolean;
+  strength: string;
+  growth: string;
+  both: { label: string; strength: string }[];
+};
 
 // Paid reading is contextual editorial guidance, separate from the public type encyclopedia.
 const scenes: Record<Letter, { scene: string; watch: string; phrase: string; work: string; experiment: string }> = {
@@ -113,11 +128,50 @@ export function buildReportData(profile: Profile, options: { sample: boolean; de
     title: copy.workTitles[i],
     body: profile.balanced[i] ? copy.workBalancedBody(reading.balanced) : join(qualifier, scene.work),
   }));
+  const poles = polesFor(locale);
+  const needs: Need[] = contexts.map(({ reading }, i) => {
+    const letter = profile.type[i] as Letter;
+    const pair = dimensions[i].split("") as Letter[];
+    return {
+      letter,
+      label: poles[letter].label,
+      value: profile.values[i],
+      degree: reading.degree,
+      balanced: profile.balanced[i],
+      strength: poles[letter].strength,
+      growth: poles[letter].growth,
+      both: pair.map((l) => ({ label: poles[l].label, strength: poles[l].strength })),
+    };
+  });
   const actionPlan: Insight[] = [
     copy.dayOne,
     ...contexts.map(({ reading, scene }, i) => ({ title: copy.dayTitle(i + 2, reading.title), body: profile.balanced[i] ? copy.dayBalancedBody(reading.question) : scene.experiment })),
     copy.daySix,
     copy.daySeven,
   ];
-  return { profile, name, line, summary, typeLabel, sample: options.sample, demo: options.demo, strengths, blindspots, relationships, work, actionPlan };
+  return { profile, name, line, summary, typeLabel, sample: options.sample, demo: options.demo, needs, strengths, blindspots, relationships, work, actionPlan };
+}
+
+/** Cut to a teaser on the server, so the result page carries each chapter's opening and nothing more. */
+function teaser(text: string, locale: Locale) {
+  if (locale === "en") {
+    const words = text.split(/\s+/);
+    return words.length > 14 ? `${words.slice(0, 14).join(" ")}…` : text;
+  }
+  const chars = Array.from(text);
+  return chars.length > 30 ? `${chars.slice(0, 30).join("")}…` : text;
+}
+
+/** How each of the four chapters opens, for the unlock panel's table of contents. */
+export function reportPreview(profile: Profile, locale: Locale) {
+  const data = buildReportData(profile, { sample: false, demo: false, locale });
+  const sep = locale === "en" ? ": " : "：";
+  const first = data.needs[0];
+  const openings = [
+    `${first.label}${sep}${first.balanced ? first.both.map((b) => b.strength).join(locale === "en" ? " " : "") : first.strength}`,
+    `${data.strengths[0].title}${sep}${data.strengths[0].body}`,
+    `${data.relationships[0].title}${sep}${data.relationships[0].body}`,
+    `${data.work[0].title}${sep}${data.work[0].body}`,
+  ];
+  return chapterLabelsFor(locale).map((label, i) => ({ label, opening: teaser(openings[i], locale) }));
 }

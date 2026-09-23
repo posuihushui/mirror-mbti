@@ -52,7 +52,9 @@ test("reduced motion, print, no-JS and 320/720/721 layouts retain complete card"
     await page.setViewportSize({ width, height: 852 });
     await page.goto(path);
     const card = page.locator("[data-share-card]");
-    await expect(card.locator("ol li")).toHaveCount(3);
+    // The first prompt leads the card's cover; the other two are the numbered list.
+    await expect(card.locator("h2")).toHaveText(share.snapshot.lines[0]);
+    await expect(card.locator("ol li")).toHaveCount(2);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await card.evaluate(node => node.getAnimations({ subtree: true }).filter(animation => animation.playState === "running").length)).toBe(0);
     await page.screenshot({ path: `docs/verification/share-growth/breakpoint-${width}-${info.project.name}.png`, fullPage: true, animations: "disabled" });
@@ -66,7 +68,7 @@ test("reduced motion, print, no-JS and 320/720/721 layouts retain complete card"
   const noJs = await browser.newContext({ baseURL: origin, javaScriptEnabled: false, viewport: { width: 393, height: 852 } });
   const staticPage = await noJs.newPage();
   await staticPage.goto(path);
-  await expect(staticPage.locator("[data-share-card] ol li")).toHaveCount(3);
+  await expect(staticPage.locator("[data-share-card] ol li")).toHaveCount(2);
   for (const line of share.snapshot.lines) await expect(staticPage.locator("[data-share-card]")).toContainText(line);
   await expect(staticPage.locator('main a[href="/zh/quiz"]')).toBeVisible();
   await staticPage.screenshot({ path: `docs/verification/share-growth/no-js-${info.project.name}.png`, fullPage: true });

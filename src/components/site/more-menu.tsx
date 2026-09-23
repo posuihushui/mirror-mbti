@@ -63,7 +63,7 @@ export function MoreMenu({
           if (!open) track("more_menu_open", { cta_location: location });
           setOpen(!open);
         }}
-        className="flex min-h-11 items-center text-[12px] text-[#5d696d] hover:text-ink aria-expanded:text-ink"
+        className="flex min-h-11 items-center text-sm text-mist hover:text-ink aria-expanded:text-ink"
       >
         <span className="flex items-center gap-[7px]">
           {label}
@@ -76,7 +76,7 @@ export function MoreMenu({
         onClick={(event) => {
           if (event.target instanceof Element && event.target.closest("a")) setOpen(false);
         }}
-        className="more-menu-panel absolute top-full right-0 z-40 mt-[6px] min-w-[180px] rounded-[4px] border border-line bg-[#f2f6f7] p-[6px] text-ink shadow-[0_14px_34px_rgba(21,28,31,0.12)]"
+        className="more-menu-panel absolute top-full right-0 z-40 mt-[6px] min-w-[180px] rounded-[4px] border border-line bg-card p-[6px] text-ink shadow-[0_14px_34px_rgba(21,28,31,0.12)]"
       >
         {children}
       </div>

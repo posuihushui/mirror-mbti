@@ -71,7 +71,7 @@ function DrawerTitle({ className, ...props }: React.ComponentProps<typeof Drawer
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn("m-0 text-[21px] font-medium tracking-[-0.04em] whitespace-pre-line", className)}
+      className={cn("m-0 text-xl font-medium tracking-tight whitespace-pre-line", className)}
       {...props}
     />
   );
@@ -81,7 +81,7 @@ function DrawerDescription({ className, ...props }: React.ComponentProps<typeof 
   return (
     <DrawerPrimitive.Description
       data-slot="drawer-description"
-      className={cn("m-0 text-[10px] leading-[1.35] text-[#8a999f]", className)}
+      className={cn("m-0 text-xs leading-[1.35] text-mist", className)}
       {...props}
     />
   );

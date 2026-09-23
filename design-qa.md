@@ -1,5 +1,7 @@
 # Design QA
 
+> **Superseded in part (2026-09-23).** The UI review that followed removed the paper-grain texture (`public/assets/surfaces/paper-grain.png`) and the `SurfaceMark` relief described below, limited dark and warm surfaces to one moment per page, and set new type, colour and link rules — see the visual rules in `AGENTS.md` and `docs/design-evidence/ui-review-2026-09-23/`. The share-image findings below still hold.
+
 ## Evidence
 
 - Source visual truth: `/Users/lake/.codex/generated_images/01a0c3e3-8005-7521-91ed-36d799439633/exec-ca4c14f7-6521-4006-ae8f-d62cb8d81687.png`

@@ -128,23 +128,20 @@ export function uniformAnswers(answers: number[]): boolean {
   return longest >= Math.ceil(answers.length * 0.375);
 }
 
+/**
+ * The type's own line and summary, which every result shows — a near-balanced dimension is noted where
+ * that dimension is read, not by replacing the type. Only an all-balanced result swaps in the even copy.
+ */
 export function profileMeta(profile: Profile, locale: Locale = "zh") {
   if (locale === "en") {
     const meta = typeMeta(profile.type, "en");
-    const leaning = meta.letters.filter((_, i) => !profile.balanced[i]).map((l) => enPoles[l as Letter].label.toLowerCase());
-    if (!leaning.length) return { ...meta, typeLabel: profile.type, line: enProfileCopy.evenLine, summary: enProfileCopy.evenSummary };
-    if (leaning.length < meta.letters.length) return { ...meta, typeLabel: profile.type, line: enProfileCopy.balancedLine, summary: enProfileCopy.balancedSummary(leaning) };
+    if (profile.balanced.every(Boolean)) return { ...meta, typeLabel: profile.type, line: enProfileCopy.evenLine, summary: enProfileCopy.evenSummary };
     return { ...meta, typeLabel: profile.type };
   }
   const meta = typeMeta(profile.type);
-  const leaning = meta.letters.filter((_, i) => !profile.balanced[i]).map((l) => poles[l].label);
-  if (!leaning.length) return {
+  if (profile.balanced.every(Boolean)) return {
     ...meta, typeLabel: profile.type, line: "在两端之间，\n你保持着灵活。",
     summary: "这次四个维度都接近中间位置。参考类型按各维度的细微差别给出，仅作对照；更值得看的是每个维度的分数与解读。接近均衡可能表示你在不同情境里切换两种方式，而不是没有特点。",
-  };
-  if (leaning.length < meta.letters.length) return {
-    ...meta, typeLabel: profile.type, line: "先看清偏好，\n再慢慢理解自己。",
-    summary: `这次作答中，${leaning.join("、")}一侧呈现相对偏向；其余维度接近均衡，暂不做单侧判断。四个字母仅作为类型对照，具体解读以各维度为准。`,
   };
   return { ...meta, typeLabel: profile.type };
 }

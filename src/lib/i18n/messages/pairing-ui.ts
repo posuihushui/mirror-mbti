@@ -3,7 +3,7 @@ import type { Locale } from "@/lib/i18n/locale";
 const zh = {
   introEyebrow: "从认识自己，到理解彼此",
   publicSteps: ["先了解自己的偏好", "邀请对方并各自确认", "阅读你们的相处指南"],
-  benefit: "完整报告包含的权益",
+  benefit: "解锁报告还包含",
   included: "已包含双人相处指南",
   unlocked: "这份报告已解锁",
   locked: "这份报告尚未解锁",

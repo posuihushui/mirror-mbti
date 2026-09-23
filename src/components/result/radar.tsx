@@ -2,7 +2,6 @@ import { cn } from "cn";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { getLocale } from "@/lib/i18n/server";
 import { polesFor, type Letter, type Profile } from "@/lib/personality";
-import { dimensions } from "@/lib/questionnaires";
 import { RadarReveal } from "./radar-reveal";
 
 /**
@@ -38,7 +37,8 @@ export async function Radar({ profile, height = 310, className }: { profile: Pro
   const letters = profile.type.split("") as Letter[];
   const points = profile.values.map((v, i) => polar(v, i));
   const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ") + " Z";
-  const label = letters.map((l, i) => profile.balanced[i] ? t.balanced(dimensions[i], profile.values[i]) : t.pole(poles[l].label, profile.values[i])).join(t.separator);
+  // Each axis names the side the answers leaned to; a near-even one says so rather than dropping the letter.
+  const label = letters.map((l, i) => profile.balanced[i] ? t.balanced(poles[l].label, profile.values[i]) : t.pole(poles[l].label, profile.values[i])).join(t.separator);
 
   return (
     <RadarReveal className={cn("relative mx-auto w-full", className)} style={{ height }}>
@@ -67,10 +67,10 @@ export async function Radar({ profile, height = 310, className }: { profile: Pro
               y={pos.y + a.dy}
               textAnchor={a.anchor}
               fontSize={12}
-              fill="#303a3d"
+              fill={profile.balanced[i] ? "#5d696d" : "#171b1c"}
               fontFamily="inherit"
             >
-              {profile.balanced[i] ? dimensions[i].split("").join(" / ") : `${poles[l].label} ${l}`}
+              {`${poles[l].label} ${l}`}
             </text>
           );
         })}

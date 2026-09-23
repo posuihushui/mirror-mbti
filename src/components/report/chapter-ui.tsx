@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowRight } from "@phosphor-icons/react";
 import { cn } from "cn";
 import { trackAttrs } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
@@ -44,18 +44,19 @@ export function ChapterSidebarNav() {
   const chapter = useChapter();
   const locale = useLocale();
   return (
-    <nav className="mt-[46px] flex flex-col gap-1" aria-label={reportMessages[locale].nav.label}>
+    <nav className="mt-10 flex flex-col" aria-label={reportMessages[locale].nav.label}>
       {chapterLabelsFor(locale).map((label, i) => (
         <button
           key={label}
           type="button"
           onClick={() => openChapter(i, chapter, "sidebar")}
           aria-current={chapter === i ? "true" : undefined}
-          className={cn("chapter-tab-motion flex min-h-[54px] items-center gap-4 border-b border-line text-left text-[12px]", chapter === i && "font-semibold")}
+          className={cn("chapter-tab-motion relative flex min-h-[52px] items-center gap-4 border-b border-line pl-4 text-left text-sm text-mist hover:text-ink", chapter === i && "font-medium text-ink")}
         >
-          <span className="text-[10px] text-[#929ea4]">0{i + 1}</span>
+          {/* The current chapter is marked by a warm bar, not by an arrow that would read as a link out. */}
+          <span aria-hidden className="chapter-bar-motion absolute top-3 bottom-3 left-0 w-0.5 bg-warm" />
+          <span className="text-xs text-mist">0{i + 1}</span>
           {label}
-          <ArrowUpRight size={15} className={cn("chapter-arrow-motion ml-auto opacity-0", chapter === i && "opacity-100")} />
         </button>
       ))}
     </nav>
@@ -70,7 +71,7 @@ export function ChapterTabs() {
     <div
       role="tablist"
       aria-label={reportMessages[locale].nav.label}
-      className="-mx-[10px] mb-[31px] grid grid-cols-4 border-b border-[#344046] pb-[10px] md:hidden"
+      className="-mx-2 grid grid-cols-4 border-b border-night-line md:hidden"
     >
       {chapterLabelsFor(locale).map((label, i) => (
         <button
@@ -81,9 +82,10 @@ export function ChapterTabs() {
           aria-selected={chapter === i}
           aria-controls={chapterPanelId(i)}
           onClick={() => openChapter(i, chapter, "tab")}
-          className={cn("chapter-tab-motion py-[9px] text-[10px] leading-[1.8] text-[#7f949c]", locale === "en" ? "min-h-11 min-w-0 px-1 wrap-anywhere whitespace-normal" : "whitespace-nowrap", chapter === i && "text-[#e1c4aa]")}
+          className={cn("chapter-tab-motion relative min-h-11 py-2.5 text-xs leading-snug text-night-mist", locale === "en" ? "min-w-0 px-1 hyphens-auto break-words whitespace-normal" : "whitespace-nowrap", chapter === i && "text-paper")}
         >
           {label}
+          <span aria-hidden className={cn("absolute inset-x-3 -bottom-px h-0.5 bg-warm transition-opacity", chapter === i ? "opacity-100" : "opacity-0")} />
         </button>
       ))}
     </div>
@@ -98,14 +100,14 @@ export function ChapterFooterNav({ sample = false }: { sample?: boolean }) {
   const labels = chapterLabelsFor(locale);
   const last = chapter === labels.length - 1;
   return (
-    <div className="mt-[38px] border-t border-night-line pt-[21px] text-right">
+    <div className="mt-6 border-t border-line pt-4 pb-2 text-right">
       {last ? (
-        <Link href={href(locale, sample ? "/quiz" : "/")} className="text-link text-[11px] text-[#e0e7ea]" {...trackAttrs(sample ? "start_quiz" : "home", "report_closing")}>
+        <Link href={href(locale, sample ? "/quiz" : "/")} className="text-link font-medium" {...trackAttrs(sample ? "start_quiz" : "home", "report_closing")}>
           {sample ? t.closingSample : t.closing}
-          <ArrowUpRight size={17} />
+          <ArrowRight size={17} />
         </Link>
       ) : (
-        <button type="button" onClick={() => openChapter(chapter + 1, chapter, "next")} className="text-link text-[11px] text-[#e0e7ea]">
+        <button type="button" onClick={() => openChapter(chapter + 1, chapter, "next")} className="text-link font-medium">
           {t.next(labels[chapter + 1])}
           <ArrowRight size={17} />
         </button>
@@ -120,8 +122,8 @@ export function StrengthSwitch({ strengths, blindspots }: { strengths: ReactNode
   const t = reportMessages[useLocale()].nav;
   return (
     <>
-      <div className="relative my-7 flex rounded-[50px] bg-[#263034] p-1" role="tablist" aria-label={t.switchLabel}>
-        <span aria-hidden="true" className="strength-indicator-motion pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-8px)/2)] rounded-[50px] bg-[#eef2f3]" style={{ transform: strength ? "translateX(0)" : "translateX(100%)" }} />
+      <div className="relative mb-6 flex rounded-[50px] bg-[#e3e9ea] p-1" role="tablist" aria-label={t.switchLabel}>
+        <span aria-hidden="true" className="strength-indicator-motion pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-8px)/2)] rounded-[50px] bg-ink" style={{ transform: strength ? "translateX(0)" : "translateX(100%)" }} />
         {(
           [
             [t.strengths, true],
@@ -138,8 +140,8 @@ export function StrengthSwitch({ strengths, blindspots }: { strengths: ReactNode
               setStrength(value);
             }}
             className={cn(
-              "strength-tab-motion relative min-h-[37px] min-w-0 flex-1 rounded-[50px] text-[11px] text-[#9aaab0] md:text-[12px]",
-              strength === value && "text-[#222a2d]",
+              "strength-tab-motion relative min-h-11 min-w-0 flex-1 rounded-[50px] text-sm text-mist",
+              strength === value && "text-paper",
             )}
           >
             {label}

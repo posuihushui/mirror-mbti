@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode, type MouseEvent } from "react";
 import type { Locale } from "@/lib/i18n/locale";
+import { ArrowRight } from "@phosphor-icons/react";
 
 type ShareEvent = "share_browser_visible" | "share_link_copied" | "share_image_requested" | "share_quiz_started";
 type Surface = "result" | "share_page" | "my_shares" | "invitation" | "quiz";
@@ -60,5 +61,6 @@ export function ShareQuizLink({ token, locale, href, children, className, surfac
     await recordShareEvent(token, "share_browser_visible", surface);
     window.location.assign(href);
   }
-  return <a href={href} lang={locale} onClick={navigate} className={className}>{children}</a>;
+  // Like every link on the site, it carries a trailing → whether it is set as a pill or a text link.
+  return <a href={href} lang={locale} onClick={navigate} className={className}>{children}<ArrowRight size={className?.includes("pill") ? 19 : 15} weight={className?.includes("pill") ? "light" : "regular"} aria-hidden className="shrink-0" /></a>;
 }

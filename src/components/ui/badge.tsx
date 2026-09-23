@@ -6,9 +6,9 @@ const badgeVariants = cva("inline-flex w-fit shrink-0 items-center justify-cente
   variants: {
     variant: {
       /** `.type-tags > span` */
-      tag: "border-[#cdd7db] px-[10px] py-[5px] text-[10px] text-[#5c6a70] md:px-[13px] md:py-[6px]",
+      tag: "border-line px-3 py-1 text-xs leading-snug text-mist",
       /** `.unlocked-badge` */
-      unlocked: "gap-[5px] border-[#c5d4ca] px-[9px] py-1 text-[9px] text-[#738079]",
+      unlocked: "gap-1.5 border-[#c5d4ca] px-3 py-1 text-xs leading-snug text-[#4f6552]",
     },
   },
   defaultVariants: { variant: "tag" },

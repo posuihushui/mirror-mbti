@@ -22,12 +22,12 @@ export function OrderReceipt({ orderId }: { orderId: string }) {
   };
   return (
     <div className="flex flex-col gap-3 text-left">
-      <span className="text-[11px] text-mist">{t.label}</span>
-      <code className="block break-all text-[12px] leading-[1.8] select-all">{orderId}</code>
-      <Button variant="link" onClick={copy} className="min-h-11 self-start text-[12px]">
+      <span className="text-xs text-mist">{t.label}</span>
+      <code className="block break-all text-xs select-all">{orderId}</code>
+      <Button variant="link" onClick={copy} className="min-h-11 self-start text-xs">
         <Copy size={16} data-icon="inline-start" />{t.copy}
       </Button>
-      <p className="text-[11px] leading-[1.9] text-mist">{t.note}</p>
+      <p className="text-xs text-mist">{t.note}</p>
     </div>
   );
 }

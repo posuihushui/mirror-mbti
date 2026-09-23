@@ -7,7 +7,8 @@ import { getLocale } from "@/lib/i18n/server";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { pageMetadata } from "@/lib/seo";
-import { SurfaceMark } from "@/components/brand/surface-mark";
+import { PrimaryButton } from "@/components/site/primary-button";
+import { TextLink } from "@/components/site/text-link";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale(); const m = pairingMessages[locale];
@@ -15,11 +16,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 export default async function PairingPage() {
   const locale = await getLocale(); const m = pairingMessages[locale]; const ui = pairingUiMessages[locale];
-  return <><AppHeader variant="page" title={m.title} backHref={href(locale, "/")} path="/pairing" /><main className="mx-auto max-w-5xl px-6 py-8 md:py-14">
-    <section className="surface-texture surface-texture-dark relative overflow-hidden bg-night p-6 text-paper md:p-10"><SurfaceMark className="-right-24 -bottom-24 opacity-[0.06]" /><div className="surface-content"><PairingReveal><p className="eyebrow text-warm">{ui.introEyebrow}</p><h1 className="mt-5 max-w-3xl text-3xl leading-normal md:text-5xl">{m.heading}</h1><p className="mt-5 max-w-2xl text-sm leading-8 text-[#b7c3c6]">{m.summary}</p></PairingReveal></div></section>
-    <div className="my-8 md:my-12"><PairingExample locale={locale} /></div>
-    <section className="border-t border-line py-8"><h2 className="text-2xl leading-[1.5]">{ui.stepsTitle}</h2><ol className="mt-6 grid gap-5 md:grid-cols-3">{ui.publicSteps.map((step, i) => <li key={step} className="border border-line p-5 text-sm leading-[1.8]"><span aria-hidden="true" className="mb-3 block text-xs text-[#c49473]">0{i + 1}</span>{step}</li>)}</ol></section>
-    <p className="mb-5 text-sm leading-[1.9] text-mist">{ui.noConsentYet}</p><p className="mb-7 text-xs leading-[1.9] text-mist">{m.note}</p>
-    <div className="flex flex-col gap-4 md:flex-row md:items-center"><a className="pill min-h-11" href={href(locale, "/quiz")}>{ui.start}</a><a className="text-link min-h-11 text-sm" href={href(locale, "/my/report")}>{ui.myReports}</a></div>
+  return <><AppHeader variant="page" title={m.title} backHref={href(locale, "/")} path="/pairing" /><main className="mx-auto max-w-5xl px-6 pt-8 pb-16 md:pt-14">
+    <section><PairingReveal><p className="eyebrow text-warm-ink">{ui.introEyebrow}</p><h1 className="mt-4 max-w-3xl text-3xl leading-heading md:text-5xl">{m.heading}</h1><p className="mt-5 max-w-2xl text-base text-slate">{m.summary}</p></PairingReveal></section>
+    <div className="my-10 md:my-14"><PairingExample locale={locale} /></div>
+    <section className="border-t border-line py-8"><h2 className="text-2xl leading-heading">{ui.stepsTitle}</h2><ol className="mt-6 grid gap-x-8 md:grid-cols-3">{ui.publicSteps.map((step, i) => <li key={step} className="flex gap-4 border-b border-line py-4 text-base md:flex-col md:gap-2 md:border-b-0 md:border-t md:pt-4"><span aria-hidden="true" className="text-xs text-warm-ink">0{i + 1}</span>{step}</li>)}</ol></section>
+    <p className="mb-2 text-sm text-mist">{ui.noConsentYet}</p><p className="mb-8 text-xs text-mist">{m.note}</p>
+    <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-8"><PrimaryButton href={href(locale, "/quiz")} className="md:max-w-xs">{ui.start}</PrimaryButton><TextLink href={href(locale, "/my/report")} prefetch={false}>{ui.myReports}</TextLink></div>
   </main></>;
 }

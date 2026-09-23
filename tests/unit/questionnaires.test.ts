@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { calculate, clarityOf, profileMeta, publicProfile, TYPES, uniformAnswers } from "@/lib/personality";
+import { calculate, clarityOf, profileMeta, publicProfile, TYPES, typeMeta, uniformAnswers } from "@/lib/personality";
+import { dimensionReading, preferenceDimensions } from "@/lib/preference-content";
 import { dimensions, LEGACY_QUESTIONNAIRE_ID, parseSubmission, questionnaires, STANDARD_QUESTIONNAIRE_ID } from "@/lib/questionnaires";
 import { buildReportData } from "@/lib/report-content";
 import { emptyProgress, migrateLegacyProgress, normalizeProgress } from "@/lib/quiz-progress";
@@ -47,13 +48,18 @@ it("keeps the unversioned legacy API while refusing unidentifiable standard answ
   expect(parseSubmission({ questionnaireId: "unknown", answers: Array(32).fill(0) })).toBeNull();
 });
 
-it("keeps meaningful partial preferences and explains the remaining balanced axes", () => {
+it("keeps the type's own copy when only some axes are balanced, and names those axes where they are read", () => {
   const answers = questionnaires[0].questions.map((q) => q.dimension === "EI" ? q.reverse ? -2 : 2 : 0);
   const profile = calculate(answers);
   expect(profile.type).toBe("ENFP");
   expect(clarityOf(profile.values[0])).toBe("marked");
   expect(profile.balanced).toEqual([false, true, true, true]);
-  expect(profileMeta(profile).summary).toContain("暂不做单侧判断");
+  // The result leads with the type's own line and summary, in both languages.
+  expect(profileMeta(profile)).toMatchObject({ line: typeMeta("ENFP").line, summary: typeMeta("ENFP").summary });
+  expect(profileMeta(profile, "en")).toMatchObject({ line: typeMeta("ENFP", "en").line, summary: typeMeta("ENFP", "en").summary });
+  // Each balanced axis says so in its own reading instead.
+  expect(dimensionReading(profile, 1).degree).toBe("几乎均衡");
+  expect(dimensionReading(profile, 1).interpretation).toBe(preferenceDimensions[1].balanced);
 });
 
 it("migrates only valid frozen legacy drafts and rejects reordered or malformed drafts", () => {

@@ -4,6 +4,7 @@ import { pairingUiMessages } from "../../src/lib/i18n/messages/pairing-ui";
 import { pairingMessages } from "../../src/lib/i18n/messages/pairing";
 import { compareMessages } from "../../src/lib/i18n/messages/compare";
 import { getQuestionnaire } from "../../src/lib/questionnaires";
+import { answerQuestion } from "./quiz-helpers";
 
 const origin = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 async function invitationForHost(request: APIRequestContext) {
@@ -26,12 +27,11 @@ async function invitationForHost(request: APIRequestContext) {
 async function complete32(page: Page, en: boolean, token: string) {
   const questionnaire = getQuestionnaire(en ? "en32-v1" : "legacy32-v1")!;
   await page.getByRole("button", { name: en ? "Start 32-item Quick" : "开始 32 题轻量版", exact: true }).click();
-  for (const question of questionnaire.questions) {
+  for (const [index, question] of questionnaire.questions.entries()) {
     expect(new URL(page.url()).searchParams.get("compare")).toBe(token);
     // Wait for the actual question text, rather than racing the next render after a click.
     await expect(page.locator("#question-title")).toHaveText(question.text);
-    await page.getByRole("group").getByRole("button").nth(question.reverse ? 4 : 0).click();
-    await page.getByRole("button", { name: en ? /^(Next|See my result|See result)$/ : /^(下一题|查看我的结果|查看结果)$/ }).filter({ visible: true }).first().click();
+    await answerQuestion(page, question.reverse ? 4 : 0, index === questionnaire.questions.length - 1);
   }
 }
 for (const en of [false, true]) {

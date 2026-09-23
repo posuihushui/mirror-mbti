@@ -38,7 +38,7 @@ export function ResponsiveSheet({ open, onOpenChange, title, description, childr
             type="button"
             onClick={() => onOpenChange(false)}
             aria-label={label}
-            className="absolute top-[21px] right-[18px] flex size-8 items-center justify-center text-[#6a7b81]"
+            className="absolute top-[21px] right-[18px] flex size-8 items-center justify-center text-mist"
           >
             <X size={20} />
           </button>
@@ -59,7 +59,7 @@ export function ResponsiveSheet({ open, onOpenChange, title, description, childr
           type="button"
           onClick={() => onOpenChange(false)}
           aria-label={label}
-          className="absolute top-[27px] right-[14px] flex size-8 items-center justify-center text-[#6a7b81]"
+          className="absolute top-[27px] right-[14px] flex size-8 items-center justify-center text-mist"
         >
           <X size={20} />
         </button>
