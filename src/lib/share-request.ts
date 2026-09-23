@@ -24,7 +24,6 @@ const errors: Record<string, [string, string]> = {
   INVITATION_UNAVAILABLE: ["这份邀请已结束或关闭。", "This invitation has ended or is closed."],
   PAIRING_UNLOCK_REQUIRED: ["请先解锁本次用于配对的报告。", "Unlock the report used for this comparison first."],
   PAIRING_ENTITLEMENT_SYNCING: ["付款已确认，正在核对报告权益，请勿重复购买。", "Payment is confirmed. Report access is being checked. Please do not purchase again."],
-  UNCLEAR_RESULT: ["本次倾向尚不明确，暂不提供新的付费解锁。", "No clear lean emerged this time, so no new paid unlock is offered."],
   CONSENT_REFRESH_REQUIRED: ["公开范围与使用规则已更新，请刷新后重新确认。", "The visibility and access terms have changed. Reload and confirm them again."],
   INVITATION_UPGRADE_REQUIRED: ["邀请方式已更新，请发起者重新创建邀请。", "The invitation process has changed. Ask the host to create a new invitation."],
   SELF_COMPARISON: ["请让另一位参与者打开邀请。", "Please let another person open this invitation."],

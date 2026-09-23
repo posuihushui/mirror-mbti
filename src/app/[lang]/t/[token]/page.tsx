@@ -60,7 +60,7 @@ export default async function InvitationPage({ params }: Props) {
       <div className="grid gap-9 md:grid-cols-2 md:gap-x-14 md:gap-y-10 md:[grid-template-rows:auto_1fr]">
         <section className="md:col-start-1 md:row-start-1">
           <p className="eyebrow text-mist">{ui.introEyebrow}</p>
-          {invitation.hostNote && <figure className="mt-5 border-l-2 border-warm pl-4">
+          {invitation.hostNote && <figure className="warm-panel mt-5 p-5">
             <blockquote className="text-[17px] leading-[1.7]">{invitation.hostNote}</blockquote>
             <figcaption className="mt-2 text-xs text-mist">{m.hostNoteFrom}</figcaption>
           </figure>}

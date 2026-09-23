@@ -28,11 +28,12 @@ describe("calculate", () => {
     expect(p.balanced).toEqual([false, false, false, false]);
   });
 
-  it("scores all-neutral answers as 50% on every axis and flags them balanced", () => {
+  it("scores all-neutral answers as 50% on every axis, flags them balanced and still names a type", () => {
     const p = calculate(Array(QUESTION_COUNT).fill(0));
     expect(p.values).toEqual([50, 50, 50, 50]);
     expect(p.balanced).toEqual([true, true, true, true]);
-    expect(p.type).toBe("ESTJ");
+    // Exact ties follow the MBTI convention rather than the order the dimensions happen to be listed in.
+    expect(p.type).toBe("INFP");
   });
 
   it("treats reverse items in the opposite direction", () => {

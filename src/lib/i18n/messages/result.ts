@@ -8,7 +8,7 @@ const zh = {
     ownEyebrow: "你的人格倾向",
     badge: (label: string) => `${label}倾向`,
     partialBalanced: "部分维度接近均衡，参考类型不代表四个维度都有明确偏向。",
-    unclearNote: "本次暂不生成确定类型，也不提供新的付费解锁。",
+    allBalanced: "四个维度都接近均衡，参考类型仅作对照，请同时阅读两端的解读。",
   },
   chart: {
     heading: "四个维度，认识你的偏好",
@@ -65,7 +65,7 @@ const en: typeof zh = {
     ownEyebrow: "YOUR PERSONALITY",
     badge: (label: string) => label,
     partialBalanced: "Some dimensions are close to balanced, so the reference type doesn’t mean all four have a clear lean.",
-    unclearNote: "No definite type is given this time, and no new paid unlock is offered.",
+    allBalanced: "All four dimensions are close to balanced, so the reference type is only a point of comparison — read both ends of each one.",
   },
   chart: {
     heading: "Four dimensions of your preferences",

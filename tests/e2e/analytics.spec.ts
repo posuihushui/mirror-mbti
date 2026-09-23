@@ -67,7 +67,7 @@ test.describe("analytics", () => {
     await expectEvent(page, "quiz_submit", { questionnaire_id: "legacy32-v1" });
     await expectEvent(page, "quiz_complete", { questionnaire_id: "legacy32-v1", question_count: 32 });
     await expectEvent(page, "page_view", { page_type: "result", page_location: `${origin}/zh/result/[id]` });
-    await expectEvent(page, "result_view", { is_sample: "false", result_owner: "true", result_clear: "true", result_unlocked: "false" });
+    await expectEvent(page, "result_view", { is_sample: "false", result_owner: "true", result_even: "false", result_uniform: "false", result_unlocked: "false" });
     await expectEvent(page, "view_item", { currency: "CNY", value: 6.9 });
 
     await page.getByRole("button", { name: /解锁报告与/ }).first().click();

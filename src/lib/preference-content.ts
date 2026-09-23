@@ -1,7 +1,7 @@
 import { enPoles } from "@/lib/i18n/content/en/personality";
 import { enDegrees, enInterpretation, enPreferenceDimensions, enPreferenceNotes } from "@/lib/i18n/content/en/preferences";
 import type { Locale } from "@/lib/i18n/locale";
-import { dimensions, poles, type Letter, type Profile } from "@/lib/personality";
+import { clarityOf, dimensions, poles, type Clarity, type Letter, type Profile } from "@/lib/personality";
 
 export const preferenceDimensions = [
   { title: "精力与交流", pair: "外向 / 内向", description: "E 侧更容易借助交流整理思路；I 侧更常先独立消化。描述恢复精力的方式，不等于社交能力或害羞程度。", question: "热闹的交流之后，我想继续聊，还是需要一段独处？", balanced: "你可能在熟悉的人面前愿意分享，也会在信息密集后需要独处。分别观察活动前后的精力，不急着选定一端。" },
@@ -11,7 +11,7 @@ export const preferenceDimensions = [
 ] as const;
 
 export const preferenceNotes = [
-  { title: "如何理解接近 50%？", body: "50% 表示本次该维度两侧回答相抵，并不证明你具有两侧同等能力。页面将 50%–60% 的较高侧分数作为“接近均衡”的展示区间；这是产品的解释规则，不是经过验证的统计置信区间。四维都在这个区间时暂不生成确定类型。" },
+  { title: "如何理解接近 50%？", body: "50% 表示本次该维度两侧回答相抵，并不证明你具有两侧同等能力。页面把较高侧分数分成四档来描述倾向强弱：50%–55% 几乎均衡，56%–60% 接近均衡，61%–74% 有轻微偏向，75% 及以上偏向较明显。这是产品的解释规则，不是经过验证的统计置信区间。四个字母始终会给出，接近均衡时它只作对照，应同时阅读两端。" },
   { title: "复测时，先看发生了什么。", body: "近期的角色、精力、经历和对题意的理解都可能改变答案。记录测试版本、时间和具体情境，先比较维度变化，再看字母。百分比不是能力分、准确率或人群百分位；32 题与 64 题尚未做等值校准，不能把跨版本分数直接当成同一尺度。" },
 ] as const;
 
@@ -23,22 +23,26 @@ export function preferenceNotesFor(locale: Locale) {
   return locale === "en" ? enPreferenceNotes : preferenceNotes;
 }
 
+/** Four clarity bands, so a near-midpoint dimension reads as a degree rather than an absence. */
+const zhDegrees: Record<Clarity, string> = { even: "几乎均衡", balanced: "接近均衡", slight: "有轻微偏向", marked: "偏向较明显" };
+
 export function dimensionReading(profile: Profile, index: number, locale: Locale = "zh") {
   const dimension = dimensions[index];
   const letter = profile.type[index];
   const firstPercent = letter === dimension[0] ? profile.values[index] : 100 - profile.values[index];
-  const balanced = profile.balanced[index];
-  const strong = profile.values[index] >= 75;
+  const clarity = clarityOf(profile.values[index]);
+  const balanced = clarity === "even" || clarity === "balanced";
+  const strong = clarity === "marked";
   if (locale === "en") {
     const copy = enPreferenceDimensions[index];
     const pole = enPoles[letter as Letter];
     return { ...copy, dimension, letter, firstPercent, secondPercent: 100 - firstPercent,
-      degree: balanced ? enDegrees.balanced : strong ? enDegrees.clear : enDegrees.slight,
+      degree: enDegrees[clarity],
       label: balanced ? copy.pair : `${pole.label} ${letter}`,
       interpretation: balanced ? copy.balanced : enInterpretation(pole.label, pole.need, strong),
     };
   }
-  const degree = balanced ? "接近均衡" : strong ? "偏向较明显" : "有轻微偏向";
+  const degree = zhDegrees[clarity];
   return { ...preferenceDimensions[index], dimension, letter, firstPercent, secondPercent: 100 - firstPercent, degree,
     label: balanced ? preferenceDimensions[index].pair : `${poles[letter].label} ${letter}`,
     interpretation: balanced ? preferenceDimensions[index].balanced : `本次更偏向${poles[letter].label}一侧：${poles[letter].need}。${strong ? "这种方式可能是你较常使用的起点，但不代表另一端的能力较弱。" : "偏向幅度不大，换一个情境时，也可能使用另一种方式。"}`,

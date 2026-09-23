@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Check } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
+import { SurfaceMark } from "@/components/brand/surface-mark";
 import { Radar } from "@/components/result/radar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -67,7 +68,9 @@ export async function ReportBody({ data, banner, footer, relationshipAction }: {
         </div>
       </aside>
 
-      <article className="bg-night px-[25px] pt-[25px] pb-[55px] text-[#eff2f4] md:p-[35px] xl:px-[50px] xl:py-11">
+      <article className="surface-texture surface-texture-dark relative overflow-hidden bg-night px-6 pt-6 pb-14 text-[#eff2f4] md:p-9 xl:px-12 xl:py-11">
+        <SurfaceMark className="-top-24 -right-28 opacity-[0.05]" />
+        <div className="surface-content">
         <div className="mb-[18px] flex justify-between text-[9px] text-[#a5b5bc] md:hidden">
           <span>
             {typeLabel} · {name}
@@ -94,6 +97,7 @@ export async function ReportBody({ data, banner, footer, relationshipAction }: {
         </ChapterPanel>
 
         <ChapterFooterNav sample={sample} />
+        </div>
       </article>
       {footer ? <div className="mt-4 md:col-span-2 md:mt-10">{footer}</div> : null}
     </main>
@@ -161,7 +165,7 @@ function ChapterThree({ data, locale }: ChapterProps) {
     <>
       <ChapterHeading>{t.heading}</ChapterHeading>
       <Lead>{t.lead}</Lead>
-      <InsightList items={data.relationships} />
+      <InsightList items={data.relationships} variant="inset" />
       <Quote>{t.quote}</Quote>
       <Body>{t.body}</Body>
     </>
@@ -177,11 +181,11 @@ function ChapterFour({ data, locale }: ChapterProps) {
       <InsightList items={data.work} />
       <h3 className="mt-9 text-[20px]">{t.weekHeading}</h3>
       <p className="mt-3 text-[12px] leading-[2] text-[#a9b7bc]">{t.weekIntro}</p>
-      <InsightList items={data.actionPlan} />
-      <div className="my-[33px] bg-[#243034] p-[25px]">
-        <p className="eyebrow text-[9px] text-[#b1bfc4]">{t.stepEyebrow}</p>
+      <InsightList items={data.actionPlan} variant="steps" />
+      <div className="warm-panel my-8 p-6">
+        <p className="eyebrow opacity-70">{t.stepEyebrow}</p>
         <p className="mt-5 text-[20px] leading-[1.7] font-normal whitespace-pre-line md:text-[21px]">{t.stepHeading}</p>
-        <p className="mt-[15px] text-[11px] text-[#a9b7bc] whitespace-pre-line">{t.stepQuestions}</p>
+        <p className="mt-4 text-[11px] opacity-75 whitespace-pre-line">{t.stepQuestions}</p>
       </div>
       <Body>{t.closing}</Body>
     </>
@@ -203,19 +207,24 @@ function ChapterHeading({ as = "h2", children }: { as?: "h1" | "h2"; children: s
   return <Tag className="text-[27px] leading-[1.6] tracking-[-0.03em] md:text-[31px]">{children}</Tag>;
 }
 
-function InsightList({ items }: { items: Insight[] }) {
+function InsightList({ items, variant = "lines" }: { items: Insight[]; variant?: "lines" | "inset" | "steps" }) {
   return (
-    <>
+    <div className={cn(variant !== "lines" && "mt-6 space-y-3")}>
       {items.map((item, i) => (
-        <section key={item.title} className="flex gap-[13px] border-b border-night-line py-[25px] md:gap-5 md:py-7">
-          <span className="pt-[5px] text-[9px] text-[#a38f7a]">0{i + 1}</span>
+        <section key={item.title} className={cn(
+          "flex gap-4",
+          variant === "lines" && "border-b border-night-line py-6 md:gap-5 md:py-7",
+          variant === "inset" && "bg-paper p-5 text-ink md:p-6",
+          variant === "steps" && "bg-[#1b2224] p-5 md:p-6",
+        )}>
+          <span className="pt-1 text-[9px] text-warm">0{i + 1}</span>
           <div>
             <h3 className="text-[15px] leading-[1.7] font-medium md:text-[14px]">{item.title}</h3>
-            <p className="mt-[10px] text-[13px] leading-[2.1] text-[#a6b6bc] md:text-[12px]">{item.body}</p>
+            <p className={cn("mt-3 text-[13px] leading-[2.1] md:text-xs", variant === "inset" ? "text-mist" : "text-[#a6b6bc]")}>{item.body}</p>
           </div>
         </section>
       ))}
-    </>
+    </div>
   );
 }
 

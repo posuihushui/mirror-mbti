@@ -3,6 +3,7 @@ import type { Locale } from "@/lib/i18n/locale";
 import { compareMessages } from "@/lib/i18n/messages/compare";
 import { CompareReveal } from "./compare-reveal";
 import styles from "./compare-motion.module.css";
+import { SurfaceMark } from "@/components/brand/surface-mark";
 
 /** Which two people this reading is rendered for; presentation only, never part of the frozen content. */
 export type CompareSides = { you: CompareCategories; other: CompareCategories; youLabel: string; otherLabel: string };
@@ -28,7 +29,7 @@ function DimensionCard({ card, locale, sides }: { card: CompareDimensionCard; lo
     <h3 className="mt-4 text-[17px] leading-[1.5] font-medium">{m.themes[card.dimension]}</h3>
     {sides && <p className="mt-2 text-xs leading-[1.7] text-mist">{sides.youLabel} {m.categoryLabels[sides.you[card.dimension]]} · {sides.otherLabel} {m.categoryLabels[sides.other[card.dimension]]}</p>}
     <p className="mt-3 text-sm leading-[1.9]">{card.body}</p>
-    <p className="mt-4 border-t border-line pt-3 text-[13px] leading-[1.8] text-mist"><span className="eyebrow mr-2 inline-block text-[#8d7259]">{m.sceneLabel}</span>{card.scene}</p>
+    <p className="mt-4 bg-[#ead9cc] p-4 text-[13px] leading-[1.8] text-ink"><span className="eyebrow mr-2 inline-block opacity-65">{m.sceneLabel}</span>{card.scene}</p>
   </li>;
 }
 
@@ -38,21 +39,24 @@ function Reading({ content, locale, compact, sides }: ReadingProps & { content: 
   const emphasised = content.cards.find(({ dimension }) => dimension === content.highlight.dimension) ?? content.cards[0];
   const cards = compact ? [emphasised] : content.cards;
   return <>
-    <section data-compare-motion="section" className="rounded-[4px] bg-night p-6 text-paper md:p-8">
+    <section data-compare-motion="section" className="surface-texture surface-texture-dark relative overflow-hidden rounded-[4px] bg-night p-6 text-paper md:p-8">
+      <SurfaceMark className="-right-24 -bottom-24 opacity-[0.06]" />
+      <div className="surface-content">
       <p className="eyebrow text-warm">{m.highlightLabel}</p>
-      {content.highlight.dimension && <h2 className="mt-4 text-[22px] leading-[1.45] md:text-[26px]">{m.themes[content.highlight.dimension]}</h2>}
-      <p className="mt-4 text-[15px] leading-[1.9] text-[#cbd6d8]">{content.highlight.body}</p>
-      <div className="mt-6 border-l border-warm pl-4">
+      {content.highlight.dimension && <h2 className="mt-5 text-3xl leading-tight md:text-4xl">{m.themes[content.highlight.dimension]}</h2>}
+      <p className="mt-5 text-[15px] leading-8 text-[#cbd6d8]">{content.highlight.body}</p>
+      <div className="mt-6 border-l border-warm pl-4 md:pl-5">
         <p className="mb-2 text-xs leading-[1.7] text-[#8d9ca1]">{m.openingLineLabel}</p>
-        <blockquote className="text-[17px] leading-[1.8] md:text-[19px]">{content.highlight.openingLine}</blockquote>
+        <blockquote className="text-lg leading-8 md:text-xl">{content.highlight.openingLine}</blockquote>
+      </div>
       </div>
     </section>
     <section>
       <h2 className="eyebrow text-mist">{compact ? m.moreDimensions : m.cardsTitle}</h2>
       <ol className={`mt-4 grid gap-4 ${compact ? "" : "md:grid-cols-2"}`}>{cards.map((card) => <DimensionCard key={card.dimension} card={card} locale={locale} sides={sides} />)}</ol>
     </section>
-    {!compact && <section data-compare-motion="section" className="border-t border-line pt-6">
-      <p className="eyebrow text-[#8d7259]">{m.practiceLabel}</p>
+    {!compact && <section data-compare-motion="section" className="warm-panel p-6 md:p-8">
+      <p className="eyebrow opacity-65">{m.practiceLabel}</p>
       <p className="mt-3 text-[17px] leading-[1.8]">{content.practice}</p>
     </section>}
   </>;

@@ -35,12 +35,9 @@ export const enPoles: Record<Letter, { label: string; need: string; strength: st
 };
 
 export const enProfileCopy = {
-  unclear: {
-    name: "Preferences still unfolding",
-    line: "Your answers this time\ndid not form a clear lean.",
-    summary: "All four dimensions sit near the middle. This may reflect differences between situations, uncertainty about the questions, or how you are feeling right now — it does not mean you lack traits. You can review your answers, or explore again after a while.",
-    typeLabel: "Unfolding",
-  },
+  evenLine: "You hold your balance\nbetween both sides.",
+  evenSummary:
+    "All four dimensions sit close to the middle this time. The reference type follows the small differences between them and is only a point of comparison — the dimension scores and readings below say more. Sitting near the middle may mean you switch between both approaches depending on the situation, not that you lack traits.",
   balancedLine: "See your preferences clearly first,\nthen get to know yourself slowly.",
   balancedSummary: (leaning: string[]) =>
     `This time, your answers leaned toward ${leaning.join(", ")}; the other dimensions are close to balanced, so no one-sided call is made. The four letters are only a reference type — read each dimension for the details.`,

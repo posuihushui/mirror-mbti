@@ -56,9 +56,9 @@ test.describe("review improvements", () => {
     await expect(page.getByText("当前进度仅保存在本页")).toBeVisible();
     for (let i = 0; i < 32; i++) await answerAndNext(page, 2);
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
-    await expect(page.getByText("倾向待探索", { exact: true })).toBeVisible();
+    await expect(page.getByText("调停者", { exact: true })).toBeVisible();
     await page.goto("/zh/my/report");
-    await expect(page.getByRole("article", { name: "待探索 测试记录" })).toHaveCount(1);
+    await expect(page.getByRole("article", { name: "INFP 测试记录" })).toHaveCount(1);
   });
 
   test("completes all 64 questions, persists the version and serves the paid chapters as HTML", async ({ page }, testInfo) => {
@@ -72,7 +72,7 @@ test.describe("review improvements", () => {
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     const resultId = new URL(page.url()).pathname.split("/").at(-1)!;
     const response = await page.request.get(`/api/results/${resultId}`);
-    expect((await response.json()).data).toMatchObject({ questionnaireId: STANDARD_QUESTIONNAIRE_ID, questionCount: 64, type: "ESTJ", clear: true });
+    expect((await response.json()).data).toMatchObject({ questionnaireId: STANDARD_QUESTIONNAIRE_ID, questionCount: 64, type: "ESTJ", clarity: ["marked", "marked", "marked", "marked"] });
     await expect(page.getByText("标准版 · 64 题", { exact: true })).toBeVisible();
     const saved = await page.request.get(`/api/results/${resultId}/answers`);
     expect((await saved.json()).data.responses).toEqual(questionnaire.questions.map((q) => ({ questionId: q.id, value: q.reverse ? -2 : 2 })));
@@ -92,25 +92,28 @@ test.describe("review improvements", () => {
     await expect(page.getByText(/标准版 · 64 题/)).toBeVisible();
   });
 
-  test("unclear results cannot be sold; owners can review answers and keep the old record", async ({ page, browser, baseURL }, testInfo) => {
+  test("a fully balanced result still names a type, still sells, and invites a review of straight-lined answers", async ({ page, browser, baseURL }, testInfo) => {
     await page.goto("/zh");
     const created = await page.request.post("/api/results", { data: { answers: Array(32).fill(0) } });
     const result = (await created.json()).data;
-    expect(result).toMatchObject({ type: null, clear: false });
+    expect(result).toMatchObject({ type: "INFP", clarity: ["even", "even", "even", "even"] });
     await page.goto(`/zh/result/${result.id}?unlock=1`);
-    await expect(page.getByText("倾向待探索", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: /解锁报告与/ })).toHaveCount(0);
-    await expect(page.getByText("更完整地，认识自己。")).toHaveCount(0);
-    await expect(page.getByText("ESTJ", { exact: true })).toHaveCount(0);
-    await page.screenshot({ path: testInfo.outputPath("unclear-result.png"), fullPage: true, animations: "disabled" });
+    const sheet = page.getByRole("dialog", { name: "更完整地，认识自己。" });
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole("button", { name: "关闭" }).click();
+    await expect(sheet).toHaveCount(0);
+    await expect(page.getByText("调停者", { exact: true })).toBeVisible();
+    await expect(page.getByText("四个维度都接近均衡", { exact: false })).toBeVisible();
+    await expect(page.getByText(/这次作答里有很长一段选了同一个选项/)).toBeVisible();
+    await expect(page.getByRole("button", { name: /解锁报告与/ }).first()).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath("balanced-result.png"), fullPage: true, animations: "disabled" });
     const og = await page.request.get(`/zh/result/${result.id}/opengraph-image`);
     expect(og.status()).toBe(200);
-    await testInfo.attach("unclear-og", { body: await og.body(), contentType: "image/png" });
+    await testInfo.attach("balanced-og", { body: await og.body(), contentType: "image/png" });
     const order = await page.request.post("/api/orders", { data: { resultId: result.id } });
-    expect(order.status()).toBe(422);
-    expect((await order.json()).error.code).toBe("UNCLEAR_RESULT");
+    expect(order.status()).toBe(201);
     const publicResult = await page.request.get(`/api/results/${result.id}`);
-    expect((await publicResult.json()).data).toMatchObject({ type: null, clear: false, unlocked: false });
+    expect((await publicResult.json()).data).toMatchObject({ type: "INFP", unlocked: false });
     const stranger = await browser.newContext({ baseURL });
     try {
       await stranger.request.get("/");
@@ -126,7 +129,7 @@ test.describe("review improvements", () => {
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
     expect(page.url()).not.toContain(result.id);
     await page.goto("/zh/my/report");
-    await expect(page.getByRole("article", { name: "待探索 测试记录" })).toHaveCount(2);
+    await expect(page.getByRole("article", { name: "INFP 测试记录" })).toHaveCount(2);
   });
 
   test("public pages explain MBTI, score limits and a working support contact", async ({ page, request }, testInfo) => {

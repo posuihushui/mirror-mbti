@@ -44,22 +44,24 @@ export default async function TypesPage() {
   return (
     <>
       <AppHeader variant="page" title={t.headerTitle} backHref={href(locale, "/")} path="/types" />
-      <main className="mx-auto max-w-[1100px] px-[27px] pt-4 pb-[135px] md:px-10 md:pt-[60px] md:pb-[80px]">
+      <main className="mx-auto max-w-6xl px-6 pt-6 pb-[135px] md:px-10 md:pt-14 md:pb-20">
         <p className="eyebrow text-[#738087]">{t.eyebrow}</p>
         <h1 className="mt-[18px] text-[27px] leading-[1.6] tracking-[-0.035em] md:text-[32px]">{t.heading}</h1>
         <p className="mt-[23px] max-w-[410px] text-[13px] leading-[1.9] text-[#6b777d]">
           {t.intro}
         </p>
-        <ul className="mt-10 grid list-none grid-cols-2 gap-px bg-line p-0 md:grid-cols-4">
+        <ul className="mt-10 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-4 md:gap-4">
           {TYPES.map((type) => {
             const { name, line } = typeMeta(type, locale);
             return (
-              <li key={type} className="bg-paper">
-                <Link href={href(locale, `/types/${type}`)} className="group flex h-full flex-col gap-3 px-4 py-6 md:px-6 md:py-8" {...trackAttrs("view_type", "type_grid")}>
-                  <span className="text-[34px] leading-none font-medium tracking-[-0.055em] md:text-[40px]">{type}</span>
-                  <span className="text-[12px] tracking-[0.08em] text-[#5c6a70]">{name}</span>
-                  <span className="text-[11px] leading-[1.9] text-[#7d898e] whitespace-pre-line">{line}</span>
-                  <span className="mt-auto flex items-center gap-2 text-[11px] text-[#5d696d] group-hover:text-ink">
+              <li key={type} className="overflow-hidden border border-line bg-card">
+                <Link href={href(locale, `/types/${type}`)} className="group flex h-full flex-col" {...trackAttrs("view_type", "type_grid")}>
+                  <span className="bg-night px-4 pt-5 pb-4 text-paper md:px-6 md:pt-6">
+                    <span className="block text-3xl leading-none font-medium tracking-[-0.055em] md:text-4xl">{type}</span>
+                    <span className="mt-3 block text-xs tracking-wider text-[#c7d1d4]">{name}</span>
+                  </span>
+                  <span className="px-4 pt-4 text-[11px] leading-[1.9] text-[#6f7c81] whitespace-pre-line md:px-6">{line}</span>
+                  <span className="mt-auto flex items-center gap-2 px-4 py-5 text-[11px] text-[#5d696d] group-hover:text-ink md:px-6">
                     {t.learnMore} <ArrowUpRight size={13} />
                   </span>
                 </Link>

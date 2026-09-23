@@ -75,7 +75,7 @@ export default async function HomePage() {
             <h1 className="mt-[18px] text-[36px] leading-[1.4] tracking-[-0.055em] md:mt-[34px] md:text-[53px] md:leading-[1.32] md:tracking-[-0.065em] xl:text-[68px] 2xl:text-[77px]">
               <span className="home-title-motion inline-block">{t.titleLine1}</span>
               <br />
-              <span className="home-title-motion home-title-motion-later inline-block">{t.titleLine2}<span className="text-[#999c98]">{t.titleStop}</span></span>
+              <span className="home-title-motion home-title-motion-later inline-block">{t.titleLine2}<span className="text-warm">{t.titleStop}</span></span>
             </h1>
             <p className="home-description-motion mt-[17px] text-[12px] leading-[1.9] text-[#677276] md:mt-[26px] md:text-[14px] md:leading-[2]">
               {t.descLine1}
@@ -106,14 +106,14 @@ export default async function HomePage() {
           <p className="absolute bottom-[7px] left-0 hidden text-[10px] tracking-[0.04em] text-[#899498] md:block">{t.bottomLine}</p>
         </section>
 
-        <section className="mt-[30px] hidden items-center justify-between gap-5 border-t border-line py-[27px] text-[11px] md:flex">
-          <span className="text-[9px] tracking-[0.1em] text-[#849195]">{t.stepsLabel}</span>
+        <section className="mt-8 hidden items-center justify-between gap-5 bg-night px-6 py-7 text-[11px] text-paper md:flex">
+          <span className="text-[9px] tracking-[0.1em] text-[#91a0a5]">{t.stepsLabel}</span>
           {t.steps.map((s, i) => (
             <div key={s}>
-              <b className="mr-[10px] font-normal text-[#8d9a9f]">0{i + 1}</b> {s}
+              <b className="mr-3 font-normal text-warm">0{i + 1}</b> {s}
             </div>
           ))}
-          <OverlayButton overlay="about" className="flex items-center gap-4 text-[11px]" {...trackAttrs("open_about", "steps_bar")}>
+          <OverlayButton overlay="about" className="flex items-center gap-4 text-[11px] text-paper" {...trackAttrs("open_about", "steps_bar")}>
             {t.aboutLink} <ArrowUpRight size={15} />
           </OverlayButton>
         </section>

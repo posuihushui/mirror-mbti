@@ -33,7 +33,7 @@ export const enPreferenceDimensions = [
 export const enPreferenceNotes = [
   {
     title: "How to read results near 50%",
-    body: "50% means your answers on both sides of that dimension balanced out this time — it does not prove equal ability on both sides. The site treats a higher-side score of 50–60% as “close to balanced”; that is a product display rule, not a validated statistical confidence interval. When all four dimensions fall in this range, no definite type is given.",
+    body: "50% means your answers on both sides of that dimension balanced out this time — it does not prove equal ability on both sides. The site describes the higher-side score in four bands: 50–55% almost even, 56–60% close to balanced, 61–74% a slight lean, 75% and above a clear lean. That is a product display rule, not a validated statistical confidence interval. You always get four letters; when a dimension is close to balanced, they are only a point of comparison, and both sides are worth reading.",
   },
   {
     title: "When you retake, first look at what changed.",
@@ -41,7 +41,7 @@ export const enPreferenceNotes = [
   },
 ] as const;
 
-export const enDegrees = { balanced: "Close to balanced", clear: "Clear lean", slight: "Slight lean" } as const;
+export const enDegrees = { even: "Almost even", balanced: "Close to balanced", slight: "Slight lean", marked: "Clear lean" } as const;
 
 export function enInterpretation(label: string, need: string, strong: boolean): string {
   const lowered = need.charAt(0).toLowerCase() + need.slice(1);

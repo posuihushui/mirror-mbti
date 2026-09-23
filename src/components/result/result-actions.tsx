@@ -25,7 +25,6 @@ type Props = {
   networks?: readonly CryptoNetwork[];
   owner: boolean;
   unlocked: boolean;
-  clear: boolean;
   syncing?: boolean;
   /** Which slot this instance renders: the desktop panel button or the phone dock. */
   slot: "panel" | "dock";
@@ -35,7 +34,7 @@ type Props = {
  * Unlock / read CTA for the result page. The payment sheet is owned by the "dock" instance
  * (mounted once); the "panel" instance only triggers it through the `?unlock=1` search param.
  */
-export function ResultActions({ resultId, type, name, priceLabel, mode, networks, owner, unlocked, clear, syncing = false, slot }: Props) {
+export function ResultActions({ resultId, type, name, priceLabel, mode, networks, owner, unlocked, syncing = false, slot }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -51,7 +50,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
 
   const readHref = href(locale, `/report/${resultId}`);
   const isUnlocked = unlocked || unlockedNow;
-  const canPay = owner && clear && !isUnlocked && !syncing;
+  const canPay = owner && !isUnlocked && !syncing;
 
   const setOpen = (next: boolean) => {
     const query = new URLSearchParams(searchParams.toString());
@@ -109,7 +108,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
           {isUnlocked && <a className="text-link min-h-11 shrink-0 text-xs" href={href(locale, `/my/pairing?result=${resultId}`)}>{pairingUiMessages[locale].inviteShort}</a>}
         </div>
       </Dock>
-      {owner && clear && !syncing && (
+      {owner && !syncing && (
         <PaymentSheet
           open={open}
           initiallyUnlocked={isUnlocked}

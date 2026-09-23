@@ -196,6 +196,39 @@
   }
 }
 
+/* The material layer is a real raster paper scan. It stays behind an explicit
+   content wrapper so grain never competes with text, controls, or charts. */
+.surface-texture {
+  position: relative;
+  isolation: isolate;
+}
+
+.surface-texture::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url("/assets/surfaces/paper-grain.png") 0 0 / 512px 512px repeat;
+  content: "";
+  opacity: 0.055;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.surface-texture-dark::before {
+  opacity: 0.14;
+  mix-blend-mode: soft-light;
+}
+
+.surface-content {
+  position: relative;
+  z-index: 1;
+}
+
+.warm-panel {
+  background: #c49473;
+  color: #171b1c;
+}
+
 /* Bottom safe-area helpers for fixed docks and sheets inside WeChat / iOS Safari. */
 @utility pb-safe-4 {
   padding-bottom: calc(16px + env(safe-area-inset-bottom));

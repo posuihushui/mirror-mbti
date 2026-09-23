@@ -4,7 +4,7 @@ import { db, schema } from "@/db";
 import { claimFirstReferral } from "@/lib/share-analytics";
 import { lockVisitor } from "@/lib/share-request";
 import { newResultId } from "@/lib/ids";
-import { calculate, sampleProfile, type Profile } from "@/lib/personality";
+import { calculate, sampleProfile, uniformAnswers, type Profile } from "@/lib/personality";
 import { getQuestionnaire, LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type QuestionnaireId } from "@/lib/questionnaires";
 
 export const SAMPLE_RESULT_ID = "sample";
@@ -17,6 +17,8 @@ export type ResultView = {
   owner: boolean;
   /** Whether the full report has been paid for. */
   unlocked: boolean;
+  /** Set when one option ran long enough to suggest a click-through. Invites a review; blocks nothing. */
+  uniform: boolean;
   createdAt: Date | null;
   questionnaireId: string;
   questionCount: number;
@@ -25,7 +27,7 @@ export type ResultView = {
 };
 
 export function sampleResult(): ResultView {
-  return { id: SAMPLE_RESULT_ID, profile: sampleProfile, sample: true, owner: false, unlocked: true, createdAt: null, questionnaireId: LEGACY_QUESTIONNAIRE_ID, questionCount: 32, scoringVersion: SCORING_VERSION, reportVersion: REPORT_VERSION };
+  return { id: SAMPLE_RESULT_ID, profile: sampleProfile, sample: true, owner: false, unlocked: true, uniform: false, createdAt: null, questionnaireId: LEGACY_QUESTIONNAIRE_ID, questionCount: 32, scoringVersion: SCORING_VERSION, reportVersion: REPORT_VERSION };
 }
 
 export async function ensureVisitor(visitorId: string, userAgent?: string | null) {
@@ -58,16 +60,17 @@ export async function createResult(visitorId: string, answers: number[], userAge
     });
     if (!previous) await claimFirstReferral(tx, visitorId, id, createdAt);
   });
-  return { id, profile, sample: false, owner: true, unlocked: false, createdAt: new Date(), ...version };
+  return { id, profile, sample: false, owner: true, unlocked: false, uniform: uniformAnswers(answers), createdAt: new Date(), ...version };
 }
 
-function toView(row: Omit<typeof schema.results.$inferSelect, "answers" | "responses">, visitorId: string | null): ResultView {
+function toView(row: Omit<typeof schema.results.$inferSelect, "answers" | "responses"> & { answers?: number[] }, visitorId: string | null): ResultView {
   return {
     id: row.id,
     profile: { type: row.type, values: row.values, balanced: row.balanced },
     sample: false,
     owner: visitorId === row.visitorId,
     unlocked: row.unlockedAt !== null,
+    uniform: row.answers ? uniformAnswers(row.answers) : false,
     createdAt: row.createdAt,
     questionnaireId: row.questionnaireId,
     questionCount: row.questionCount,

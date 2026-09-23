@@ -1,0 +1,1 @@
+ALTER TABLE "results" ALTER COLUMN "scoring_version" SET DEFAULT 'preference-v2';

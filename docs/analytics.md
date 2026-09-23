@@ -48,7 +48,7 @@
 
 | 类型 | 参数 |
 | --- | --- |
-| 事件范围维度 | `page_type` `site_language` `cta_id` `cta_location` `questionnaire_id` `progress_percent` `resumed` `is_sample` `result_owner` `result_clear` `result_unlocked` `chapter_number` `nav_method` `tab` `payment_mode` `payment_type` `stage` `error_code` `target` `completed` `order_status` `outcome` `copy_target` `network` `token_symbol` `wallet_name` `language_to` `faq_index` `question_number` |
+| 事件范围维度 | `page_type` `site_language` `cta_id` `cta_location` `questionnaire_id` `progress_percent` `resumed` `is_sample` `result_owner` `result_even` `result_uniform` `result_unlocked` `chapter_number` `nav_method` `tab` `payment_mode` `payment_type` `stage` `error_code` `target` `completed` `order_status` `outcome` `copy_target` `network` `token_symbol` `wallet_name` `language_to` `faq_index` `question_number` |
 | 事件范围指标 | `question_count` `answered_count` `record_count` `unlocked_count` |
 | 用户范围维度 | `wechat_browser` |
 
@@ -124,7 +124,7 @@
 
 | 事件 | 触发时机 | 参数 |
 | --- | --- | --- |
-| `result_view` | 结果页（含示例） | `questionnaire_id` `question_count` `is_sample` `result_owner` `result_clear` `result_unlocked` |
+| `result_view` | 结果页（含示例） | `questionnaire_id` `question_count` `is_sample` `result_owner` `result_even` `result_uniform` `result_unlocked` |
 | `view_item` | 本人、倾向明确且未解锁的结果页 | `currency` `value` `items` |
 | `result_answers_review` | 倾向不明确时点击回看作答 | `outcome`（loaded / failed） |
 | `report_view` | 报告页（含示例） | `questionnaire_id` `question_count` `is_sample` |
@@ -182,7 +182,7 @@
 | `pairing_info` / `invite_pairing` / `my_pairing` | 双人指南介绍 / 邀请入口 / 我的双人指南；仅通用名称，不附带结果或邀请编号 |
 | `home` | 回到首页（报告结尾、404） |
 
-`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`unclear_result`、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`、`pairing_benefit`、`pairing_center`。
+`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`、`pairing_benefit`、`pairing_center`。
 
 ## 新增埋点
 

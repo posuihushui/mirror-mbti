@@ -43,6 +43,20 @@ export const poles: Record<string, { label: string; need: string; strength: stri
 
 export type Profile = { type: string; values: number[]; balanced: boolean[] };
 
+/**
+ * How strongly one dimension leans, read off its score. `even` and `balanced` together are exactly
+ * the `balanced` flag's 60% rule, split in two so a near-midpoint dimension still has something to
+ * say. These bands are a display convention, not a validated confidence interval.
+ */
+export type Clarity = "even" | "balanced" | "slight" | "marked";
+
+export function clarityOf(value: number): Clarity {
+  if (value <= 55) return "even";
+  if (value <= 60) return "balanced";
+  if (value < 75) return "slight";
+  return "marked";
+}
+
 export const sampleProfile: Profile = { type: "INFJ", values: [79, 71, 64, 58], balanced: [false, false, false, true] };
 
 export function calculate(answers: number[], questionnaireId: QuestionnaireId = LEGACY_QUESTIONNAIRE_ID): Profile {
@@ -54,7 +68,9 @@ export function calculate(answers: number[], questionnaireId: QuestionnaireId = 
     return Math.round(50 + (sum / (indices.length * 2)) * 50);
   });
   return {
-    type: raw.map((n, i) => dimensions[i][n >= 50 ? 0 : 1]).join(""),
+    // An exact tie goes to I / N / F / P, the published MBTI convention: those sides are the ones
+    // self-report tends to under-state. Every completed questionnaire therefore yields four letters.
+    type: raw.map((n, i) => dimensions[i][n > 50 ? 0 : 1]).join(""),
     values: raw.map((n) => Math.max(n, 100 - n)),
     balanced: raw.map((n) => Math.abs(n - 50) <= 10),
   };
@@ -95,35 +111,45 @@ export function typeMeta(type: string, locale: Locale = "zh") {
   return { name, line, summary, letters };
 }
 
-/** A balanced result is meaningful feedback, but not a determinate four-letter type. */
-export function hasClearPreference(profile: Profile): boolean {
-  return profile.values.some((value) => value > 60);
+/**
+ * Flags a stretch of identical answers long enough to suggest the questionnaire was clicked through.
+ * Every dimension appears once forward and once reverse-scored within any eight consecutive items,
+ * so an honest respondent rarely repeats one option this far. It only invites a review: a flagged
+ * result still gets its type and can still be unlocked.
+ */
+export function uniformAnswers(answers: number[]): boolean {
+  if (!answers.length) return false;
+  let longest = 1;
+  let run = 1;
+  for (let i = 1; i < answers.length; i++) {
+    run = answers[i] === answers[i - 1] ? run + 1 : 1;
+    if (run > longest) longest = run;
+  }
+  return longest >= Math.ceil(answers.length * 0.375);
 }
 
 export function profileMeta(profile: Profile, locale: Locale = "zh") {
   if (locale === "en") {
-    const letters = profile.type.split("");
-    if (!hasClearPreference(profile)) return { ...enProfileCopy.unclear, letters };
     const meta = typeMeta(profile.type, "en");
-    if (profile.balanced.some(Boolean)) return {
-      ...meta, typeLabel: profile.type, line: enProfileCopy.balancedLine,
-      summary: enProfileCopy.balancedSummary(meta.letters.filter((_, i) => !profile.balanced[i]).map((l) => enPoles[l as Letter].label.toLowerCase())),
-    };
+    const leaning = meta.letters.filter((_, i) => !profile.balanced[i]).map((l) => enPoles[l as Letter].label.toLowerCase());
+    if (!leaning.length) return { ...meta, typeLabel: profile.type, line: enProfileCopy.evenLine, summary: enProfileCopy.evenSummary };
+    if (leaning.length < meta.letters.length) return { ...meta, typeLabel: profile.type, line: enProfileCopy.balancedLine, summary: enProfileCopy.balancedSummary(leaning) };
     return { ...meta, typeLabel: profile.type };
   }
-  if (!hasClearPreference(profile)) return {
-    name: "倾向待探索", line: "本次回答暂未形成\n清晰倾向。",
-    summary: "四个维度都接近中间位置。这可能与情境差异、对题意的不确定或当前状态有关，不表示你没有特点。可以检查答案，也可以过一段时间再探索。",
-    letters: profile.type.split(""), typeLabel: "待探索",
-  };
   const meta = typeMeta(profile.type);
-  if (profile.balanced.some(Boolean)) return {
+  const leaning = meta.letters.filter((_, i) => !profile.balanced[i]).map((l) => poles[l].label);
+  if (!leaning.length) return {
+    ...meta, typeLabel: profile.type, line: "在两端之间，\n你保持着灵活。",
+    summary: "这次四个维度都接近中间位置。参考类型按各维度的细微差别给出，仅作对照；更值得看的是每个维度的分数与解读。接近均衡可能表示你在不同情境里切换两种方式，而不是没有特点。",
+  };
+  if (leaning.length < meta.letters.length) return {
     ...meta, typeLabel: profile.type, line: "先看清偏好，\n再慢慢理解自己。",
-    summary: `这次作答中，${meta.letters.filter((_, i) => !profile.balanced[i]).map((l) => poles[l].label).join("、")}一侧呈现相对偏向；其余维度接近均衡，暂不做单侧判断。四个字母仅作为类型对照，具体解读以各维度为准。`,
+    summary: `这次作答中，${leaning.join("、")}一侧呈现相对偏向；其余维度接近均衡，暂不做单侧判断。四个字母仅作为类型对照，具体解读以各维度为准。`,
   };
   return { ...meta, typeLabel: profile.type };
 }
 
+/** Every completed questionnaire yields a type; `clarity` carries how strongly each dimension leans. */
 export function publicProfile(profile: Profile) {
-  return { ...profile, type: hasClearPreference(profile) ? profile.type : null, clear: hasClearPreference(profile) };
+  return { ...profile, clarity: profile.values.map(clarityOf) };
 }

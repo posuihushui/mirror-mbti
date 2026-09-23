@@ -30,7 +30,7 @@ import { paymentModeFor, priceLabelFor, priceMinorFor } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
-import { hasClearPreference, profileMeta, typeMeta } from "@/lib/personality";
+import { profileMeta, typeMeta } from "@/lib/personality";
 import { questionnaireLocale, questionnaireName } from "@/lib/questionnaires";
 import { getResult, SAMPLE_RESULT_ID } from "@/lib/results";
 import { cryptoNetworks } from "@/lib/payments/crypto/config";
@@ -81,7 +81,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
   const ui = pairingUiMessages[locale];
   const { profile, sample } = result;
   const { name } = profileMeta(profile, locale);
-  const clear = hasClearPreference(profile);
+  const even = profile.balanced.every(Boolean);
   const price = priceLabelFor(locale);
   const mode = paymentModeFor(locale);
   const secureNote = mode === "mock" ? t.secureMock : mode === "waffo" ? t.secureCard : t.secureLive;
@@ -95,7 +95,6 @@ export default async function ResultPage({ params, searchParams }: Params) {
     networks: mode === "crypto" ? cryptoNetworks() : [],
     owner: result.owner,
     unlocked: result.owner && result.unlocked,
-    clear,
     syncing: eligibility === "syncing",
   } as const;
 
@@ -113,22 +112,28 @@ export default async function ResultPage({ params, searchParams }: Params) {
   return (
     <>
       <AppHeader variant="page" title={sample ? t.sampleHeader : t.ownTitle} backHref={href(locale, "/")} path={sample ? "/result/sample" : undefined} />
-      <main className="pt-[15px] pb-[110px] md:mx-auto md:max-w-[1150px] md:px-10 md:pt-0 md:pb-0">
-        <p className="mx-[27px] mt-5 text-[12px] text-mist md:mx-0">{t.versionLine(questionnaireName(result.questionnaireId, locale) ?? t.legacyVersion, result.questionCount, sample)}</p>
-        <section className="block md:grid md:grid-cols-2 md:items-center md:gap-10 md:pt-[58px] md:pb-[50px] xl:gap-20">
+      <main className="pb-[110px] md:mx-auto md:max-w-6xl md:px-10 md:pb-0">
+        <p className="mx-6 my-5 text-xs text-mist md:mx-0 md:my-6">{t.versionLine(questionnaireName(result.questionnaireId, locale) ?? t.legacyVersion, result.questionCount, sample)}</p>
+        <section className="grid gap-4 md:grid-cols-2 md:items-stretch md:gap-6 md:pb-12">
           <TypeIntro profile={profile} sample={sample} />
           <ResultChart profile={profile} />
         </section>
+        {!sample && result.owner && result.uniform && (
+          <section className="mx-[27px] mb-7 border border-line px-5 py-6 md:mx-0">
+            <p className="mb-4 text-[13px] leading-[1.9]">{t.uniformNotice}</p>
+            <ReviewAnswers resultId={id} />
+          </section>
+        )}
         <PreferenceReading profile={profile} />
         {!sample && result.owner && <>
           <ContinuationList items={continuations} locale={locale} />
           {compare && !continuations.some(item => item.invitationToken === compare) && <section className="mx-6 my-7 border-t border-line pt-5 md:mx-0"><h2 className="text-xl">{ui.continue}</h2><p className="my-4 text-sm leading-[1.8]">{invitation ? ui.continuationNote : ui.continuationExpired}</p>{invitation && <ContinuationAction invitationToken={compare} resultId={id} resultLocale={locale} locale={locale} />}</section>}
-          {eligibility === "syncing" ? <section className="mx-6 md:mx-0"><AccessActions resultId={id} locale={locale} surface="result" /></section> : (clear || result.unlocked) && <PairingTracker resultId={id} surface="result"><PairingBenefit locale={locale} resultId={id} unlocked={result.unlocked} /></PairingTracker>}
+          {eligibility === "syncing" ? <section className="mx-6 md:mx-0"><AccessActions resultId={id} locale={locale} surface="result" /></section> : <PairingTracker resultId={id} surface="result"><PairingBenefit locale={locale} resultId={id} unlocked={result.unlocked} /></PairingTracker>}
         </>}
         {sample ? (
           /* Nothing is locked on the sample, so it closes by inviting the test, not by quoting a price. */
           <SampleCta secondary={{ href: href(locale, `/report/${SAMPLE_RESULT_ID}`), label: t.readSample }} />
-        ) : result.owner && result.unlocked ? <div className="mx-6 mb-8 md:mx-0"><PrimaryButton href={href(locale, `/report/${id}`)} className="max-w-[320px]">{t.readPurchased}</PrimaryButton></div> : eligibility === "syncing" ? null : clear ? (
+        ) : result.owner && result.unlocked ? <div className="mx-6 mb-8 md:mx-0"><PrimaryButton href={href(locale, `/report/${id}`)} className="max-w-[320px]">{t.readPurchased}</PrimaryButton></div> : eligibility === "syncing" ? null : (
           <UnlockPanel
             priceLabel={price}
             secureNote={secureNote}
@@ -138,14 +143,10 @@ export default async function ResultPage({ params, searchParams }: Params) {
               </Suspense>
             }
           />
-        ) : <section className="mx-[27px] mb-8 border-t border-line pt-6 md:mx-0">
-          <h2 className="mb-4 text-[20px]">{t.unclearHeading}</h2>
-          {result.owner ? <ReviewAnswers resultId={id} /> : <PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "unclear_result")}>{t.startMine}</PrimaryButton>}
-          {result.owner && result.unlocked && <PrimaryButton href={href(locale, `/report/${id}`)} className="mt-5 max-w-[300px]" {...trackAttrs("read_report", "unclear_result")}>{t.readPurchased}</PrimaryButton>}
-        </section>}
+        )}
         {!sample && result.owner && <ShareEntry resultId={id} locale={locale} />}
         {/* A buyer who reopened this page inside a wallet app has no visitor cookie; the order number restores it. */}
-        {!sample && !result.owner && clear && mode === "crypto" && (
+        {!sample && !result.owner && mode === "crypto" && (
           <section className="mx-[27px] mb-8 max-w-[560px] border-t border-line pt-6 md:mx-0" aria-labelledby="wallet-handoff">
             <h2 id="wallet-handoff" className="text-[20px] leading-[1.6]">{t.handoffHeading}</h2>
             <p className="mt-3 mb-5 text-[12px] leading-[2] text-mist">{t.handoffBody}</p>
@@ -160,14 +161,14 @@ export default async function ResultPage({ params, searchParams }: Params) {
         <Dock>
           <PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "dock")}>{t.start}</PrimaryButton>
         </Dock>
-      ) : clear || (result.owner && result.unlocked) || eligibility === "syncing" ? (
+      ) : (
         <Suspense fallback={null}>
           <ResultActions {...actionProps} slot="dock" />
         </Suspense>
-      ) : <Dock><PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("retake_quiz", "dock")}>{t.retake}</PrimaryButton></Dock>}
+      )}
       {productJsonLd && <JsonLd data={productJsonLd} />}
-      <TrackView event="result_view" params={{ questionnaire_id: result.questionnaireId, question_count: result.questionCount, is_sample: sample, result_owner: result.owner, result_clear: clear, result_unlocked: result.owner && result.unlocked }} />
-      {!sample && result.owner && clear && !result.unlocked && <TrackView event="view_item" params={reportCommerce(currencyFor(locale), priceMinorFor(locale))} />}
+      <TrackView event="result_view" params={{ questionnaire_id: result.questionnaireId, question_count: result.questionCount, is_sample: sample, result_owner: result.owner, result_even: even, result_uniform: result.uniform, result_unlocked: result.owner && result.unlocked }} />
+      {!sample && result.owner && !result.unlocked && <TrackView event="view_item" params={reportCommerce(currencyFor(locale), priceMinorFor(locale))} />}
     </>
   );
 }

@@ -5,7 +5,7 @@ import type { OrderRow, PaymentChannel } from "@/db/schema";
 import { appUrl, env, paymentModeFor, priceMinorFor } from "@/lib/env";
 import { href, type Locale } from "@/lib/i18n/locale";
 import { isValidOrderId, newOrderId } from "@/lib/ids";
-import { hasClearPreference, typeMeta } from "@/lib/personality";
+import { typeMeta } from "@/lib/personality";
 import { getCryptoProvider, getPaymentProvider } from "@/lib/payments";
 import type { CryptoNetwork, OrderView, PaymentPayload, PaymentProvider } from "@/lib/payments/types";
 import { questionnaireLocale } from "@/lib/questionnaires";
@@ -29,7 +29,6 @@ const orderMessages = {
     notFound: "结果不存在。",
     notOwner: "只能为自己的测试结果购买报告。",
     unlocked: "这份报告已经解锁。",
-    unclear: "本次回答暂未形成清晰倾向，请先检查答案或重新测试，暂不提供付费解锁。",
     openid: "需要先完成微信授权。",
     network: "请选择支付网络。",
     closed: "订单已关闭。",
@@ -41,7 +40,6 @@ const orderMessages = {
     notFound: "Result not found.",
     notOwner: "You can only buy reports for your own test results.",
     unlocked: "This report is already unlocked.",
-    unclear: "Your answers didn’t form a clear lean this time. Please review your answers or retake the test; no paid unlock is offered.",
     openid: "WeChat authorization is required first.",
     network: "Please choose a payment network.",
     closed: "This order is closed. Please start a new payment.",
@@ -96,7 +94,6 @@ export async function createOrder(input: { visitorId: string; resultId: string; 
   if (!result.owner) throw new OrderError(403, "NOT_OWNER", t.notOwner);
   if (result.unlocked) throw new OrderError(409, "ALREADY_UNLOCKED", t.unlocked);
   if (await getPairingEligibility(input.resultId, input.visitorId) === "syncing") throw new OrderError(409, "PAIRING_ENTITLEMENT_SYNCING", locale === "zh" ? "付款已确认，正在核对权益，请勿重复购买。" : "Payment is confirmed. Access is being checked. Please do not purchase again.");
-  if (!hasClearPreference(result.profile)) throw new OrderError(422, "UNCLEAR_RESULT", t.unclear);
 
   const provider = await getPaymentProvider(paymentModeFor(locale));
   let channel: PaymentChannel;
