@@ -2,6 +2,8 @@
 import { ImageResponse } from "next/og";
 import QRCode from "qrcode";
 import { BrandLogo, BrandMark, brandLogoWidth } from "@/components/brand/brand-logo";
+import { MirrorMark } from "@/components/brand/mirror-mark";
+import { shareMirrorProfile } from "@/lib/share-mark";
 import { shareMessages } from "@/lib/i18n/messages/share";
 import { OG_FONT_FAMILY, ogFonts } from "@/lib/og/fonts";
 import type { PublicShareSnapshot } from "@/lib/share-types";
@@ -13,6 +15,8 @@ export async function renderShareImage(snapshot: PublicShareSnapshot, publicUrl:
   const t = shareMessages[snapshot.locale];
   const [fonts, qr] = await Promise.all([ogFonts(), portrait ? QRCode.toDataURL(publicUrl, { width: 160, margin: 4, errorCorrectionLevel: "M", color: { dark: "#171b1c", light: "#edf2f3" } }) : Promise.resolve(null)]);
   const hasOptional = Boolean(snapshot.typeLabel || snapshot.dimensions);
+  // The sharer's own mark when they published a type or sides; otherwise the faint brand relief.
+  const mark = shareMirrorProfile(snapshot);
   const optional = <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: portrait ? 20 : 17, lineHeight: 1.4 }}>
     {snapshot.typeLabel && <div style={{ display: "flex", flexDirection: "column", gap: 6 }}><div>{`${t.referenceType} · ${snapshot.typeLabel}`}</div>{snapshot.typeNote && <div style={{ fontSize: portrait ? 15 : 13, color: "#627176" }}>{snapshot.typeNote}</div>}</div>}
     {snapshot.dimensions && <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{snapshot.dimensions.map(dimension => <div key={dimension.dimension} style={{ border: "1px solid #ccd5d7", borderRadius: 20, padding: "5px 10px", fontSize: portrait ? 15 : 13 }}>{dimension.label}</div>)}</div>}
@@ -20,7 +24,9 @@ export async function renderShareImage(snapshot: PublicShareSnapshot, publicUrl:
   return new ImageResponse(<div style={{ display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", width: "100%", height: "100%", background: "#edf2f3", color: "#171b1c", fontFamily: OG_FONT_FAMILY }}>
     {portrait ? <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%" }}>
       <div style={{ display: "flex", position: "relative", overflow: "hidden", flexDirection: "column", height: 430, flexShrink: 0, padding: 64, background: "#121718", color: "#edf2f3" }}>
-        <div style={{ display: "flex", position: "absolute", right: -155, bottom: -185, opacity: .1 }}>{BrandMark({ tone: "paper", monochrome: true, size: 560 })}</div>
+        {mark
+          ? <div style={{ display: "flex", position: "absolute", right: 56, top: 44 }}>{MirrorMark({ profile: mark, tone: "paper", size: 150 })}</div>
+          : <div style={{ display: "flex", position: "absolute", right: -155, bottom: -185, opacity: .1 }}>{BrandMark({ tone: "paper", monochrome: true, size: 560 })}</div>}
         <div style={{ display: "flex", height: 44, flexShrink: 0 }}>{BrandLogo({ locale: snapshot.locale, tone: "paper", width: brandLogoWidth(snapshot.locale, 194) })}</div>
         <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", width: 700 }}>
           <div style={{ fontSize: 19, letterSpacing: 2, color: "#c49473" }}>{t.title}</div>
@@ -39,7 +45,9 @@ export async function renderShareImage(snapshot: PublicShareSnapshot, publicUrl:
     </div> : <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%" }}>
       <div style={{ display: "flex", flex: 1 }}>
         <div style={{ display: "flex", position: "relative", overflow: "hidden", flexDirection: "column", width: 455, flexShrink: 0, padding: 44, background: "#121718", color: "#edf2f3" }}>
-          <div style={{ display: "flex", position: "absolute", right: -120, bottom: -165, opacity: .09 }}>{BrandMark({ tone: "paper", monochrome: true, size: 420 })}</div>
+          {mark
+            ? <div style={{ display: "flex", position: "absolute", right: 30, top: 26 }}>{MirrorMark({ profile: mark, tone: "paper", size: 96 })}</div>
+            : <div style={{ display: "flex", position: "absolute", right: -120, bottom: -165, opacity: .09 }}>{BrandMark({ tone: "paper", monochrome: true, size: 420 })}</div>}
           <div style={{ display: "flex", height: 40 }}>{BrandLogo({ locale: snapshot.locale, tone: "paper", width: brandLogoWidth(snapshot.locale, 176) })}</div>
           <div style={{ display: "flex", flexDirection: "column", marginTop: "auto" }}><div style={{ fontSize: 17, letterSpacing: 2, color: "#c49473" }}>{t.title}</div><div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 16 }}><div style={{ width: 26, flexShrink: 0, paddingTop: 7, fontSize: 16, color: "#c49473" }}>01</div><div style={{ flex: 1, fontSize: en ? 31 : 38, fontWeight: 500, lineHeight: 1.35 }}>{snapshot.lines[0]}</div></div><div style={{ marginTop: 14, fontSize: 17, lineHeight: 1.5, color: "#bac6c9" }}>{t.subtitle}</div></div>
         </div>

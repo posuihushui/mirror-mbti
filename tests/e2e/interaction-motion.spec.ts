@@ -40,7 +40,8 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       }
     });
 
-    test("rapid strength switches retain both original lists and align the selected pill", async ({ page }) => {
+    test("rapid strength switches retain both original lists and align the selected pill", async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== "mobile", "From 721px the two lists sit side by side, with no switch.");
       await page.goto("/zh/report/sample?chapter=2");
       const switcher = page.getByRole("tablist", { name: "优势与盲点" });
       await expect(switcher).toBeVisible();

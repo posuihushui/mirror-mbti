@@ -13,6 +13,9 @@ import { type Profile } from "@/lib/personality";
 import type { Insight, Need } from "@/lib/report-content";
 import { ChapterFooterNav, ChapterPanel, ChapterSidebarNav, ChapterTabs, StrengthSwitch } from "./chapter-ui";
 import { PracticeCheck, PracticeProgress } from "./practice-check";
+import { ContinueReading } from "./continue-reading";
+import { ReportImage } from "./report-image";
+import { href } from "@/lib/i18n/locale";
 
 export type ReportData = {
   profile: Profile;
@@ -42,6 +45,7 @@ export async function ReportBody({ data, reportKey, banner, footer, relationship
   const locale = await getLocale();
   const t = reportMessages[locale].aside;
   const { name, sample, demo, typeLabel, profile } = data;
+  const image = href(locale, `/report/${reportKey}/image`);
 
   return (
     <main
@@ -70,10 +74,12 @@ export async function ReportBody({ data, reportKey, banner, footer, relationship
             </Badge>
           )}
           <ChapterSidebarNav />
+          <ReportImage src={image} className="mt-8 text-sm text-mist hover:text-ink" />
         </div>
       </aside>
 
       <article className="min-w-0">
+        <div className="px-6 md:px-0"><ContinueReading reportKey={reportKey} /></div>
         <div className="bg-night px-6 pt-6 text-paper md:hidden">
           <div className="mb-4 flex items-center justify-between gap-4">
             <span className="flex min-w-0 items-center gap-3">
@@ -90,7 +96,11 @@ export async function ReportBody({ data, reportKey, banner, footer, relationship
 
         <ChapterPanel index={0}>
           <Cover index={0} type={typeLabel} locale={locale} heading={reportMessages[locale].one.heading} as="h1" lead={reportMessages[locale].one.lead} />
-          <Reading><ChapterOne data={data} locale={locale} /></Reading>
+          <Reading>
+            <ChapterOne data={data} locale={locale} />
+            {/* Phones keep the image here; desktop has it under the chapter list. */}
+            <ReportImage src={image} className="mt-6 font-medium md:hidden" />
+          </Reading>
         </ChapterPanel>
         <ChapterPanel index={1}>
           <Cover index={1} type={typeLabel} locale={locale} heading={reportMessages[locale].two.heading} />
@@ -178,11 +188,37 @@ function ChapterOne({ data, locale }: ChapterProps) {
 
 function ChapterTwo({ data, locale }: ChapterProps) {
   const t = reportMessages[locale].two;
+  const nav = reportMessages[locale].nav;
   return (
     <>
-      <StrengthSwitch strengths={<InsightList items={data.strengths} />} blindspots={<InsightList items={data.blindspots} />} />
+      {/* Phones switch between the two lists; from 721px they sit side by side, each strength next to its blind spot. */}
+      <div className="md:hidden">
+        <StrengthSwitch strengths={<InsightList items={data.strengths} />} blindspots={<InsightList items={data.blindspots} />} />
+      </div>
+      <div className="hidden md:grid md:grid-cols-2 md:gap-x-8" data-strength-columns>
+        <h3 className="border-b border-ink pb-2 text-sm font-medium">{nav.strengths}</h3>
+        <h3 className="border-b border-ink pb-2 text-sm font-medium">{nav.blindspots}</h3>
+        {data.strengths.map((strength, i) => (
+          <div key={strength.title} className="contents">
+            <Insight item={strength} index={i} />
+            <Insight item={data.blindspots[i]} index={i} />
+          </div>
+        ))}
+      </div>
       <Quote>{t.quote}</Quote>
     </>
+  );
+}
+
+function Insight({ item, index }: { item: Insight; index: number }) {
+  return (
+    <section className="flex gap-4 border-b border-line py-6">
+      <span aria-hidden className="pt-1 text-xs text-warm-ink">0{index + 1}</span>
+      <div className="min-w-0">
+        <h4 className="text-base font-medium">{item.title}</h4>
+        <p className="mt-2 text-base text-slate">{item.body}</p>
+      </div>
+    </section>
   );
 }
 
@@ -239,6 +275,7 @@ function InsightList({ items, variant = "lines" }: { items: Insight[]; variant?:
           <div className="min-w-0">
             <h3 className="text-base font-medium">{item.title}</h3>
             <p className="mt-2 text-base text-slate">{item.body}</p>
+            {item.say && <p className="mt-3 rounded-[16px] rounded-bl-[4px] border border-line bg-paper px-4 py-3 text-base text-ink">“{item.say}”</p>}
           </div>
         </section>
       ))}

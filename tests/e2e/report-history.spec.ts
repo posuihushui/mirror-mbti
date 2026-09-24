@@ -40,8 +40,8 @@ async function expectRecord(page: Page, result: SavedResult, paid = false) {
     has: page.locator(`a[href="${href}"]`),
   });
   await expect(card).toBeVisible();
-  await expect(card.getByRole("link", { name: paid ? "阅读详细报告" : "查看简要结果", exact: true })).toHaveAttribute("href", href);
-  if (!paid) await expect(card.getByRole("link", { name: "阅读详细报告", exact: true })).toHaveCount(0);
+  await expect(card.getByRole("link", { name: paid ? "阅读完整报告" : "查看测试结果", exact: true })).toHaveAttribute("href", href);
+  if (!paid) await expect(card.getByRole("link", { name: "阅读完整报告", exact: true })).toHaveCount(0);
 }
 
 test.describe("report history and order recovery", () => {

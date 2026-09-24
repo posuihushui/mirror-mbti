@@ -2,6 +2,7 @@ import { TextLink } from "@/components/site/text-link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/site/app-header";
+import { Dock } from "@/components/site/dock";
 import { PreferenceSummary } from "@/components/compare/preference-summary";
 import { CompareUnavailable } from "@/components/compare/compare-unavailable";
 import { ShareQuizLink, ShareVisit } from "@/components/share/share-visit";
@@ -54,11 +55,16 @@ export default async function InvitationPage({ params }: Props) {
   const hasResults = choices.length > 0;
   const joinHref = href(locale, `/t/${token}/join`);
   const quizHref = href(locale, `/quiz?compare=${token}`);
-  const startQuiz = <ShareQuizLink token={token} surface="invitation" locale={locale} href={quizHref} className={hasResults ? "text-link min-h-11 shrink-0 text-sm" : "pill min-h-11 md:w-auto"}>{ui.start}</ShareQuizLink>;
-  const useExisting = <a href={joinHref} className={hasResults ? "pill min-h-11 md:w-auto" : "text-link min-h-11 shrink-0 text-sm"}>{m.chooseExisting}<ArrowRight size={hasResults ? 19 : 15} weight={hasResults ? "light" : "regular"} aria-hidden className="shrink-0" /></a>;
+  // The action the reader most likely wants: their own result if they have one, otherwise the test.
+  const pill = "pill min-h-[52px] md:w-auto md:min-w-64";
+  const link = "text-link shrink-0";
+  const startQuiz = (primary: boolean) => <ShareQuizLink token={token} surface="invitation" locale={locale} href={quizHref} className={primary ? pill : link}>{ui.start}</ShareQuizLink>;
+  const useExisting = (primary: boolean) => <a href={joinHref} className={primary ? pill : link}>{m.chooseExisting}<ArrowRight size={primary ? 19 : 15} weight={primary ? "light" : "regular"} aria-hidden className="shrink-0" /></a>;
+  const primary = hasResults ? useExisting : startQuiz;
+  const secondary = hasResults ? startQuiz : useExisting;
   return <>
     <AppHeader variant="page" title={p.title} backHref={href(locale, "/")} />
-    <main data-share-static className="mx-auto max-w-[1060px] px-6 py-8 md:py-14">
+    <main data-share-static className="mx-auto max-w-[1060px] px-6 pt-8 pb-[120px] md:py-14">
       <div className="grid gap-9 md:grid-cols-2 md:gap-x-14 md:gap-y-10 md:[grid-template-rows:auto_1fr]">
         <section className="md:col-start-1 md:row-start-1">
           <p className="eyebrow text-mist">{ui.introEyebrow}</p>
@@ -73,22 +79,24 @@ export default async function InvitationPage({ params }: Props) {
             <span className="text-base">{text}</span>
           </li>)}</ol>
         </section>
-        {/* The preview and the host's agreed scope: the proof, above the decision on a phone. */}
-        <div className="md:col-start-2 md:row-span-2 md:row-start-1">
-          <PairingExample locale={locale} />
-          <div data-share-card className="mt-5"><PreferenceSummary snapshot={invitation.snapshot} locale={locale} title={ui.hostScope} /></div>
-        </div>
+        {/* The decision follows the promise directly; on phones the main action also stays in the dock. */}
         <section className="md:col-start-1 md:row-start-2">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">{hasResults ? <>{useExisting}{startQuiz}</> : <>{startQuiz}{useExisting}</>}</div>
-          <p className="mt-5 text-xs text-mist">{ui.noConsentYet}</p>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-6"><span className="hidden md:contents">{primary(true)}</span>{secondary(false)}</div>
+          <p className="mt-4 text-xs text-mist">{ui.noConsentYet}</p>
           {hasResults && <p className="mt-2 text-xs text-mist">{p.feeRule}</p>}
-          <div className="mt-4 flex flex-wrap gap-x-6 text-xs">
+          <div className="mt-3 flex flex-wrap gap-x-6 text-xs">
             <TextLink href={href(locale === "zh" ? "en" : "zh", `/quiz?compare=${token}`)} prefetch={false} hrefLang={locale === "zh" ? "en" : "zh-CN"}>{locale === "zh" ? "English" : "中文"}</TextLink>
             <TextLink href={href(locale, "/pairing")}>{ui.learn}</TextLink>
           </div>
           <p className="mt-3 text-xs text-mist">{m.invitationEnd} <time dateTime={invitation.expiresAt}>{new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(invitation.expiresAt))}</time></p>
         </section>
+        {/* The preview and the host's agreed scope: the proof, after the decision on a phone. */}
+        <div className="md:col-start-2 md:row-span-2 md:row-start-1">
+          <PairingExample locale={locale} />
+          <div data-share-card className="mt-5"><PreferenceSummary snapshot={invitation.snapshot} locale={locale} title={ui.hostScope} /></div>
+        </div>
       </div>
+      <Dock>{primary(true)}</Dock>
       <ShareVisit token={token} locale={locale} surface="invitation" />
     </main>
   </>;

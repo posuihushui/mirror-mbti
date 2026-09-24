@@ -6,6 +6,7 @@ import { href } from "@/lib/i18n/locale";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { getLocale } from "@/lib/i18n/server";
+import { unlockBulletsFor } from "@/lib/site";
 
 const icons = [BookOpen, Compass, ChatsCircle];
 
@@ -54,7 +55,7 @@ export async function UnlockPanel({ priceLabel, action, secureNote, preview }: P
           <span className="pb-1 text-xs text-night-mist">{t.priceNote}</span>
         </div>
         <ul className="mt-6 space-y-3">
-          {t.includes.map((label, i) => {
+          {unlockBulletsFor(locale).map((label, i) => {
             const Icon = icons[i];
             return (
               <li key={label} className="flex items-center gap-3 text-sm text-night-body">

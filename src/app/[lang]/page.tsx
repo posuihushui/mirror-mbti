@@ -124,7 +124,7 @@ export default async function HomePage() {
         <StartButton className="border-[3px] border-[#3e4343]" trackLocation="dock" />
         <div className="flex items-center justify-between px-1 pt-2">
           <span className="text-xs text-[#52656e]">{t.dockFree}</span>
-          <PrimaryLink locale={locale} label={t.dockSample} />
+          <SampleChip locale={locale} label={t.dockSample} />
         </div>
       </Dock>
       <JsonLd data={appJsonLd} />
@@ -132,10 +132,13 @@ export default async function HomePage() {
   );
 }
 
-function PrimaryLink({ locale, label }: { locale: Locale; label: string }) {
+/** Phones: the sample as a thing you can open — its small mirror and type, not a bare text link. */
+function SampleChip({ locale, label }: { locale: Locale; label: string }) {
   return (
-    <Link href={href(locale, "/result/sample")} className="flex min-h-8 items-center gap-1 text-xs text-[#52656e]" {...trackAttrs("view_sample_result", "dock")}>
+    <Link href={href(locale, "/result/sample")} className="flex min-h-8 items-center gap-1.5 text-xs text-[#52656e]" {...trackAttrs("view_sample_result", "dock")}>
+      <MirrorMark profile={sampleProfile} size={20} className="shrink-0" />
       {label}
+      <b className="font-medium text-ink">{sampleProfile.type}</b>
       <ArrowRight size={13} />
     </Link>
   );

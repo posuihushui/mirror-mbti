@@ -98,9 +98,8 @@
 | --- | --- | --- |
 | `page_view` | 首次加载与每次路径变化 | `page_location` `page_referrer`（均已脱敏） |
 | `cta_click` | 点击带 `trackAttrs` 的链接或按钮 | `cta_id` `cta_location` |
-| `language_menu_open` | 打开语言菜单 | `cta_location`（header_nav / header_mobile） |
 | `more_menu_open` | 打开顶栏「更多信息」菜单 | `cta_location`（header_nav / header_mobile） |
-| `language_switch` | 选择另一种语言 | `language_to` |
+| `language_switch` | 在「更多」菜单末尾选择另一种语言 | `language_to` |
 | `faq_open` | 「关于这次探索」弹层中展开问题 | `faq_index`（从 1 开始） `cta_location` |
 | `page_not_found` | 404 页面 | — |
 
@@ -110,6 +109,7 @@
 | --- | --- | --- |
 | `quiz_start` | 在版本页选择开始或继续某个版本 | `questionnaire_id` `question_count` `resumed` `answered_count` |
 | `quiz_progress` | 答题数首次达到 25% / 50% / 75% / 100% | `questionnaire_id` `question_count` `progress_percent` `answered_count` |
+| `quiz_part_complete` | 64 题版每完成 16 题、出现「休息一下」时 | `questionnaire_id`、`question_count`、`part_number`（1–3） |
 | `quiz_version_switch` | 答题中点击「切换版本」 | `questionnaire_id` `question_count` `answered_count` |
 | `quiz_review_open` | 展开答题回顾 | `questionnaire_id` `question_count` `answered_count` |
 | `quiz_review_jump` | 在回顾中跳到另一题 | `questionnaire_id` `question_count` `question_number` |
@@ -131,6 +131,7 @@
 | `report_chapter_view` | 切换到另一章 | `chapter_number` `nav_method`（tab / sidebar / next） |
 | `report_tab_switch` | 第二章「优势 / 容易忽略的」切换 | `tab`（strengths / blindspots） |
 | `report_practice_check` | 第四章七天练习里勾选或取消某一天（勾选状态只存在本浏览器） | `day_number`（1–7）、`checked` |
+| `report_image_open` | 在报告里打开「把报告摘要存成图片」 | 无 |
 | `my_report_view` | 「我的报告」页 | `record_count` `unlocked_count` |
 | `recover_submit` / `recover_success` / `recover_error` | 用订单号找回记录 | `recover_error`：`error_code` |
 

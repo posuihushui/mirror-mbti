@@ -1,15 +1,19 @@
 "use client";
 
 import { CaretDown } from "@phosphor-icons/react";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { cn } from "cn";
 import type { CtaLocation } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 
+const MenuOpen = createContext(false);
+/** Whether the enclosing 更多 menu is open: the language options render only then. */
+export const useMoreMenuOpen = () => useContext(MenuOpen);
+
 /**
  * Header "更多信息" disclosure (WAI-ARIA disclosure navigation): a button toggles a panel of
- * server-rendered links. The panel is only `hidden` while closed, so the links stay in the HTML for
- * crawlers; the language menu may render its options on open because hreflang covers crawlers.
+ * server-rendered links, ending with the language options. The panel is only `hidden` while closed, so the
+ * page links stay in the HTML for crawlers.
  * Not a `<details>`: its implicit `group` role would sit on every page next to the quiz answer group.
  */
 export function MoreMenu({
@@ -78,7 +82,7 @@ export function MoreMenu({
         }}
         className="more-menu-panel absolute top-full right-0 z-40 mt-[6px] min-w-[180px] rounded-[4px] border border-line bg-card p-[6px] text-ink shadow-[0_14px_34px_rgba(21,28,31,0.12)]"
       >
-        {children}
+        <MenuOpen value={open}>{children}</MenuOpen>
       </div>
     </div>
   );

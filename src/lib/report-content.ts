@@ -4,7 +4,8 @@ import { dimensions, polesFor, profileMeta, type Letter, type Profile } from "@/
 import { dimensionReading } from "@/lib/preference-content";
 import { blindspotTitles, chapterLabelsFor } from "@/lib/site";
 
-export type Insight = { title: string; body: string };
+/** `say` is a sentence to try out loud; the report sets it apart as speech. */
+export type Insight = { title: string; body: string; say?: string };
 
 /**
  * Chapter 01's reading of one dimension. A clear lean gets its usual strength and one thing to try;
@@ -90,8 +91,9 @@ const zhReportCopy = {
   blindspotTitles,
   blindspotBalancedBody: (pair: string, question: string) => `当${pair}接近均衡时，不必为自己选定一个固定标签。${question}分别写出两种答案对应的场景，看看改变的是任务、角色还是精力。`,
   relationshipTitles: ["让精力的需要变得可见", "把彼此理解的起点说清楚", "一起说明决定背后的取舍", "约定稳定部分与可变部分"],
-  relationshipBalancedBody: (balanced: string) => `${balanced}可以这样开始：“我在不同情境下会有不同需要，这一次我更希望……你呢？”`,
-  relationshipBody: (qualifier: string, phrase: string) => `${qualifier}可以尝试这样说：“${phrase}”然后邀请对方用自己的话回应，避免用类型猜测对方。`,
+  relationshipBalancedBody: (balanced: string) => `${balanced}可以这样开始：`,
+  relationshipBalancedSay: "我在不同情境下会有不同需要，这一次我更希望……你呢？",
+  relationshipBody: (qualifier: string) => `${qualifier}可以试着这样开口，然后邀请对方用自己的话回应，避免用类型猜测对方：`,
   workTitles: ["适合你的工作节奏", "让理解变成可见的成果", "给选择设定可讨论的条件", "兼顾推进与调整"],
   workBalancedBody: (balanced: string) => `${balanced}在学习或工作中各试用一次，记录哪种安排更适合当前任务，而非为自己选择固定职业标签。`,
   dayOne: { title: "第 1 天 · 留下一次真实记录", body: "选一个今天发生的小情境，记下当时的任务、与你互动的人、你的第一反应和精力变化。先描述事实，暂时不套用人格标签。" },
@@ -122,7 +124,9 @@ export function buildReportData(profile: Profile, options: { sample: boolean; de
     title: copy.blindspotTitles[i], body: profile.balanced[i] ? copy.blindspotBalancedBody(reading.pair, reading.question) : join(qualifier, scene.watch),
   }));
   const relationships = contexts.map(({ reading, scene, qualifier }, i) => ({
-    title: copy.relationshipTitles[i], body: profile.balanced[i] ? copy.relationshipBalancedBody(reading.balanced) : copy.relationshipBody(qualifier, scene.phrase),
+    title: copy.relationshipTitles[i],
+    body: profile.balanced[i] ? copy.relationshipBalancedBody(reading.balanced) : copy.relationshipBody(qualifier),
+    say: profile.balanced[i] ? copy.relationshipBalancedSay : scene.phrase,
   }));
   const work = contexts.map(({ reading, scene, qualifier }, i) => ({
     title: copy.workTitles[i],

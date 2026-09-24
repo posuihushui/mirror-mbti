@@ -1,19 +1,19 @@
 import type { Locale } from "@/lib/i18n/locale";
 
 const zh = {
-  title: "双人相处指南",
+  title: "双人指南",
   heading: "把认识自己，延伸到理解彼此。",
   summary: "发现需要说清楚的地方，带走一句可以试着说的话。",
   unlock: "解锁报告与双人指南",
   invite: "邀请一个人",
   learnMore: "了解双人指南",
-  feeRule: "双方都需解锁各自用于配对的报告；已解锁无需重复购买。",
+  feeRule: "双方都需解锁各自的完整报告；已解锁的无需重复购买。",
   delayedGeneration: "对方参与并确认后，生成你们的指南。",
   hostAgree: "同意公开并生成邀请",
-  guestAgree: "同意并生成我们的相处指南",
-  continue: "继续这次配对",
+  guestAgree: "同意并生成我们的双人指南",
+  continue: "继续这份邀请",
   waiting: "邀请已准备好；对方确认后，可在这里查看指南。",
-  locked: "请先解锁本次结果的报告，再继续配对。",
+  locked: "请先解锁这份结果的完整报告，再继续。",
   syncing: "付款已确认，正在核对报告权益，请勿重复购买。",
   unavailable: "本次倾向尚不明确，暂不提供付费解锁。",
   invalidInvitation: "这份邀请已失效，你的个人报告不受影响。",
@@ -29,11 +29,11 @@ const zh = {
     firstLine: "先把时间定下来，我才放心。",
     secondLine: "先留一点余地，临时再看看。",
   },
-  invitationText: (url: string) => `想和你一起看看，我们哪些地方容易理解彼此，哪些话可以换个方式说。这里能生成一份只给我们双方看的相处指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
+  invitationText: (url: string) => `想和你一起看看，我们哪些地方容易理解彼此，哪些话可以换个方式说。这里能生成一份只给我们双方看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
 };
 
 const en: typeof zh = {
-  title: "A guide to understanding each other",
+  title: "Guide for two",
   heading: "Understand yourself and each other.",
   summary: "Explore what needs explaining and something you can try saying.",
   unlock: "Unlock my report and the guide for two",

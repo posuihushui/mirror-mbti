@@ -49,7 +49,7 @@ test.describe("analytics", () => {
     }).toPass();
   });
 
-  test("the paid funnel is measured end to end without result IDs or order numbers", async ({ page }) => {
+  test("the paid funnel is measured end to end without result IDs or order numbers", async ({ page }, testInfo) => {
     await page.goto("/zh/quiz");
     const origin = new URL(page.url()).origin;
     await page.getByRole("button", { name: "开始 32 题轻量版" }).click();
@@ -91,8 +91,11 @@ test.describe("analytics", () => {
 
     await page.getByRole("button", { name: /下一章/ }).click();
     await expectEvent(page, "report_chapter_view", { chapter_number: 2, nav_method: "next", page_type: "report" });
-    await page.getByRole("tab", { name: "容易忽略的" }).click();
-    await expectEvent(page, "report_tab_switch", { tab: "blindspots" });
+    // Phones switch between strengths and blind spots; desktop sets them side by side, with nothing to switch.
+    if (testInfo.project.name === "mobile") {
+      await page.getByRole("tab", { name: "容易忽略的" }).click();
+      await expectEvent(page, "report_tab_switch", { tab: "blindspots" });
+    }
     expect((await events(page, "page_view")).filter((event) => event.params.page_type === "report")).toHaveLength(1);
 
     const queued = JSON.stringify(await commands(page));

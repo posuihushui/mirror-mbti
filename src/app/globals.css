@@ -183,9 +183,13 @@
     cursor: default;
     opacity: 0.35;
   }
+  /* Warm alone is under 3:1 on paper, so the ring is warm-ink there and warm on the dark surfaces. */
   :where(button, a, [role="tab"]):focus-visible {
-    outline: 2px solid var(--color-warm);
+    outline: 2px solid var(--color-warm-ink);
     outline-offset: 5px;
+  }
+  :where(.bg-night, .bg-night-deep) :where(button, a, [role="tab"]):focus-visible {
+    outline-color: var(--color-warm);
   }
   img {
     -webkit-user-drag: none;
@@ -294,7 +298,6 @@
 .chapter-bar-motion { opacity: 0; transform: scaleY(0.4); }
 [aria-current="true"] > .chapter-bar-motion { opacity: 1; transform: none; }
 
-[data-slot="dropdown-menu-trigger"][data-state="open"] .language-caret,
 .more-menu [aria-expanded="true"] .more-menu-caret { transform: rotate(180deg); }
 
 /* Motion enhances the existing, visible server HTML. Only the portrait and copy
@@ -310,6 +313,14 @@
 
   .home-description-motion {
     animation: home-copy-enter 500ms var(--motion-ease-out) 180ms backwards;
+  }
+
+  .result-reveal {
+    animation: detail-fade-in 240ms ease-out backwards;
+  }
+
+  .result-reveal-letter {
+    animation: home-copy-enter 420ms var(--motion-ease-out) backwards;
   }
 
   .home-portrait-motion {
@@ -421,16 +432,10 @@
     animation: dialog-exit 180ms ease-in forwards;
   }
 
-  [data-slot="dropdown-menu-content"][data-state="open"],
   .more-menu-panel:not([hidden]) {
     animation: menu-enter var(--motion-duration-feedback) var(--motion-ease-out) backwards;
   }
 
-  [data-slot="dropdown-menu-content"][data-state="closed"] {
-    animation: detail-fade-out 120ms ease-in forwards;
-  }
-
-  .language-caret,
   .more-menu-caret {
     transition: transform var(--motion-duration-feedback) var(--motion-ease-out);
   }

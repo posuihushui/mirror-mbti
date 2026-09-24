@@ -23,7 +23,7 @@ test.describe("core flow", () => {
 
   test("sample result and sample report are reachable", async ({ page }) => {
     await page.goto("/zh/result/sample");
-    await expect(page.getByText("示例报告", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("示例结果", { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("img", { name: /内向偏好 79%/ }).first()).toBeVisible();
     await page.goto("/zh/report/sample");
     await expect(page.getByText("第一章")).toBeVisible();
@@ -60,7 +60,7 @@ test.describe("core flow", () => {
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
   });
 
-  test("complete quiz → result → mock pay → report chapters", async ({ page }) => {
+  test("complete quiz → result → mock pay → report chapters", async ({ page }, testInfo) => {
     await page.goto("/zh/quiz");
     await answerAll(page);
     await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
@@ -86,8 +86,9 @@ test.describe("core flow", () => {
 
     await page.getByRole("button", { name: /下一章/ }).click();
     await expect(page.getByText("第二章")).toBeVisible();
-    await page.getByRole("tab", { name: "容易忽略的" }).click();
-    await expect(page.getByText("精力的边界")).toBeVisible();
+    // Phones switch to the blind spots; desktop already shows them beside the strengths.
+    if (testInfo.project.name === "mobile") await page.getByRole("tab", { name: "容易忽略的" }).click();
+    await expect(page.getByText("精力的边界").filter({ visible: true })).toBeVisible();
 
     const reportPath = new URL(page.url()).pathname;
     await page.goto("/zh/my/report");
@@ -150,7 +151,7 @@ test.describe("core flow", () => {
     }
   });
 
-  test("report chapters deep-link, switch and keep both insight lists", async ({ page }) => {
+  test("report chapters deep-link, switch and keep both insight lists", async ({ page }, testInfo) => {
     await page.goto("/zh/report/sample?chapter=3");
     await expect(page.getByRole("heading", { name: /好的关系/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /先看清偏好/ })).toBeHidden();
@@ -161,11 +162,22 @@ test.describe("core flow", () => {
 
     await page.goto("/zh/report/sample?chapter=2");
     const chapterTwo = page.locator("#chapter-panel-2");
-    await expect(chapterTwo.getByRole("heading", { name: "在独处中恢复能量" })).toBeVisible();
-    await expect(chapterTwo.getByRole("heading", { name: "精力的边界" })).toBeHidden();
-    await page.getByRole("tab", { name: "容易忽略的" }).click();
-    await expect(chapterTwo.getByRole("heading", { name: "精力的边界" })).toBeVisible();
-    await expect(chapterTwo.getByRole("heading", { name: "在独处中恢复能量" })).toBeHidden();
+    const strength = chapterTwo.getByRole("heading", { name: "在独处中恢复能量" });
+    const blindspot = chapterTwo.getByRole("heading", { name: "精力的边界" });
+    await expect(strength).toBeVisible();
+    if (testInfo.project.name === "mobile") {
+      // Phones switch between the two lists.
+      await expect(blindspot).toBeHidden();
+      await page.getByRole("tab", { name: "容易忽略的" }).click();
+      await expect(blindspot).toBeVisible();
+      await expect(strength).toBeHidden();
+    } else {
+      // From 721px each strength sits on one row with its blind spot.
+      await expect(blindspot).toBeVisible();
+      const [left, right] = [(await strength.boundingBox())!, (await blindspot.boundingBox())!];
+      expect(Math.abs(left.y - right.y)).toBeLessThan(2);
+      expect(right.x).toBeGreaterThan(left.x + left.width);
+    }
   });
 
   test("locked report redirects to the result with the unlock sheet", async ({ page }) => {

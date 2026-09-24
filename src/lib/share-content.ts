@@ -72,7 +72,7 @@ function variantIndex(seed: string | undefined, dimension: ShareDimension): numb
   return (hash >>> 0) % SHARE_VARIANTS;
 }
 const labels = {
-  zh: [["外向", "外向 / 内向 · 接近均衡", "内向"], ["感觉", "感觉 / 直觉 · 接近均衡", "直觉"], ["思考", "思考 / 情感 · 接近均衡", "情感"], ["判断", "判断 / 知觉 · 接近均衡", "知觉"]],
+  zh: [["外向", "外向 / 内向 · 接近均衡", "内向"], ["实感", "实感 / 直觉 · 接近均衡", "直觉"], ["思考", "思考 / 情感 · 接近均衡", "情感"], ["判断", "判断 / 知觉 · 接近均衡", "知觉"]],
   en: [["Extraverted", "Extraversion / Introversion · Close to balanced", "Introverted"], ["Sensing", "Sensing / Intuition · Close to balanced", "Intuitive"], ["Thinking", "Thinking / Feeling · Close to balanced", "Feeling"], ["Judging", "Judging / Perceiving · Close to balanced", "Perceiving"]],
 };
 function stateIndex(profile: Profile, index: number): 0 | 1 | 2 {

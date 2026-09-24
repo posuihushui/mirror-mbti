@@ -38,36 +38,37 @@ test.describe("English site", () => {
     expect(oldEnglish.headers().location).toMatch(/\/quiz\?from=old-link$/);
   });
 
-  test("the header language menu opens the same page in the other language, and locale-bound pages open the other home", async ({ page }) => {
-    // The trigger is a hydrated Radix button: retry until the menu is open rather than racing hydration.
-    const openLanguageMenu = (name: RegExp) =>
+  test("the 更多 menu's languages open the same page in the other language, and locale-bound pages open the other home", async ({ page }) => {
+    // The languages end the header's 更多 menu. Its button works once hydrated: retry until the panel is open.
+    const languages = page.locator("[data-language-options]").filter({ visible: true });
+    const openMore = (name: RegExp) =>
       expect(async () => {
-        await page.getByRole("button", { name }).filter({ visible: true }).click();
-        await expect(page.getByRole("menu")).toBeVisible({ timeout: 1000 });
+        await page.locator("header").getByRole("navigation").filter({ visible: true }).getByRole("button", { name }).click();
+        await expect(languages).toBeVisible({ timeout: 1000 });
       }).toPass();
 
     await page.goto("/zh/types/INFJ");
-    await openLanguageMenu(/语言/);
-    await expect(page.getByRole("menuitem", { name: "中文" })).toHaveAttribute("aria-current", "true");
-    const english = page.getByRole("menuitem", { name: "English" });
+    await openMore(/^更多/);
+    await expect(languages.getByText("中文", { exact: true })).toHaveAttribute("aria-current", "true");
+    const english = languages.getByRole("link", { name: "English" });
     await expect(english).toHaveAttribute("href", "/types/INFJ");
     await english.click();
     await page.waitForURL(/\/types\/INFJ$/);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
 
-    await openLanguageMenu(/Language/);
-    await page.getByRole("menuitem", { name: "中文" }).click();
+    await openMore(/^More/);
+    await languages.getByRole("link", { name: "中文" }).click();
     await page.waitForURL(/\/zh\/types\/INFJ$/);
     expect(new URL(page.url()).pathname).toBe("/zh/types/INFJ");
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
 
     await page.goto("/report/sample");
-    await openLanguageMenu(/Language/);
-    await expect(page.getByRole("menuitem", { name: "中文" })).toHaveAttribute("href", "/zh/report/sample");
+    await openMore(/^More/);
+    await expect(languages.getByRole("link", { name: "中文" })).toHaveAttribute("href", "/zh/report/sample");
 
     await page.goto("/result/zzzzzzzzzzzz");
-    await openLanguageMenu(/Language/);
-    await expect(page.getByRole("menuitem", { name: "中文" })).toHaveAttribute("href", "/zh");
+    await openMore(/^More/);
+    await expect(languages.getByRole("link", { name: "中文" })).toHaveAttribute("href", "/zh");
   });
 
   test("the English sample report ships all four chapters in the server HTML", async ({ request }) => {
@@ -84,7 +85,7 @@ test.describe("English site", () => {
     const id = page.url().split("/result/")[1].split(/[?#]/)[0];
 
     await expect(page.getByText("YOUR PERSONALITY", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: /Unlock report|Unlock & pair/ }).filter({ visible: true }).first().click();
+    await page.getByRole("button", { name: /Unlock report/ }).filter({ visible: true }).first().click();
     // The price comes from PRICE_USD_CENTS, so match the label rather than one amount.
     await page.getByRole("button", { name: /^Demo payment \$\d/ }).click();
     await page.getByRole("link", { name: "Read my report", exact: true }).click();

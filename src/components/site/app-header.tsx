@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
-import { LanguageMenu, type LanguageOption } from "@/components/site/language-menu";
+import { LanguageLinks, type LanguageOption } from "@/components/site/language-links";
 import { MoreMenu } from "@/components/site/more-menu";
 import { MyReportLink } from "@/components/site/my-report-link";
 import { trackAttrs, type CtaId, type CtaLocation } from "@/lib/analytics/events";
@@ -11,30 +11,31 @@ import { siteMessages } from "@/lib/i18n/messages/site";
 import { getLocale } from "@/lib/i18n/server";
 
 /**
- * `path` is this page's unprefixed path in every language (`/types/INFJ`); the language menu links there.
+ * `path` is this page's unprefixed path in every language (`/types/INFJ`); the language options link there.
  * Omit it on pages bound to one language (real results, reports, orders): the menu then opens the other home.
  */
 type Props =
   | { variant: "home"; path?: string }
-  | { variant: "page"; title: string; backHref: string; active?: "quiz"; path?: string };
+  | { variant: "page"; title: string; backHref: string; active?: "quiz" | "types"; path?: string };
 
 type MenuLink = readonly [path: string, cta: CtaId, label: keyof (typeof siteMessages)["zh"]["header"], prefetch?: false];
 
 /** Secondary pages, grouped. Pages have no footer navigation: the header's "更多信息" menu is where they are listed. */
 const moreGroups: readonly (readonly MenuLink[])[] = [
-  [["/preferences", "view_preferences", "preferences"], ["/types", "view_types", "types"], ["/about", "view_about", "aboutPage"], ["/help", "view_help", "help"]],
+  [["/preferences", "view_preferences", "preferences"], ["/about", "view_about", "aboutPage"], ["/help", "view_help", "help"]],
   [["/privacy", "view_privacy", "privacy"], ["/terms", "view_terms", "terms"]],
 ];
-/** Phones only fit the language code and 更多, so that menu starts with the primary items. History is never prefetched. */
-const phonePrimary: readonly MenuLink[] = [["/quiz", "start_quiz", "quiz"], ["/my/report", "my_report", "myReport", false]];
+/** Phones show only 更多, so that menu starts with the primary items. History is never prefetched. */
+const phonePrimary: readonly MenuLink[] = [["/quiz", "start_quiz", "quiz"], ["/types", "view_types", "types"], ["/my/report", "my_report", "myReport", false]];
 
 const navItem = "flex min-h-11 items-center gap-2 text-sm text-mist hover:text-ink";
 const menuItem =
   "flex min-h-11 items-center rounded-[3px] px-3 text-sm whitespace-nowrap text-mist hover:bg-paper hover:text-ink focus-visible:bg-paper focus-visible:text-ink focus-visible:-outline-offset-2";
 
 /**
- * `.app-header`: brand or back link, the desktop nav (人格测试 · 我的报告 · 更多信息 · language), and on phones the
- * language code plus 更多, a menu that also holds 人格测试 and 我的报告. `backHref` is already localized.
+ * `.app-header`: brand or back link, the desktop nav (人格测试 · 16 型人格 · 我的报告 · 更多信息), and on phones
+ * a single 更多 menu that also holds those three. Both menus end with the language options.
+ * `backHref` is already localized.
  */
 export async function AppHeader(props: Props) {
   const locale = await getLocale();
@@ -74,19 +75,22 @@ export async function AppHeader(props: Props) {
         <Link href={href(locale, "/quiz")} className={cn(navItem, !home && props.active === "quiz" && "text-ink")} {...trackAttrs("start_quiz", "header_nav")}>
           {t.quiz}
         </Link>
+        <Link href={href(locale, "/types")} className={cn(navItem, !home && props.active === "types" && "text-ink")} {...trackAttrs("view_types", "header_nav")}>
+          {t.types}
+        </Link>
         <MyReportLink href={myReport} className={navItem} {...trackAttrs("my_report", "header_nav")}>
           {t.myReport}
         </MyReportLink>
         <MoreMenu label={t.more} location="header_nav">
           <MoreLinks locale={locale} location="header_nav" groups={moreGroups} />
+          <div className="mt-[6px] border-t border-line pt-[6px]"><LanguageLinks options={languages} label={t.language} itemClassName={menuItem} /></div>
         </MoreMenu>
-        <LanguageMenu current={locale} options={languages} label={t.language} className="border-l border-line pl-[45px]" />
       </nav>
 
-      <nav className="flex shrink-0 items-center gap-4 md:hidden" aria-label={t.navLabel}>
-        <LanguageMenu current={locale} options={languages} label={t.language} compact />
+      <nav className="flex shrink-0 items-center md:hidden" aria-label={t.navLabel}>
         <MoreMenu label={t.moreShort} location="header_mobile">
           <MoreLinks locale={locale} location="header_mobile" groups={[phonePrimary, ...moreGroups]} />
+          <div className="mt-[6px] border-t border-line pt-[6px]"><LanguageLinks options={languages} label={t.language} itemClassName={menuItem} /></div>
         </MoreMenu>
       </nav>
     </header>

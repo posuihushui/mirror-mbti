@@ -89,7 +89,7 @@ test.describe("review improvements", () => {
     await expect(page.getByRole("heading", { name: "第 7 天 · 保留一个小调整" })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("paid-action-plan.png"), fullPage: true, animations: "disabled" });
     await page.goto("/zh/my/report");
-    await expect(page.getByRole("link", { name: "阅读详细报告", exact: true })).toHaveAttribute("href", `/zh/report/${resultId}`);
+    await expect(page.getByRole("link", { name: "阅读完整报告", exact: true })).toHaveAttribute("href", `/zh/report/${resultId}`);
     await expect(page.getByText(/标准版 · 64 题/)).toBeVisible();
   });
 

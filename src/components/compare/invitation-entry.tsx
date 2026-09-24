@@ -1,4 +1,5 @@
 "use client";
+import { ArrowRight } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n/locale";
 import type { CompareSnapshot } from "@/lib/compare-types";
@@ -36,5 +37,5 @@ export function InvitationEntry({ resultId, shareId, locale }: { resultId: strin
     finally { clearTimeout(timeout); }
   }
   function change(open: boolean) { setOpen(open); if (open) { emitPairingEvent("pairing_entry_clicked", resultId, "my_pairing"); void load(); } else { sequence.current++; request.current?.abort(); requestAnimationFrame(() => trigger.current?.focus()); } }
-  return <><button ref={trigger} type="button" className="text-link min-h-11 text-sm" onClick={() => change(true)}>{pairingUiMessages[locale].invite}</button><ResponsiveSheet open={open} onOpenChange={change} title={m.create} description={m.createSheetDescription} closeLabel={shareMessages[locale].close}>{open && <div className="mt-5">{existing ? <InvitationActions url={existing.url} locale={locale} /> : snapshot ? <CompareConsent kind="host" resultId={resultId} shareId={shareId} locale={locale} snapshot={snapshot} /> : <><p role="status">{error || m.preparing}</p>{error && <button type="button" className="pill mt-5 min-h-11" onClick={load}>{m.retry}</button>}</>}</div>}</ResponsiveSheet></>;
+  return <><button ref={trigger} type="button" className="pill min-h-[52px] md:w-auto md:min-w-60" onClick={() => change(true)}>{pairingUiMessages[locale].invite}<ArrowRight size={19} weight="light" aria-hidden /></button><ResponsiveSheet open={open} onOpenChange={change} title={m.create} description={m.createSheetDescription} closeLabel={shareMessages[locale].close}>{open && <div className="mt-5">{existing ? <InvitationActions url={existing.url} locale={locale} /> : snapshot ? <CompareConsent kind="host" resultId={resultId} shareId={shareId} locale={locale} snapshot={snapshot} /> : <><p role="status">{error || m.preparing}</p>{error && <button type="button" className="pill mt-5 min-h-11" onClick={load}>{m.retry}</button>}</>}</div>}</ResponsiveSheet></>;
 }

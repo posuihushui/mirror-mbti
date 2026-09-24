@@ -23,13 +23,13 @@ for(const en of [false,true])test(`paid invitation → own overview → payment 
  const inviteInput={resultId:host,requestId:randomUUID(),consentVersion:'compare-host-v3'};
  const denied=await page.request.post('/api/comparison-invitations',{headers:{origin},data:inviteInput});expect(denied.status()).toBe(403);
  await page.goto(`${prefix}/result/${host}`);await expect(page.locator('[data-pairing-benefit="preview"]')).toBeVisible();await shot(page,`benefit-${locale}-${info.project.name}`);
- await pay(page.request,host);await page.reload();await expect(page.locator('[data-pairing-benefit="unlocked"]')).toBeVisible();await expect(page.getByRole('button',{name:/解锁报告与|Unlock report|Unlock & pair/})).toHaveCount(0);await shot(page,`paid-entry-${locale}-${info.project.name}`);
+ await pay(page.request,host);await page.reload();await expect(page.locator('[data-pairing-benefit="unlocked"]')).toBeVisible();await expect(page.getByRole('button',{name:/解锁报告与|Unlock report/})).toHaveCount(0);await shot(page,`paid-entry-${locale}-${info.project.name}`);
  const created=await page.request.post('/api/comparison-invitations',{headers:{origin},data:inviteInput});expect(created.status()).toBe(201);const invite=(await created.json()).data;
  const guest=await browser.newContext({baseURL:origin,viewport:page.viewportSize()!});const g=await guest.newPage();await g.goto(new URL(invite.url).pathname);expect(await g.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|\bpaid\b|\bunlock|\bsubscription\b|[¥$]\s?\d/i);
  const own=await seed(guest.request,en);await g.goto(`${prefix}/t/${invite.token}/join`);await g.getByRole('button',{name:m.choose}).click();await g.waitForURL(new RegExp(`/result/${own}`));await expect(g.locator('[data-pairing-continuations]')).toBeVisible();
  // Storage cannot authorize, and blocked storage cannot lose the server continuation.
  await g.addInitScript(()=>{for(const s of [localStorage,sessionStorage]){s.clear();Object.defineProperty(s,'setItem',{value:()=>{throw new Error('blocked');}});}});await g.reload();
- await g.getByRole('button',{name:/解锁报告与|Unlock report|Unlock & pair/}).filter({visible:true}).first().click();await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Demo payment \$/:/模拟支付 ¥/}).click();
+ await g.getByRole('button',{name:/解锁报告与|Unlock report/}).filter({visible:true}).first().click();await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Demo payment \$/:/模拟支付 ¥/}).click();
  await expect(g.locator('[data-pairing-access="eligible"]')).toBeVisible();
  // Switching between the dialog and drawer must not return a paid buyer to checkout.
  const originalViewport=g.viewportSize()!;
@@ -82,7 +82,7 @@ test('result docks fit phone breakpoints',async({page},info)=>{
    await page.setViewportSize({width,height:width===390?749:852});
    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
    if(width<721) {
-    const unlock=page.locator('.fixed').getByRole('button',{name:/解锁报告与配对|Unlock & pair/});
+    const unlock=page.locator('.fixed').getByRole('button',{name:/解锁报告与双人指南|Unlock report & guide/});
     await expect(unlock).toBeVisible();
     const bounds=await unlock.boundingBox();
     expect(bounds!.x).toBeGreaterThanOrEqual(0);

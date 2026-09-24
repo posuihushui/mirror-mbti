@@ -77,7 +77,8 @@ export async function getComparisonResult(resultId: string, visitorId: string) {
 }
 export async function listComparisonResults(visitorId: string) {
   const rows = await db().query.results.findMany({ where: eq(R.visitorId, visitorId), columns: resultColumns, orderBy: [desc(R.createdAt), desc(R.id)], limit: 100 });
-  return Promise.all(rows.map(async row => ({ id: row.id, snapshot: snapshotFromResult(row), locale: questionnaireLocale(row.questionnaireId), eligibility: await getPairingEligibility(row.id, visitorId) })));
+  // The owner's own results: the type is shown to them alone, on their private center page.
+  return Promise.all(rows.map(async row => ({ id: row.id, type: row.type, snapshot: snapshotFromResult(row), locale: questionnaireLocale(row.questionnaireId), eligibility: await getPairingEligibility(row.id, visitorId) })));
 }
 export async function createComparisonInvitation(visitorId: string, raw: z.infer<typeof invitationInputSchema>) {
   const input = invitationInputSchema.parse(raw);
@@ -168,10 +169,10 @@ export async function findOwnedComparisonForInvitation(token: string, visitorId:
 }
 export async function listOwnedComparisons(visitorId: string) {
   // Metadata only: a revoked guide's private frozen content never reaches management HTML/RSC.
-  const rows = await db().select({ id: P.id, locale: P.locale, createdAt: P.createdAt, revokedAt: P.revokedAt, invitationRevokedAt: I.revokedAt, shareRevokedAt: S.revokedAt, accessPolicy: P.accessPolicy }).from(P).innerJoin(I, eq(P.invitationId, I.id)).leftJoin(S, eq(I.shareId, S.id))
+  const rows = await db().select({ id: P.id, invitationId: P.invitationId, locale: P.locale, createdAt: P.createdAt, revokedAt: P.revokedAt, invitationRevokedAt: I.revokedAt, shareRevokedAt: S.revokedAt, accessPolicy: P.accessPolicy }).from(P).innerJoin(I, eq(P.invitationId, I.id)).leftJoin(S, eq(I.shareId, S.id))
     .where(or(eq(P.hostVisitorId, visitorId), eq(P.guestVisitorId, visitorId))).orderBy(desc(P.createdAt), desc(P.id)).limit(100);
   const invitations = await db().query.comparisonInvitations.findMany({ where: eq(I.visitorId, visitorId), orderBy: [desc(I.createdAt), desc(I.id)], limit: 100 });
-  return { items: rows.map(row => ({ id: row.id, locale: row.locale as Locale, url: href(row.locale as Locale, `/compare/${row.id}`), createdAt: row.createdAt.toISOString(), revokedAt: (row.revokedAt ?? row.invitationRevokedAt ?? row.shareRevokedAt)?.toISOString() ?? null, accessPolicy: row.accessPolicy })), invitations: invitations.map(invitationView) };
+  return { items: rows.map(row => ({ id: row.id, invitationId: row.invitationId, locale: row.locale as Locale, url: href(row.locale as Locale, `/compare/${row.id}`), createdAt: row.createdAt.toISOString(), revokedAt: (row.revokedAt ?? row.invitationRevokedAt ?? row.shareRevokedAt)?.toISOString() ?? null, accessPolicy: row.accessPolicy })), invitations: invitations.map(invitationView) };
 }
 export async function revokeComparisonInvitation(id: string, visitorId: string) {
   uuid.parse(id);

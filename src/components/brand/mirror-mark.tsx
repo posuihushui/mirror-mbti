@@ -39,20 +39,45 @@ function leans(profile: MirrorProfile) {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-/** One half: a flat inner edge and a curved outer edge, like the logo's `D` contours. */
-function halfPath(side: -1 | 1, inner: number, depth: number, height: number, closed: boolean) {
+/** One half's outer curve, open at the inner edge (drawn separately), like the logo's `D` contours. */
+function curvePath(side: -1 | 1, inner: number, depth: number, height: number) {
   const top = 32 - height / 2;
   const bottom = 32 + height / 2;
   const outer = inner + side * depth;
   // Control points follow the logo's curve (10.5/18 across, 9.5/23 down).
   const cx = inner + side * depth * 0.583;
   const cy = (height / 2) * 0.413;
-  const d = `M${round(inner)} ${round(top)}C${round(cx)} ${round(top)} ${round(outer)} ${round(top + cy)} ${round(outer)} 32`
+  return `M${round(inner)} ${round(top)}C${round(cx)} ${round(top)} ${round(outer)} ${round(top + cy)} ${round(outer)} 32`
     + `S${round(cx)} ${round(bottom)} ${round(inner)} ${round(bottom)}`;
-  return closed ? `${d}Z` : d;
 }
 
-export function mirrorGeometry(profile: MirrorProfile) {
+function edgePath(x: number, height: number) {
+  return `M${round(x)} ${round(32 - height / 2)}V${round(32 + height / 2)}`;
+}
+
+export type MirrorGeometry = {
+  left: string;
+  right: string;
+  /** Both inner edges as one path. */
+  edges: string;
+  /** Judging closes each half, perceiving leaves it open, a near-even pair draws it dotted. */
+  edge: "solid" | "dotted" | "none";
+  ring: boolean;
+  dot: number;
+};
+
+function geometry(gap: number, height: number, depth: number, edge: MirrorGeometry["edge"], ring: boolean, dot: number): MirrorGeometry {
+  return {
+    left: curvePath(-1, 32 - gap / 2, depth, height),
+    right: curvePath(1, 32 + gap / 2, depth, height),
+    edges: `${edgePath(32 - gap / 2, height)}${edgePath(32 + gap / 2, height)}`,
+    edge,
+    ring,
+    dot,
+  };
+}
+
+export function mirrorGeometry(profile: MirrorProfile): MirrorGeometry {
   const [ei, sn, tf, jp] = leans(profile);
   // E/I: the logo's gap is 14; introversion (negative) widens it to 20, extraversion narrows it to 10.
   const gap = 14 - ei * (ei > 0 ? 4 : 6);
@@ -61,41 +86,33 @@ export function mirrorGeometry(profile: MirrorProfile) {
   const depth = Math.min(18 + sn * 3, (56 - gap) / 2);
   // The centre never touches the inner edges, however close an extraverted pair sits.
   const dot = Math.min(2.5 + Math.abs(tf) * 1.5, gap / 2 - 1.8);
-  return {
-    left: halfPath(-1, 32 - gap / 2, depth, height, jp >= 0),
-    right: halfPath(1, 32 + gap / 2, depth, height, jp >= 0),
-    // A near-even J/P closes with a dashed edge rather than choosing a side.
-    innerDash: Math.abs(jp) < 0.2,
-    ring: tf > 0,
-    dot,
-    gap,
-    height,
-  };
+  const edge = Math.abs(jp) < 0.2 ? "dotted" : jp > 0 ? "solid" : "none";
+  return geometry(gap, height, depth, edge, tf > 0, dot);
+}
+
+/** The brand mark's own geometry: where every reveal starts. */
+export const LOGO_GEOMETRY = geometry(14, 46, 18, "solid", false, 3);
+
+/** About 1.3px on screen at any size: thin at display sizes, the logo's weight at icon sizes. */
+export function mirrorStroke(size: number) {
+  return Math.min(Math.max(150 / size, 1.3), 2.6);
+}
+
+/** Round dots, one stroke wide, so an open edge reads the same at every size. */
+export function dottedEdge(stroke: number) {
+  return `0.01 ${round(stroke * 2.4)}`;
 }
 
 export function MirrorMark({ profile, size = 96, tone = "ink", className, style }: Props) {
   const color = BRAND_COLORS[tone];
   const g = mirrorGeometry(profile);
-  // About 1.3px on screen at any size: thin at display sizes, the logo's weight at icon sizes.
-  const stroke = Math.min(Math.max(150 / size, 1.3), 2.6);
-  const top = 32 - g.height / 2;
-  const bottom = 32 + g.height / 2;
+  const stroke = mirrorStroke(size);
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 64 64" fill="none" className={className} style={style} aria-hidden="true" focusable="false">
       <g stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
-        {g.innerDash ? (
-          <>
-            <path d={g.left.replace(/Z$/, "")} />
-            <path d={g.right.replace(/Z$/, "")} />
-            {/* Round dots, one stroke wide, so the open edge reads the same at every size. */}
-            <path d={`M${32 - g.gap / 2} ${top}V${bottom}M${32 + g.gap / 2} ${top}V${bottom}`} strokeDasharray={`0.01 ${round(stroke * 2.4)}`} />
-          </>
-        ) : (
-          <>
-            <path d={g.left} />
-            <path d={g.right} />
-          </>
-        )}
+        <path d={g.left} />
+        <path d={g.right} />
+        {g.edge !== "none" && <path d={g.edges} strokeDasharray={g.edge === "dotted" ? dottedEdge(stroke) : undefined} />}
       </g>
       {g.ring ? (
         <circle cx="32" cy="32" r={g.dot} stroke={BRAND_COLORS.warm} strokeWidth={Math.max(stroke, 1.4)} />
@@ -109,4 +126,19 @@ export function MirrorMark({ profile, size = 96, tone = "ink", className, style 
 /** The canonical mark for a type page or card: every dimension at a clear, even lean. */
 export function typeMirrorProfile(type: string): MirrorProfile {
   return { type, values: [75, 75, 75, 75] };
+}
+
+/**
+ * A mark from qualitative categories (a pair guide or a public card never carries scores): a clear
+ * side draws at the canonical lean, a near-even pair (anything that is not one of its letters) at the midpoint.
+ */
+export function categoryMirrorProfile(categories: readonly (string | null | undefined)[]): MirrorProfile {
+  const side = (i: number) => {
+    const c = categories[i];
+    return c && c.length === 1 && PAIRS[i].includes(c) ? c : null;
+  };
+  return {
+    type: PAIRS.map((pair, i) => side(i) ?? pair[0]).join(""),
+    values: PAIRS.map((_, i) => (side(i) ? 75 : 50)),
+  };
 }

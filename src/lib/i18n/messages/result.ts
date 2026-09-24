@@ -4,7 +4,7 @@ import type { Locale } from "@/lib/i18n/locale";
 const zh = {
   currency: "¥",
   typeIntro: {
-    sampleEyebrow: "示例报告",
+    sampleEyebrow: "示例结果",
     ownEyebrow: "你的人格倾向",
     badge: (label: string) => `${label}倾向`,
     /** One line, named per dimension, in place of a second paragraph of caveats. */
@@ -33,14 +33,13 @@ const zh = {
     sub: "完整报告按你这次的四个维度写成。下面是四章的开头：",
     previewLabel: "完整报告目录",
     sampleLink: "先阅读完整示例",
-    includes: ["四章完整报告", "七天小练习与复盘问题", "本次结果的双人相处指南资格"],
     priceNote: "单次解锁 · 无订阅",
     after: "购买后可在“我的报告”回访；保存订单号，也能在换设备后找回。报告为基于作答的情境建议，不是诊断或准确性保证。",
     help: "订单与找回帮助",
   },
   unlockBar: {
     title: "继续读完整报告",
-    sub: "四章解读、七天小练习和双人相处指南资格，一次解锁。",
+    sub: "四章完整报告、七天小练习和双人指南，一次解锁。",
   },
   sampleCta: {
     meta: [["32/64", "题可选"], ["5–10", "分钟"], ["16", "种人格倾向"]] as [string, string][],
@@ -60,7 +59,7 @@ const zh = {
     read: "阅读报告",
     unlock: "解锁报告与双人指南",
     startMine: "开始我的测试",
-    dockLabel: "完整报告＋配对资格",
+    dockLabel: "完整报告＋双人指南",
     perTime: " / 次",
   },
 };
@@ -68,7 +67,7 @@ const zh = {
 const en: typeof zh = {
   currency: "$",
   typeIntro: {
-    sampleEyebrow: "SAMPLE REPORT",
+    sampleEyebrow: "SAMPLE RESULT",
     ownEyebrow: "YOUR PERSONALITY",
     badge: (label: string) => label,
     balancedNote: (pairs: string[]) => `${pairs.join(" and ")} ${pairs.length > 1 ? "are" : "is"} close to balanced — ${pairs.length > 1 ? "those letters are" : "that letter is"} only a reference, so read both ends.`,
@@ -96,14 +95,13 @@ const en: typeof zh = {
     sub: "The full report is written from your four dimensions this time. Here is how each chapter opens:",
     previewLabel: "Full report contents",
     sampleLink: "Read the full sample first",
-    includes: ["The full four-chapter report", "Seven days of small practices and reflection questions", "Pairing access for this result"],
     priceNote: "One-time unlock · No subscription",
     after: "After purchase, revisit it in “My reports”; keep your order number to recover it on another device. The report offers situational suggestions based on your answers — not a diagnosis or a guarantee of accuracy.",
     help: "Order & recovery help",
   },
   unlockBar: {
     title: "Keep reading: the full report",
-    sub: "Four chapters, seven days of small practices and pairing access, unlocked once.",
+    sub: "The full report, seven days of small practices and the guide for two, unlocked once.",
   },
   sampleCta: {
     meta: [["32/64", "items"], ["5–10", "minutes"], ["16", "types"]],
@@ -121,9 +119,9 @@ const en: typeof zh = {
   actions: {
     readFull: "Read the full report",
     read: "Read report",
-    unlock: "Unlock report & shared guides",
+    unlock: "Unlock report & guide for two",
     startMine: "Start my test",
-    dockLabel: "Report + pairing access",
+    dockLabel: "Report + guide for two",
     perTime: " once",
   },
 };

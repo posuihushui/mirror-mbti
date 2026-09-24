@@ -12,10 +12,10 @@ export const enChoices = ["Strongly agree", "Somewhat agree", "Not sure", "Somew
 
 export const enChapterLabels = ["Overview", "Strengths & blind spots", "Relationships & communication", "Work & growth"] as const;
 
-export const enUnlockBullets = ["A shared guide to understanding each other and practising communication",
-  "Scenarios read by the strength of each preference, including near-balanced ones",
-  "Strengths, blind spots, communication examples and work routines",
-  "A seven-day practice with reflection questions",
+export const enUnlockBullets = [
+  "The full four-chapter report: strengths and blind spots, relationships, work and growth",
+  "Seven days of small practices and reflection questions",
+  "The guide for two: invite someone and explore it together",
 ] as const;
 
 export function enFaqs(): [string, string][] {

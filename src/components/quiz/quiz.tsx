@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check } from "@phosphor-icons/react";
 import { cn } from "cn";
@@ -23,25 +23,35 @@ import { getQuestionnaire } from "@/lib/questionnaires";
 import { emptyProgress } from "@/lib/quiz-progress";
 import { choicesFor } from "@/lib/site";
 import { NumberMotion, NumberTextMotion } from "@/components/site/number-motion";
+import type { MirrorProfile } from "@/components/brand/mirror-mark";
+import { ResultReveal, revealAllowed } from "@/components/quiz/result-reveal";
 
-type CreateResultResponse = { ok: true; data: { id: string } } | { ok: false; error: { code: string; message: string } };
+type CreateResultResponse = { ok: true; data: { id: string; type: string; values: number[] } } | { ok: false; error: { code: string; message: string } };
 
 /** Long enough to see the choice confirm (160ms) before the next question slides in. */
 const ADVANCE_MS = 280;
+/** The 64-item version is read in four parts of 16, with a short pause between them. */
+const PART_SIZE = 16;
+/** A rough reading pace for the time left at a pause; the version picker's estimates are ~8s per item. */
+const SECONDS_PER_ITEM = 8.5;
 
 /** The questionnaire island: answers and position persist in localStorage; scoring happens on the server. */
 export function Quiz() {
   const progress = useQuizProgress();
   const locale = useLocale();
+  const router = useRouter();
   const [choosing, setChoosing] = useState(false);
   const [previousCount, setPreviousCount] = useState<number>();
+  // Held here, above the runner: the draft is cleared on submission, which would otherwise swap in the version picker.
+  const [reveal, setReveal] = useState<{ profile: MirrorProfile; target: string } | null>(null);
+  if (reveal) return <ResultReveal profile={reveal.profile} onDone={() => router.push(reveal.target)} />;
   // A draft from the other language's questionnaire is kept, but this page starts from its own versions.
   const own = progress && getQuestionnaire(progress.questionnaireId)?.locale === locale ? progress : null;
   if (!own || choosing) return <QuizVersions onChoose={() => setChoosing(false)} />;
-  return <QuizRunner key={own.questionnaireId} progress={own} previousCount={previousCount} onChoose={() => { setPreviousCount(getQuestionnaire(own.questionnaireId)!.count); setChoosing(true); }} />;
+  return <QuizRunner key={own.questionnaireId} progress={own} previousCount={previousCount} onReveal={setReveal} onChoose={() => { setPreviousCount(getQuestionnaire(own.questionnaireId)!.count); setChoosing(true); }} />;
 }
 
-function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgress; onChoose: () => void; previousCount?: number }) {
+function QuizRunner({ progress, onChoose, onReveal, previousCount }: { progress: QuizProgress; onChoose: () => void; onReveal: (reveal: { profile: MirrorProfile; target: string }) => void; previousCount?: number }) {
   const router = useRouter();
   const locale = useLocale();
   const t = quizMessages[locale].runner;
@@ -53,7 +63,10 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
   const [submitting, setSubmitting] = useState(false);
   const [restartOpen, setRestartOpen] = useState(false);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
+  /** The part just completed while its pause is showing (64 items only); never persisted, so a reload resumes on the next question. */
+  const [pause, setPause] = useState<number | null>(null);
   const quiz = { questionnaire_id: questionnaire.id, question_count: count };
+  const parts = count > 32 ? Math.ceil(count / PART_SIZE) : 1;
   const advanceTimer = useRef<number | null>(null);
   // Keyboard users keep their place in the answers when a choice moves them on.
   const focusChoices = useRef(false);
@@ -68,8 +81,11 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
   useEffect(() => {
     if (!focusChoices.current) return;
     focusChoices.current = false;
-    choices.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
-  }, [index]);
+    const target = pause !== null
+      ? document.querySelector<HTMLButtonElement>("[data-quiz-continue]:not([hidden])")
+      : choices.current?.querySelector<HTMLButtonElement>("button");
+    target?.focus({ preventScroll: true });
+  }, [index, pause]);
 
   const save = (patch: Partial<Pick<QuizProgress, "answers" | "index">>) => {
     writeQuizProgress({ ...progress, ...patch });
@@ -82,6 +98,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
 
   const goTo = (nextIndex: number) => {
     cancelAdvance();
+    setPause(null);
     if (nextIndex === index) return;
     setDirection(nextIndex > index ? "forward" : "backward");
     save({ index: nextIndex });
@@ -111,7 +128,18 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
       if (!latest || latest.index !== from) return;
       setDirection("forward");
       writeQuizProgress({ ...latest, index: from + 1 });
+      // Finishing a part of the long version pauses before the next one instead of running straight on.
+      if (parts > 1 && (from + 1) % PART_SIZE === 0) {
+        const done = (from + 1) / PART_SIZE;
+        setPause(done);
+        track("quiz_part_complete", { ...quiz, part_number: done });
+      }
     }, ADVANCE_MS);
+  };
+
+  const resume = () => {
+    setDirection("forward");
+    setPause(null);
   };
 
   const back = () => {
@@ -119,6 +147,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
   };
 
   const next = async () => {
+    if (pause !== null) return resume();
     if (current === null || submitting) return;
     if (!last) {
       goTo(index + 1);
@@ -138,7 +167,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
       if (!json.ok) throw Object.assign(new Error(json.error.message), { code: json.error.code });
       track("quiz_complete", quiz);
       writeLastResultId(json.data.id);
-      writeQuizProgress(null);
+      const reveal = revealAllowed();
       const compare = new URLSearchParams(window.location.search).get("compare");
       const continuation = compare && /^[A-Za-z0-9_-]{32}$/.test(compare) ? `?compare=${compare}` : "";
       if (continuation) {
@@ -146,7 +175,13 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
         await fetch("/api/comparison-continuations", { method: "POST", headers: { "content-type": "application/json", "X-Mirror-Locale": locale },
           body: JSON.stringify({ invitationToken: compare, resultId: json.data.id }), signal: AbortSignal.timeout(4000) }).catch(() => undefined);
       }
-      router.push(href(locale, `/result/${json.data.id}${continuation}`));
+      const target = href(locale, `/result/${json.data.id}${continuation}`);
+      // The reveal plays while the result page loads; without motion the page opens straight away.
+      if (reveal) {
+        router.prefetch(target);
+        onReveal({ profile: { type: json.data.type, values: json.data.values }, target });
+      } else router.push(target);
+      writeQuizProgress(null);
     } catch (e) {
       track("quiz_submit_error", { ...quiz, error_code: (e as { code?: string }).code ?? (e instanceof Error ? e.name : "UNKNOWN") });
       toast(e instanceof Error ? e.message : t.submitFailed);
@@ -154,8 +189,36 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
     }
   };
 
-  const nextLabel = submitting ? t.submitting : last ? t.viewResult : t.next;
-  const mobileNextLabel = submitting ? t.mobileSubmitting : last ? t.mobileViewResult : t.next;
+  const nextLabel = pause !== null ? t.partContinue(pause + 1) : submitting ? t.submitting : last ? t.viewResult : t.next;
+  const mobileNextLabel = pause !== null ? t.partContinue(pause + 1) : submitting ? t.mobileSubmitting : last ? t.mobileViewResult : t.next;
+  const nextDisabled = pause === null && (current === null || submitting);
+  const remainingMinutes = Math.max(1, Math.round(((count - answered) * SECONDS_PER_ITEM) / 60));
+
+  // Keyboard answering: 1–5 choose, ← → move, Enter continues from a pause. Fields and dialogs keep their keys.
+  const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || submitting) return;
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    if (target?.closest("input, textarea, select, [contenteditable='true']") || document.querySelector("[role='dialog']")) return;
+    const choice = /^[1-5]$/.test(event.key) ? Number(event.key) - 1 : -1;
+    if (choice >= 0 && pause === null) {
+      event.preventDefault();
+      focusChoices.current = true;
+      select(choicesFor(locale)[choice].v);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      back();
+    } else if (event.key === "ArrowRight" && (pause !== null || (current !== null && !last))) {
+      event.preventDefault();
+      void next();
+    } else if (event.key === "Enter" && pause !== null && !target?.closest("button, a")) {
+      event.preventDefault();
+      void next();
+    }
+  });
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   return (
     <>
@@ -169,6 +232,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
             <span className="pl-3 text-base text-mist"> / <NumberMotion value={count} initialFrom={previousCount} /></span>
           </div>
           <p className="mt-1 text-xs text-mist">{t.asideHint}</p>
+          <p className="mt-6 hidden text-xs text-mist [@media(hover:hover)_and_(pointer:fine)]:block">{t.keyboardHint}</p>
         </aside>
 
         <section className="md:max-w-[460px]">
@@ -180,11 +244,30 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
           <div className="flex items-baseline justify-between text-xs text-mist">
             <span className="text-2xl font-semibold text-ink">
               <NumberMotion value={index + 1} digits={2} /> <small className="text-sm font-normal text-mist">/ <NumberMotion value={count} initialFrom={previousCount} /></small>
+              {parts > 1 && <small className="ml-2 text-xs font-normal text-mist">· {t.part(Math.min(Math.floor(index / PART_SIZE) + 1, parts), parts)}</small>}
             </span>
             <span><NumberTextMotion>{t.answered(answered, count)}</NumberTextMotion></span>
           </div>
-          <Progress value={answered} max={count} className="mt-3 h-[2px]" indicatorClassName="quiz-progress-motion" aria-label={t.progressLabel} />
+          <div className="relative mt-3">
+            <Progress value={answered} max={count} className="h-[2px]" indicatorClassName="quiz-progress-motion" aria-label={t.progressLabel} />
+            {/* The long version's parts show as gaps in the bar. */}
+            {Array.from({ length: parts - 1 }, (_, i) => (
+              <span key={i} aria-hidden className="absolute -top-px h-1 w-1 bg-paper" style={{ left: `calc(${((i + 1) * 100) / parts}% - 2px)` }} />
+            ))}
+          </div>
 
+          {pause !== null ? (
+            <div className="quiz-question-motion" data-direction="forward" key={`pause-${pause}`} aria-live="polite">
+              <p className="eyebrow mt-7 text-warm-ink md:mt-10">{t.partDoneEyebrow(pause, parts)}</p>
+              <h2 className="mt-4 text-2xl md:text-[27px]">{t.partDoneHeading}</h2>
+              <p className="mt-4 text-base text-slate">{t.partDoneBody(answered, count, remainingMinutes)}</p>
+              <ol aria-hidden className="mt-7 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${parts}, minmax(0, 1fr))` }}>
+                {Array.from({ length: parts }, (_, i) => (
+                  <li key={i} className={cn("h-1.5 rounded-full", i < pause ? "bg-warm" : "bg-line")} />
+                ))}
+              </ol>
+            </div>
+          ) : (
           <div className="quiz-question-motion" data-direction={direction} key={index}>
             <p className="eyebrow mt-7 text-mist short:hidden md:mt-10">{t.eyebrow}</p>
             <h2 id="question-title" aria-live="polite" aria-atomic="true" className="mt-4 min-h-[2.9em] text-2xl short:mt-6 short:text-xl md:mt-5 md:text-[27px]">
@@ -219,6 +302,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
               })}
             </div>
           </div>
+          )}
           <p className="mt-4 text-center text-xs text-mist">{t.noWrong}</p>
           <Accordion type="single" collapsible className="mt-4" onValueChange={(value) => { if (value) track("quiz_review_open", { ...quiz, answered_count: answered }); }}>
             <AccordionItem value="answers"><AccordionTrigger aria-label={t.review(answered, count)}><span><NumberTextMotion>{t.review(answered, count)}</NumberTextMotion></span></AccordionTrigger>
@@ -240,7 +324,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
               <ArrowLeft size={17} />
               {t.back}
             </Button>
-            <PrimaryButton disabled={current === null || submitting} onClick={next} className="min-h-[52px] w-[190px] min-w-0 shrink">
+            <PrimaryButton disabled={nextDisabled} onClick={next} data-quiz-continue={pause !== null ? "" : undefined} className="min-h-[52px] w-[210px] min-w-0 shrink">
               {nextLabel}
             </PrimaryButton>
           </nav>
@@ -253,7 +337,7 @@ function QuizRunner({ progress, onChoose, previousCount }: { progress: QuizProgr
             <ArrowLeft size={17} />
             {t.back}
           </Button>
-          <PrimaryButton disabled={current === null || submitting} onClick={next} className="min-h-[52px] min-w-0 max-w-[190px] flex-1 shrink">
+          <PrimaryButton disabled={nextDisabled} onClick={next} className="min-h-[52px] min-w-0 max-w-[210px] flex-1 shrink">
             {mobileNextLabel}
           </PrimaryButton>
         </nav>

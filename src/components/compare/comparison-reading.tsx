@@ -3,6 +3,7 @@ import type { Locale } from "@/lib/i18n/locale";
 import { compareMessages } from "@/lib/i18n/messages/compare";
 import { CompareReveal } from "./compare-reveal";
 import styles from "./compare-motion.module.css";
+import { categoryMirrorProfile, MirrorMark } from "@/components/brand/mirror-mark";
 
 /** Which two people this reading is rendered for; presentation only, never part of the frozen content. */
 export type CompareSides = { you: CompareCategories; other: CompareCategories; youLabel: string; otherLabel: string };
@@ -16,17 +17,56 @@ type ReadingProps = {
   sides?: CompareSides;
 };
 
+/** Where a category sits on its pair's line: a side's end, or the middle when near-even. */
+function position(category: string, dimension: string) {
+  return category === dimension[0] ? 6 : category === dimension[1] ? 94 : 50;
+}
+
+/**
+ * Both people on one two-ended line for this dimension. Only their consented categories place them,
+ * so it shows sides, never strength; two people on the same spot sit a little apart to stay legible.
+ */
+function PairScale({ dimension, sides, locale }: { dimension: CompareDimensionCard["dimension"]; sides: CompareSides; locale: Locale }) {
+  const m = compareMessages[locale];
+  const at = position(sides.you[dimension], dimension);
+  const other = position(sides.other[dimension], dimension);
+  // Same spot: step the other person inward from an end, or to the right of the middle.
+  const you = at;
+  const them = other !== at ? other : at === 94 ? 80 : at === 6 ? 20 : 64;
+  const dot = (left: number, label: string, filled: boolean) => (
+    <span className="absolute top-0 flex -translate-x-1/2 flex-col items-center" style={{ left: `${left}%` }}>
+      <span className={filled ? "mt-[5px] size-3 rounded-full bg-ink ring-2 ring-card" : "mt-[5px] size-3 rounded-full border-2 border-warm bg-card"} />
+      <span className="mt-1 text-xs whitespace-nowrap text-mist">{label}</span>
+    </span>
+  );
+  return (
+    <div className="mt-4" aria-hidden>
+      <div className="flex justify-between text-xs text-mist">
+        <span>{m.categoryLabels[dimension[0] as keyof typeof m.categoryLabels]} {dimension[0]}</span>
+        <span>{m.categoryLabels[dimension[1] as keyof typeof m.categoryLabels]} {dimension[1]}</span>
+      </div>
+      <div className="relative mt-1 h-10">
+        <span className="absolute inset-x-0 top-[10px] h-px bg-line" />
+        <span className="absolute top-[6px] left-1/2 h-2 w-px bg-[#b9c5c9]" />
+        {dot(you, sides.youLabel, true)}
+        {dot(them, sides.otherLabel, false)}
+      </div>
+    </div>
+  );
+}
+
 function DimensionCard({ card, locale, sides }: { card: CompareDimensionCard; locale: Locale; sides?: CompareSides }) {
   const m = compareMessages[locale];
   const mark = card.relation === "opposite" ? styles.markOpposite : card.relation === "includes-balanced" ? styles.markContextual : styles.markSame;
   return <li data-compare-motion="section" data-compare-card={card.dimension} className="rounded-[4px] border border-line bg-card p-5 md:p-6">
     <p className="flex items-center gap-3">
       <span aria-hidden="true" className="text-xl leading-none tracking-wider text-mist">{card.dimension}</span>
-      <span aria-hidden="true" className={mark} />
-      <span className="text-xs">{m.relationLabels[card.relation]}</span>
+      {!sides && <span aria-hidden="true" className={mark} />}
+      <span className={sides ? "rounded-full border border-line px-2 py-0.5 text-xs leading-snug" : "text-xs"}>{m.relationLabels[card.relation]}</span>
     </p>
     <h3 className="mt-4 text-lg leading-heading font-medium">{m.themes[card.dimension]}</h3>
-    {sides && <p className="mt-2 text-xs text-mist">{sides.youLabel} {m.categoryLabels[sides.you[card.dimension]]} · {sides.otherLabel} {m.categoryLabels[sides.other[card.dimension]]}</p>}
+    {sides && <p className="sr-only">{sides.youLabel} {m.categoryLabels[sides.you[card.dimension]]} · {sides.otherLabel} {m.categoryLabels[sides.other[card.dimension]]}</p>}
+    {sides && <PairScale dimension={card.dimension} sides={sides} locale={locale} />}
     <p className="mt-3 text-base text-slate">{card.body}</p>
     <p className="mt-4 border-l-2 border-warm pl-4 text-sm text-ink"><span className="eyebrow mr-2 inline-block text-warm-ink">{m.sceneLabel}</span>{card.scene}</p>
   </li>;
@@ -39,7 +79,18 @@ function Reading({ content, locale, compact, sides }: ReadingProps & { content: 
   const cards = compact ? [emphasised] : content.cards;
   return <>
     <section data-compare-motion="section" className="rounded-[4px] bg-night p-6 text-paper md:p-8">
-      <p className="eyebrow text-warm">{m.highlightLabel}</p>
+      <div className="flex items-start justify-between gap-4">
+        <p className="eyebrow text-warm">{m.highlightLabel}</p>
+        {/* Two mirrors, one for each of you: the brand's own picture of a pair. */}
+        {sides && <div aria-hidden className="-mt-1 flex shrink-0 gap-3">
+          {([[sides.you, sides.youLabel], [sides.other, sides.otherLabel]] as const).map(([c, label]) => (
+            <span key={label} className="flex flex-col items-center gap-1">
+              <MirrorMark profile={categoryMirrorProfile([c.EI, c.SN, c.TF, c.JP])} tone="paper" size={44} />
+              <span className="text-xs text-night-mist">{label}</span>
+            </span>
+          ))}
+        </div>}
+      </div>
       {content.highlight.dimension && <h2 className="mt-5 text-3xl leading-heading md:text-4xl">{m.themes[content.highlight.dimension]}</h2>}
       <p className="mt-5 text-base text-night-body">{content.highlight.body}</p>
       <div className="mt-6 border-l-2 border-warm pl-4 md:pl-5">

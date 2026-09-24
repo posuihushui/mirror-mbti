@@ -97,7 +97,7 @@ const en: typeof zh = {
     aboutTitle: "About this exploration",
     aboutDescription: "Answer each question at your own pace.",
     emptyTitle: "Your story hasn’t started yet.",
-    emptyDescription: "After the test, you can find your personality report here.",
+    emptyDescription: "After the test, you can find your result and report here.",
   },
   about: {
     intro: "Knowing yourself isn’t putting yourself in a box.\nIt’s gaining one more language for who you are.",

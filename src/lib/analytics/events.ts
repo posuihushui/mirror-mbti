@@ -100,7 +100,6 @@ export type AnalyticsEvents = {
   // Site
   page_view: { page_location: string; page_referrer: string };
   cta_click: { cta_id: CtaId; cta_location: CtaLocation };
-  language_menu_open: { cta_location: CtaLocation };
   more_menu_open: { cta_location: CtaLocation };
   language_switch: { language_to: Locale };
   faq_open: { faq_index: number; cta_location: CtaLocation };
@@ -109,6 +108,7 @@ export type AnalyticsEvents = {
   // Quiz
   quiz_start: Quiz & { resumed: boolean; answered_count: number };
   quiz_progress: Quiz & { progress_percent: QuizMilestone; answered_count: number };
+  quiz_part_complete: Quiz & { part_number: number };
   quiz_version_switch: Quiz & { answered_count: number };
   quiz_review_open: Quiz & { answered_count: number };
   quiz_review_jump: Quiz & { question_number: number };
@@ -126,6 +126,7 @@ export type AnalyticsEvents = {
   report_chapter_view: { chapter_number: number; nav_method: "tab" | "sidebar" | "next" };
   report_tab_switch: { tab: "strengths" | "blindspots" };
   report_practice_check: { day_number: number; checked: boolean };
+  report_image_open: Empty;
   my_report_view: { record_count: number; unlocked_count: number };
   recover_submit: Empty;
   recover_success: Empty;

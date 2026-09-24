@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-/** The header's 更多信息 menu is the only place these pages are listed: pages carry no footer navigation. */
+/** The header's menus are the only place these pages are listed: pages carry no footer navigation. */
 const menuPaths = ["/preferences", "/types", "/about", "/help", "/privacy", "/terms"];
 
 test.describe("header navigation", () => {
@@ -19,35 +19,36 @@ test.describe("header navigation", () => {
     const nav = page.getByRole("navigation", { name: "主导航" }).filter({ visible: true });
     const trigger = nav.getByRole("button", { name: phone ? "更多" : "更多信息", exact: true });
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
-    const types = nav.getByRole("link", { name: "16 型人格", exact: true });
-    await expect(types).toBeHidden();
-    if (!phone) {
-      await expect(nav.getByRole("link", { name: "人格测试", exact: true })).toBeVisible();
-      await expect(nav.getByRole("link", { name: /我的报告/ })).toBeVisible();
-    }
+    const about = nav.getByRole("link", { name: "测试说明", exact: true });
+    const primary = ["人格测试", "16 型人格", "我的报告"].map((name) => nav.getByRole("link", { name, exact: true }));
+    const english = nav.locator("[data-language-options]").getByRole("link", { name: "English" });
+    await expect(about).toBeHidden();
+    await expect(english).toBeHidden();
+    // Desktop shows the three primary links beside the menu; phones keep them inside it.
+    for (const link of primary) await (phone ? expect(link).toBeHidden() : expect(link).toBeVisible());
 
     // The button works once hydrated: retry until it opens.
     await expect(async () => {
       await trigger.click();
-      await expect(types).toBeVisible({ timeout: 1000 });
+      await expect(about).toBeVisible({ timeout: 1000 });
     }).toPass();
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
-    if (phone) {
-      await expect(nav.getByRole("link", { name: "人格测试", exact: true })).toBeVisible();
-      await expect(nav.getByRole("link", { name: "我的报告", exact: true })).toBeVisible();
-    }
+    for (const link of primary) await expect(link).toBeVisible();
+    // The menu ends with the languages: the current one is marked, the other is a link.
+    await expect(nav.locator("[data-language-options]").getByText("中文", { exact: true })).toHaveAttribute("aria-current", "true");
+    await expect(english).toHaveAttribute("href", "/");
     await page.keyboard.press("Escape");
-    await expect(types).toBeHidden();
+    await expect(about).toBeHidden();
     await expect(trigger).toBeFocused();
 
     await trigger.click();
-    await expect(types).toBeVisible();
+    await expect(about).toBeVisible();
     await page.mouse.click(4, Math.round(page.viewportSize()!.height * 0.45));
-    await expect(types).toBeHidden();
+    await expect(about).toBeHidden();
 
     await trigger.click();
-    await types.click();
-    await page.waitForURL(/\/types$/);
+    await about.click();
+    await page.waitForURL(/\/about$/);
     await expect(page.locator('.more-menu [aria-expanded="true"]')).toHaveCount(0);
   });
 
@@ -75,14 +76,13 @@ test.describe("header navigation", () => {
     }
   });
 
-  test("the phone header keeps the logo or back link and both menu labels on one centre line", async ({ page }, testInfo) => {
+  test("the phone header keeps the logo or back link and the menu label on one centre line", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "Phone header only.");
     for (const path of ["/zh", "/", "/zh/help"]) {
       await page.goto(path);
       const nav = page.locator("header").getByRole("navigation").filter({ visible: true });
       const parts = [
         page.locator("header > a").first().locator("svg").filter({ visible: true }),
-        nav.locator('[data-slot="dropdown-menu-trigger"] > span'),
         nav.locator(".more-menu > button > span"),
       ];
       const [left, ...labels] = await Promise.all(
