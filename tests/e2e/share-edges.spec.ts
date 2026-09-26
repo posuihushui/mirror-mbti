@@ -51,7 +51,8 @@ test('creation can finish after closing; owner management recovers it once',asyn
  await page.getByRole('dialog').getByRole('button',{name:shareMessages.zh.publish,exact:true}).click();await persisted;
  await page.getByRole('dialog').getByRole('button',{name:shareMessages.zh.close,exact:true}).click();release();
  await expect(page.getByRole('dialog')).toHaveCount(0);
- const list=(await(await page.request.get('/api/shares')).json()).data;expect(list.items).toHaveLength(1);
+ // The owner list is one language per page, like the manager that pages through it with this header.
+ const list=(await(await page.request.get('/api/shares',{headers:{'X-Mirror-Locale':'zh'}})).json()).data;expect(list.items).toHaveLength(1);
  await page.goto('/zh/my/shares');await expect(page.locator('[data-share-manager]')).toBeVisible();
 });
 test('no signed cookie cannot authorize a write',async({playwright})=>{
