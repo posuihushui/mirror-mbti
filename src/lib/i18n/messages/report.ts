@@ -115,7 +115,7 @@ const en: typeof zh = {
     title: "Report summary image",
     description: "Your type, the four dimensions and this week’s small step; the QR code opens the free test, never your report.",
     save: "Download image",
-    longPress: "In WeChat, press and hold the image to save it.",
+    longPress: "Press and hold the image to save it.",
     loading: "Creating the image…",
     failed: "The image isn’t ready yet. Please try again.",
     retry: "Try again",
