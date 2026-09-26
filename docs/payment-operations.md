@@ -49,7 +49,26 @@ flowchart LR
 1. 按[官方快速开始](https://docs.waffo.ai/quickstart)注册商户并创建店铺，在店铺中创建**一次性商品**。本站每次创建托管结账会话，并按服务器计算的订单金额覆盖价格；不使用订阅商品。
 2. 在 **API & Development** 创建环境对应的 API 密钥，保存商户 ID 和仅显示一次的私钥；在 Webhooks 配置 `https://你的域名/api/payments/waffo/webhook`，订阅 `order.completed`，取得相同环境的 Webhook 验签公钥。[官方集成说明](https://docs.waffo.ai/features/integrations)区分测试和生产密钥。
 3. 按[身份验证](https://docs.waffo.ai/merchant/identity-kyc)填写与身份证件一致的法定姓名，再配置[收款账户](https://docs.waffo.ai/merchant/finance)。官方当前列出的人民币提现目的地为中国大陆银行卡或支付宝；是否获准收款和提现以平台审核为准。
-4. 先在测试环境完成成功、拒付和 Webhook 验证；切到生产环境时更换 **API 私钥和 Webhook 公钥**，再做一笔可对账的真实付款。费率及提现费用查看[官方费用页](https://docs.waffo.ai/mor/fees)，不要依赖旧调研文档中的数字。
+4. 先在测试环境完成成功、拒付和 Webhook 验证：成功卡 `4576 7500 0000 0110`、拒付卡 `4576 7500 0000 0220`，有效期填任意未来日期，CVC 任意（[官方测试卡](https://docs.waffo.ai/quickstart#test-cards)）。切到生产环境前按官方上线清单绑定收款账户、补全 **Settings → Business Details**、把商品从测试同步到生产；切换时更换 **API 私钥和 Webhook 公钥**（商品 ID 两边相同，`WAFFO_PRODUCT_ID` 不用改），再做一笔可对账的真实付款。费率及提现费用查看[官方费用页](https://docs.waffo.ai/mor/fees)，不要依赖旧调研文档中的数字。
+
+#### Waffo 后台入口
+
+本站的 Waffo 店铺是 `STO_4Uzfp2KpyESSvzjnNPXQ2a`（即 `WAFFO_STORE_ID`），后台用 Google、GitHub 或邮箱链接登录。**页头的 Test / Live 开关决定看到哪一套数据和密钥**；查账、配 Webhook、复制公钥前先确认开关位置。下表中有链接的是直达地址，其余从店铺菜单进入。
+
+| 要做的事 | 入口 | 说明 |
+| --- | --- | --- |
+| 看收入、客户与销售概况 | [店铺首页](https://pancake.waffo.ai/merchant/dashboard/STO_4Uzfp2KpyESSvzjnNPXQ2a/home) | 统计随 Test / Live 切换 |
+| 查单笔付款 | 店铺菜单 **Payments** | 金额、税、状态、卡末四位、买家邮箱与商品。本站订单号作为 `orderMerchantExternalId` 传给 Waffo，结账会话另带 `resultId` 元数据 |
+| 查商品、取 `WAFFO_PRODUCT_ID` | 店铺菜单 **Products** → 点开商品 | 商品 ID 在详情页和地址栏。本站每单按服务器金额覆盖价格，商品标价不影响实收 |
+| 取 `WAFFO_MERCHANT_ID`、建 API 密钥 | [API & Development](https://pancake.waffo.ai/merchant/dashboard/integration) | 商户 ID（`MER_` 开头）在 “Create an API Key” 区块、密钥列表上方第一行的复制按钮，不在页面顶部；私钥只显示一次，测试与生产各一把 |
+| 配 Webhook、取 `WAFFO_WEBHOOK_PUBLIC_KEY` | **Settings → Webhooks** | 地址与订阅事件见第 2 步；公钥按环境区分；可看投递记录，或用 **Send Test Events** 发一条样例 |
+| 核对店铺 ID、改结账页品牌 | **Settings → Store Profile** / **Checkout** | |
+| 看本店收入 | [Revenue](https://pancake.waffo.ai/merchant/dashboard/STO_4Uzfp2KpyESSvzjnNPXQ2a/revenue) | 店铺层面不能单独提现，结算后自动汇入 Merchant Finance |
+| 余额与提现 | [Merchant Finance](https://pancake.waffo.ai/merchant/dashboard/finance) | 商户层面，所有店铺共用：可提现、清算中（约 10 个工作日）、提现记录 |
+| 收款账户 | [Payout Accounts](https://pancake.waffo.ai/merchant/dashboard/payout-accounts) | 商户层面，需先完成身份验证 |
+| 买家查发票、提退款申请 | [Consumer Portal](https://pancake.waffo.ai/consumer/portal/login) | 买家入口，不是商户后台。本站没有退款流程，退款事件只记录、不收回报告 |
+
+Webhook 投递的响应可以直接判断问题：样例事件里没有本站订单，正常结果是 404 `unknown order`（地址可达、验签已通过）；401 `signature verification failed` 说明公钥与当前环境不符；404 `provider disabled` 说明英文站没有设 `EN_PAYMENT_PROVIDER=waffo`。
 
 ### USDC / USDT（英文链上支付）
 
@@ -129,7 +148,7 @@ flowchart TD
 | 机制 | 当前代码行为 | 运营时要注意 |
 | --- | --- | --- |
 | 微信通知 | 验签、解密、金额核对后更新订单；订单页可主动查单 | 支付目录、回调公网 HTTPS 和证书必须正确；查单依赖买家或运营打开订单页 |
-| Waffo 通知 | 验签后按事件 ID 去重；`order.completed` 更新订单；订单页另有主动查询 | Webhook 失败日志可在 Waffo 后台查；超过订单期限的已扣款订单仍可确认 |
+| Waffo 通知 | 验签后按事件 ID 去重；`order.completed` 更新订单；订单页另有主动查询 | Webhook 投递记录在 Waffo 后台 **Settings → Webhooks**（见[后台入口](#waffo-后台入口)）；超过订单期限的已扣款订单仍可确认 |
 | 链上识别 | Solana 按 `reference` 和实际余额增量、Ethereum 按签名钱包与 Transfer 日志匹配；同一转账事件只可归一单 | 链上**没有回调**；查询由订单状态页触发，RPC 故障会延后解锁 |
 | 过期 | 微信订单 15 分钟；银行卡和链上订单 30 分钟。银行卡与链上过期后 24 小时内仍尝试回查 | 24 小时窗口并非后台定时作业；页面无人访问时不会自动查单 |
 | 权益 | 服务端按已付订单开放报告；重复通知和重复查单应保持幂等 | 客户端显示的 `unlocked` 不是授权依据 |
