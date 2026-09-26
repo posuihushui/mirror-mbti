@@ -58,14 +58,13 @@ export async function POST(req: Request) {
   const data = event.data ?? {};
   const order = data.orderMerchantExternalId ? await getOrderByIdUnchecked(data.orderMerchantExternalId) : null;
   // `eventId` identifies the payment or refund, so the type keeps one payment's events apart.
-  const isNew = await recordPaymentEvent({
+  await recordPaymentEvent({
     orderId: order?.id ?? null,
     provider: "waffo",
     eventId: `${event.eventType}:${event.eventId}`,
     kind: event.eventType,
     raw: withoutBuyerEmail(event),
   });
-  if (!isNew) return NextResponse.json({ ok: true });
   if (!order) return fail("unknown order", 404);
 
   if (event.eventType === "order.completed" && data.paymentStatus !== "failed") {
@@ -75,6 +74,8 @@ export async function POST(req: Request) {
       return fail("amount mismatch", 400);
     }
     // A callback that arrives after the order expired still unlocks it: the card was already charged.
+    // The event may already be recorded if an earlier delivery failed after recording it.
+    // Re-run the idempotent transition so Waffo's retry can still grant access.
     await markOrderPaid(order.id, data.paymentId ?? event.eventId, event.timestamp ? new Date(event.timestamp) : new Date(), { allowExpired: true });
   }
   return NextResponse.json({ ok: true });

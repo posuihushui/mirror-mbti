@@ -118,6 +118,10 @@ APP_URL=https://your-domain.com docker compose up -d --build
 
 多版本上线前应用 `0002_oval_dagger.sql`，为结果补充问卷 ID、题数、题目 ID 答案、计分和报告版本。既有记录默认归入 `legacy32-v1`，保留原始分数、结果链接和付费权益；历史答案在检查时按冻结的旧题序还原。
 
+## 支付申请、使用与稳定性
+
+各支付渠道的申请、配置、买家使用步骤、上线验收与故障处理见 [支付申请、使用与稳定性指南](docs/payment-operations.md)（含流程图和对照表）。
+
 ## 接入微信支付
 
 1. 在商户平台获取 `mchid`、API 证书序列号、商户私钥（PEM）、APIv3 密钥；开通微信支付公钥或使用平台证书（留空 `WECHAT_PAY_PUBLIC_KEY*` 时系统自动拉取并缓存平台证书）。
