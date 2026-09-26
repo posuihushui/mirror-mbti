@@ -4,6 +4,12 @@
 
 技术栈：Next.js 16（App Router、Turbopack、Cache Components、React Compiler）、React 19、Tailwind CSS v4、shadcn/ui（Radix）、Drizzle ORM + Postgres、Zod。支付层为 provider 抽象，按订单语言选用：中文订单由 `PAYMENT_PROVIDER` 决定，默认 `mock`（演示，不扣款），可切换到微信支付 APIv3（JSAPI / H5 / Native）；英文订单由 `EN_PAYMENT_PROVIDER` 决定，默认 `mock`，可切换到 `waffo`（Waffo Pancake 托管的银行卡收银台）或 `crypto`（Ethereum / Solana 上的 USDC / USDT 直接收款，无第三方网关）。每种语言同一时间只启用一种支付方式。
 
+## 域名方向
+
+英文为主的域名首选候选是 `mirrorfor.me`，读作 “mirror for me”：保留 `mirror` 品牌，也呼应每个人自己的测试结果与报告。英文仍使用无前缀路径，中文使用 `/zh`。该域名的实时可注册状态和价格尚未确认；注册并决定启用后，再将生产环境的 `APP_URL` 设为 `https://mirrorfor.me` 并重新构建。
+
+域名中避开 `MBTI`。它是 Myers & Briggs Foundation 的商标；[The Myers-Briggs Company 的网站指引](https://www.themyersbriggs.com/en-US/Support/Website-Guidelines)明确要求不要将其商标放进域名，并指出这样做可能构成商标侵权。[商标使用指引](https://www.themyersbriggs.com/en-US/Support/-/media/Myers-Briggs/Files/Support/Trademark_Guidelines.pdf)还要求，未经事先书面许可，不要把商标并入自有产品名或域名。页面可以准确说明本站是 “MBTI®-style” 人格探索，但不能暗示它是官方量表或得到官方认可。
+
 ## 页面与接口
 
 英文页面使用不带前缀的地址（`/quiz`），中文页面加 `/zh` 前缀（`/zh/quiz`），下表只列不带前缀的路径。页面都在 `src/app/[lang]` 下：`src/proxy.ts` 把不带前缀的地址重写到内部的 `/en/…`，旧的 `/en/…` 地址由 `next.config.ts` 308 跳转到不带前缀的地址。结果、报告、订单、分享与双人指南页面会跳转到内容所属的语言（结果的语言即其问卷的语言）。
