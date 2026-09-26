@@ -1,11 +1,8 @@
 import "server-only";
+import { TaxCategory, WaffoPancake, type CheckoutSessionResult } from "@waffo/pancake-ts";
 import { waffoConfig, type WaffoConfig } from "./config";
-import { requestMessage, rsaSha256Sign } from "./crypto";
 
-const CHECKOUT_PATH = "/v1/actions/checkout/create-session";
-const GRAPHQL_PATH = "/v1/graphql";
-
-export type CheckoutSession = { sessionId: string; checkoutUrl: string; expiresAt: string };
+export type CheckoutSession = CheckoutSessionResult;
 
 /** One payment attempt on a Waffo order, as returned by the read-only GraphQL API. */
 export type WaffoPayment = { id: string; orderId: string; status: string; refundStatus: string | null; createdAt: string | null };
@@ -21,56 +18,23 @@ export type CreateSessionInput = {
   metadata?: Record<string, string>;
 };
 
-export class WaffoApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-  ) {
-    super(message);
-  }
-}
-
 export type WaffoClient = ReturnType<typeof createWaffoClient>;
 
 /**
- * Signed server-to-server client. Requests carry an RSA-SHA256 signature over the canonical
- * request; the private key never leaves the server and no API secret is sent.
+ * Server-to-server client on `@waffo/pancake-ts`. The SDK signs every request with the merchant's
+ * RSA private key; the key never leaves the server and no API secret is sent.
  */
-export function createWaffoClient(config: WaffoConfig = waffoConfig(), fetchImpl: typeof fetch = fetch) {
-  async function call<T>(path: string, body: unknown): Promise<T> {
-    const payload = JSON.stringify(body);
-    const timestamp = Math.floor(Date.now() / 1000).toString();
-    const res = await fetchImpl(`${config.apiBase}${path}`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-merchant-id": config.merchantId,
-        "x-timestamp": timestamp,
-        "x-signature": rsaSha256Sign(requestMessage("POST", path, timestamp, payload), config.privateKey),
-      },
-      body: payload,
-      cache: "no-store",
-    });
-    const text = await res.text();
-    let json: { data?: T; errors?: { message?: string }[] };
-    try {
-      json = JSON.parse(text) as typeof json;
-    } catch {
-      throw new WaffoApiError(`Waffo returned a non-JSON response (${res.status})`, res.status);
-    }
-    const error = json.errors?.[0]?.message;
-    if (!res.ok || error || json.data === undefined) throw new WaffoApiError(error ?? `Waffo request failed (${res.status})`, res.status);
-    return json.data;
-  }
+export function createWaffoClient(config: WaffoConfig = waffoConfig(), fetchImpl?: typeof fetch) {
+  const sdk = new WaffoPancake({ merchantId: config.merchantId, privateKey: config.privateKey, baseUrl: config.apiBase, fetch: fetchImpl });
 
   return {
     /** Locks product version, price and currency, and returns the hosted checkout URL. */
-    createSession(input: CreateSessionInput): Promise<CheckoutSession> {
-      return call<CheckoutSession>(CHECKOUT_PATH, {
+    async createSession(input: CreateSessionInput): Promise<CheckoutSession> {
+      const { sessionId, checkoutUrl, expiresAt } = await sdk.checkout.createSession({
         productId: config.productId,
         currency: input.currency,
-        // Tax is added on top of this amount at checkout, so `subtotal` on the callback is what we charged.
-        priceSnapshot: { amount: input.amount, taxIncluded: false, taxCategory: "digital_goods" },
+        // Prices are tax-exclusive: tax is added at checkout, so the callback's list subtotal is what we charged.
+        priceSnapshot: { amount: input.amount, taxCategory: TaxCategory.DigitalGoods },
         successUrl: input.successUrl,
         expiresInSeconds: input.expiresInSeconds,
         orderMerchantExternalId: input.externalId,
@@ -78,15 +42,20 @@ export function createWaffoClient(config: WaffoConfig = waffoConfig(), fetchImpl
         language: "en",
         includePaymentMethods: ["card", "applepay", "googlepay"],
       });
+      // The SDK only throws on an `errors` envelope; a bare non-2xx would otherwise come back empty.
+      if (!checkoutUrl) throw new Error("Waffo returned no checkout URL");
+      return { sessionId, checkoutUrl, expiresAt };
     },
 
     /** Payment attempts for one of our order ids, newest first. */
     async paymentsFor(externalId: string): Promise<WaffoPayment[]> {
-      const data = await call<{ payments: WaffoPayment[] | null }>(GRAPHQL_PATH, {
+      const result = await sdk.graphql.query<{ payments: WaffoPayment[] | null }>({
         query: `query($ref: String!) { payments(filter: { orderMerchantExternalId: { eq: $ref } }) { id orderId status refundStatus createdAt } }`,
         variables: { ref: externalId },
       });
-      return data.payments ?? [];
+      // GraphQL reports failures in the envelope rather than throwing.
+      if (result.errors?.length) throw new Error(`Waffo payments query failed: ${result.errors[0].message}`);
+      return result.data?.payments ?? [];
     },
   };
 }

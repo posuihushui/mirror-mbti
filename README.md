@@ -102,7 +102,7 @@ npm run dev                   # http://localhost:3000（英文），中文在 /z
 - `PRICE_FEN` / `PRICE_USD_CENTS`：完整报告价格，分别按分（中文订单，默认 690 即 ¥6.9）和美分（英文订单，默认 690 即 $6.9）计。
 - `INVITE_PRICE_FEN` / `INVITE_PRICE_USD_CENTS`：邀请价（默认 550 即 ¥5.5 / $5.5），访客通过别人的邀请或邀请链接购买第一份报告时使用。
 - `GIFT_PRICE_FEN` / `GIFT_PRICE_USD_CENTS`：请 TA 的价格（默认 490 即 ¥4.9 / $4.9）。
-- `WAFFO_*`：`EN_PAYMENT_PROVIDER=waffo` 时必填。买家跳转到 Waffo Pancake 托管收银台付款后回到 `/pay/[orderId]`，本站不收集卡号；税费加在价格之上。Webhook 地址为 `${APP_URL}/api/payments/waffo/webhook`。没有退款流程：购买即为最终交易，退款事件只记录，不收回报告。
+- `WAFFO_*`：`EN_PAYMENT_PROVIDER=waffo` 时必填商户 ID、私钥、店铺 ID、商品 ID 与 `WAFFO_ENVIRONMENT`（`test` | `prod`，须与私钥所属环境一致）；`WAFFO_WEBHOOK_PUBLIC_KEY` 可留空，官方 SDK `@waffo/pancake-ts` 内置两套环境的验签公钥。买家跳转到 Waffo Pancake 托管收银台付款后回到 `/pay/[orderId]`，本站不收集卡号；税费加在价格之上。Webhook 地址为 `${APP_URL}/api/payments/waffo/webhook`，只接受本店铺、本环境的事件。没有退款流程：购买即为最终交易，退款事件只记录，不收回报告。
 - `CRYPTO_EVM_RECEIVER` + `ETHEREUM_RPC_URL`、`CRYPTO_SOLANA_RECEIVER` + `SOLANA_RPC_URL`：`EN_PAYMENT_PROVIDER=crypto` 时，收款地址与 RPC 都已配置的网络才会出现在结账中。付款直接进入收款地址，从链上读取确认；Ethereum 订单只认签署了订单挑战的钱包，Solana 订单各带独立的 Solana Pay reference。订单有效期 30 分钟，过期后 24 小时内仍会查询。
 - `NEXT_PUBLIC_GA_MEASUREMENT_ID`：GA4 衡量 ID（`G-` 开头）。它在 **构建时** 写入客户端代码（Docker 通过 `--build-arg`），留空则不加载 GA。埋点清单、GA 后台配置与验证方法见 [`docs/analytics.md`](docs/analytics.md)。
 - `WECHAT_SHARE_ENABLED`：默认 `false`；公众号渠道验证通过后才设为 `true`，开启微信 JS-SDK 分享。

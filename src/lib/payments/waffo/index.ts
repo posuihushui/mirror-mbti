@@ -2,7 +2,7 @@ import "server-only";
 import type { OrderRow } from "@/db/schema";
 import type { CreatePaymentContext, PaymentPayload, PaymentProvider, QueryPaymentResult } from "../types";
 import { createWaffoClient, type WaffoClient } from "./client";
-import { centsToAmount } from "./crypto";
+import { centsToAmount } from "./amounts";
 
 /** A session shorter than a minute would expire before a buyer reaches the card form. */
 const MIN_SESSION_SECONDS = 60;

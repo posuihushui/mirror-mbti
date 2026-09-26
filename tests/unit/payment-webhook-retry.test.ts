@@ -18,8 +18,8 @@ vi.mock("@/lib/orders", () => ({
   markOrderPaid: mocks.markPaid,
   setOrderStatus: mocks.setStatus,
 }));
-vi.mock("@/lib/payments/waffo/config", () => ({ waffoConfig: () => ({ webhookPublicKey: "test-key" }) }));
-vi.mock("@/lib/payments/waffo/crypto", () => ({ verifyWebhook: () => true, amountToCents: (amount: string) => Math.round(Number(amount) * 100) }));
+vi.mock("@/lib/payments/waffo/config", () => ({ waffoConfig: () => ({ environment: "test", storeId: "STO_ours" }) }));
+vi.mock("@waffo/pancake-ts", async (original) => ({ ...(await original<typeof import("@waffo/pancake-ts")>()), verifyWebhook: (body: string) => JSON.parse(body) }));
 vi.mock("@/lib/payments/wechat", () => ({ weChatClient: () => ({ verifySignature: mocks.verifyWeChat, decryptResource: mocks.decryptWeChat }) }));
 
 const orderId = "M2026092600000000PAYMENTTEST";
@@ -35,7 +35,7 @@ beforeEach(() => {
 
 describe("payment webhook retries", () => {
   it("retries Waffo fulfillment even when the event ID was previously recorded", async () => {
-    const body = JSON.stringify({ eventType: "order.completed", eventId: "waffo-event", data: { orderMerchantExternalId: orderId, currency: "USD", subtotal: "6.90", paymentId: "waffo-payment" } });
+    const body = JSON.stringify({ eventType: "order.completed", eventId: "waffo-event", storeId: "STO_ours", mode: "test", data: { orderMerchantExternalId: orderId, currency: "USD", subtotal: "6.90", paymentId: "waffo-payment" } });
     const response = await waffoWebhook(new Request("https://mirror.example/api/payments/waffo/webhook", { method: "POST", body }));
 
     expect(response.status).toBe(200);
@@ -44,7 +44,7 @@ describe("payment webhook retries", () => {
   });
 
   it("still rejects an already-recorded Waffo event with the wrong amount", async () => {
-    const body = JSON.stringify({ eventType: "order.completed", eventId: "waffo-event", data: { orderMerchantExternalId: orderId, currency: "USD", subtotal: "1.00" } });
+    const body = JSON.stringify({ eventType: "order.completed", eventId: "waffo-event", storeId: "STO_ours", mode: "test", data: { orderMerchantExternalId: orderId, currency: "USD", subtotal: "1.00" } });
     const logging = vi.spyOn(console, "error").mockImplementation(() => {});
     try {
       const response = await waffoWebhook(new Request("https://mirror.example/api/payments/waffo/webhook", { method: "POST", body }));

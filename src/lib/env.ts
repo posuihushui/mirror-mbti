@@ -36,6 +36,9 @@ const schema = z.object({
   WAFFO_PRIVATE_KEY: z.string().optional(),
   WAFFO_STORE_ID: z.string().optional(),
   WAFFO_PRODUCT_ID: z.string().optional(),
+  // Which Waffo environment the API key belongs to; webhooks from the other one are refused.
+  WAFFO_ENVIRONMENT: z.enum(["test", "prod"]).optional(),
+  // Optional override: the SDK ships Waffo's test and production webhook keys.
   WAFFO_WEBHOOK_PUBLIC_KEY: z.string().optional(),
   WAFFO_API_BASE: z.string().url().default("https://api.waffo.ai"),
   WECHAT_PAY_MCHID: z.string().optional(),

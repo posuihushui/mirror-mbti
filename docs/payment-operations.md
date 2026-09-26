@@ -47,13 +47,13 @@ flowchart LR
 ### Waffo Pancake（英文银行卡）
 
 1. 按[官方快速开始](https://docs.waffo.ai/quickstart)注册商户并创建店铺，在店铺中创建**一次性商品**。本站每次创建托管结账会话，并按服务器计算的订单金额覆盖价格；不使用订阅商品。
-2. 在 **API & Development** 创建环境对应的 API 密钥，保存商户 ID 和仅显示一次的私钥；在 Webhooks 配置 `https://你的域名/api/payments/waffo/webhook`，订阅 `order.completed`，取得相同环境的 Webhook 验签公钥。[官方集成说明](https://docs.waffo.ai/features/integrations)区分测试和生产密钥。
+2. 在 **API & Development** 创建环境对应的 API 密钥，保存商户 ID 和仅显示一次的私钥；把私钥所属环境写入 `WAFFO_ENVIRONMENT`（`test` 或 `prod`）；在 Webhooks 配置 `https://你的域名/api/payments/waffo/webhook`，订阅 `order.completed`。验签公钥由官方 SDK `@waffo/pancake-ts` 内置，`WAFFO_WEBHOOK_PUBLIC_KEY` 只在 Waffo 轮换密钥后覆盖用；Webhook 只接受 `WAFFO_STORE_ID` 这家店、`WAFFO_ENVIRONMENT` 这一环境的事件。[官方集成说明](https://docs.waffo.ai/features/integrations)区分测试和生产密钥。
 3. 按[身份验证](https://docs.waffo.ai/merchant/identity-kyc)填写与身份证件一致的法定姓名，再配置[收款账户](https://docs.waffo.ai/merchant/finance)。官方当前列出的人民币提现目的地为中国大陆银行卡或支付宝；是否获准收款和提现以平台审核为准。
-4. 先在测试环境完成成功、拒付和 Webhook 验证：成功卡 `4576 7500 0000 0110`、拒付卡 `4576 7500 0000 0220`，有效期填任意未来日期，CVC 任意（[官方测试卡](https://docs.waffo.ai/quickstart#test-cards)）。切到生产环境前按官方上线清单绑定收款账户、补全 **Settings → Business Details**、把商品从测试同步到生产；切换时更换 **API 私钥和 Webhook 公钥**（商品 ID 两边相同，`WAFFO_PRODUCT_ID` 不用改），再做一笔可对账的真实付款。费率及提现费用查看[官方费用页](https://docs.waffo.ai/mor/fees)，不要依赖旧调研文档中的数字。
+4. 先在测试环境完成成功、拒付和 Webhook 验证：成功卡 `4576 7500 0000 0110`、拒付卡 `4576 7500 0000 0220`，有效期填任意未来日期，CVC 任意（[官方测试卡](https://docs.waffo.ai/quickstart#test-cards)）。切到生产环境前按官方上线清单绑定收款账户、补全 **Settings → Business Details**、把商品从测试同步到生产；切换时更换 **API 私钥**，并把 `WAFFO_ENVIRONMENT` 改为 `prod`、在 Live 下重新配置 Webhook（商品 ID 两边相同，`WAFFO_PRODUCT_ID` 不用改），再做一笔可对账的真实付款。费率及提现费用查看[官方费用页](https://docs.waffo.ai/mor/fees)，不要依赖旧调研文档中的数字。
 
 #### Waffo 后台入口
 
-本站的 Waffo 店铺是 `STO_4Uzfp2KpyESSvzjnNPXQ2a`（即 `WAFFO_STORE_ID`），后台用 Google、GitHub 或邮箱链接登录。**页头的 Test / Live 开关决定看到哪一套数据和密钥**；查账、配 Webhook、复制公钥前先确认开关位置。下表中有链接的是直达地址，其余从店铺菜单进入。
+本站的 Waffo 店铺是 `STO_4Uzfp2KpyESSvzjnNPXQ2a`（即 `WAFFO_STORE_ID`），后台用 Google、GitHub 或邮箱链接登录。**页头的 Test / Live 开关决定看到哪一套数据和密钥**；查账、配 Webhook、建密钥前先确认开关位置。下表中有链接的是直达地址，其余从店铺菜单进入。
 
 | 要做的事 | 入口 | 说明 |
 | --- | --- | --- |
@@ -61,14 +61,14 @@ flowchart LR
 | 查单笔付款 | 店铺菜单 **Payments** | 金额、税、状态、卡末四位、买家邮箱与商品。本站订单号作为 `orderMerchantExternalId` 传给 Waffo，结账会话另带 `resultId` 元数据 |
 | 查商品、取 `WAFFO_PRODUCT_ID` | 店铺菜单 **Products** → 点开商品 | 商品 ID 在详情页和地址栏。本站每单按服务器金额覆盖价格，商品标价不影响实收 |
 | 取 `WAFFO_MERCHANT_ID`、建 API 密钥 | [API & Development](https://pancake.waffo.ai/merchant/dashboard/integration) | 商户 ID（`MER_` 开头）在 “Create an API Key” 区块、密钥列表上方第一行的复制按钮，不在页面顶部；私钥只显示一次，测试与生产各一把 |
-| 配 Webhook、取 `WAFFO_WEBHOOK_PUBLIC_KEY` | **Settings → Webhooks** | 地址与订阅事件见第 2 步；公钥按环境区分；可看投递记录，或用 **Send Test Events** 发一条样例 |
+| 配 Webhook | **Settings → Webhooks** | 地址与订阅事件见第 2 步；按 Test / Live 分别配置；可看投递记录，或用 **Send Test Events** 发一条样例。验签公钥已内置在 SDK，平台轮换后才需要复制到 `WAFFO_WEBHOOK_PUBLIC_KEY` |
 | 核对店铺 ID、改结账页品牌 | **Settings → Store Profile** / **Checkout** | |
 | 看本店收入 | [Revenue](https://pancake.waffo.ai/merchant/dashboard/STO_4Uzfp2KpyESSvzjnNPXQ2a/revenue) | 店铺层面不能单独提现，结算后自动汇入 Merchant Finance |
 | 余额与提现 | [Merchant Finance](https://pancake.waffo.ai/merchant/dashboard/finance) | 商户层面，所有店铺共用：可提现、清算中（约 10 个工作日）、提现记录 |
 | 收款账户 | [Payout Accounts](https://pancake.waffo.ai/merchant/dashboard/payout-accounts) | 商户层面，需先完成身份验证 |
 | 买家查发票、提退款申请 | [Consumer Portal](https://pancake.waffo.ai/consumer/portal/login) | 买家入口，不是商户后台。本站没有退款流程，退款事件只记录、不收回报告 |
 
-Webhook 投递的响应可以直接判断问题：样例事件里没有本站订单，正常结果是 404 `unknown order`（地址可达、验签已通过）；401 `signature verification failed` 说明公钥与当前环境不符；404 `provider disabled` 说明英文站没有设 `EN_PAYMENT_PROVIDER=waffo`。
+Webhook 投递的响应可以直接判断问题：样例事件里没有本站订单，正常结果是 404 `unknown order`（地址可达、验签已通过）；401 `signature verification failed` 说明事件来自与 `WAFFO_ENVIRONMENT` 不同的环境（或 Waffo 轮换了公钥）；400 `unknown store` 说明事件不属于 `WAFFO_STORE_ID` 这家店；404 `provider disabled` 说明英文站没有设 `EN_PAYMENT_PROVIDER=waffo`。
 
 ### USDC / USDT（英文链上支付）
 
@@ -97,7 +97,7 @@ Solana Pay 是开放支付协议，`reference` 是其付款请求的一部分；
 | 目标 | 必要配置 | 启用方式 |
 | --- | --- | --- |
 | 微信 | `WECHAT_PAY_MCHID`、`WECHAT_PAY_APPID`、`WECHAT_PAY_SERIAL_NO`、`WECHAT_PAY_PRIVATE_KEY`、`WECHAT_PAY_APIV3_KEY`；JSAPI 另需 `WECHAT_MP_APPID`、`WECHAT_MP_SECRET` | `PAYMENT_PROVIDER=wechat` |
-| Waffo | `WAFFO_MERCHANT_ID`、`WAFFO_PRIVATE_KEY`、`WAFFO_STORE_ID`、`WAFFO_PRODUCT_ID`、`WAFFO_WEBHOOK_PUBLIC_KEY` | `EN_PAYMENT_PROVIDER=waffo` |
+| Waffo | `WAFFO_MERCHANT_ID`、`WAFFO_PRIVATE_KEY`、`WAFFO_STORE_ID`、`WAFFO_PRODUCT_ID`、`WAFFO_ENVIRONMENT`（可选覆盖：`WAFFO_WEBHOOK_PUBLIC_KEY`） | `EN_PAYMENT_PROVIDER=waffo` |
 | Solana | `CRYPTO_SOLANA_RECEIVER`、`SOLANA_RPC_URL`；测试网另填代币 mint | `EN_PAYMENT_PROVIDER=crypto` |
 | Ethereum | `CRYPTO_EVM_RECEIVER`、`ETHEREUM_RPC_URL`；非主网另填链 ID 和代币合约 | `EN_PAYMENT_PROVIDER=crypto` |
 
@@ -160,7 +160,7 @@ flowchart TD
 | 检查 | 通过条件 |
 | --- | --- |
 | 申请 | 对应产品权限、主体、域名、提现身份均审核完成 |
-| 环境 | 测试和生产密钥、Webhook 公钥及数据库互不混用；服务端配置不出现在客户端或 Git 中 |
+| 环境 | 测试和生产密钥、Webhook 及数据库互不混用（Waffo 按 `WAFFO_ENVIRONMENT` 拒收另一环境的事件）；服务端配置不出现在客户端或 Git 中 |
 | 正常付款 | 每条已启用入口各有一笔真实小额订单，支付方账单、本站订单 `paid` 与报告权限一致 |
 | 延迟与重复 | 延迟回调、重复回调、重复刷新不重复授权；扣款后订单过期也能正确处理 |
 | 失败 | 取消、拒付、RPC 故障、回调失败时保留测试结果，并能从原订单继续核对 |

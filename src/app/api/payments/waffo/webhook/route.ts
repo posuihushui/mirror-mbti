@@ -1,61 +1,50 @@
+import { verifyWebhook, WebhookEventType, type WebhookEvent, type WebhookEventData } from "@waffo/pancake-ts";
 import { NextResponse } from "next/server";
 import { paymentModeFor } from "@/lib/env";
 import { getOrderByIdUnchecked, markOrderPaid, recordPaymentEvent } from "@/lib/orders";
+import { amountToCents } from "@/lib/payments/waffo/amounts";
 import { waffoConfig } from "@/lib/payments/waffo/config";
-import { amountToCents, verifyWebhook } from "@/lib/payments/waffo/crypto";
-
-type WaffoEvent = {
-  id: string;
-  timestamp?: string;
-  eventType: string;
-  eventId: string;
-  mode?: string;
-  data?: {
-    orderId?: string;
-    orderStatus?: string;
-    orderMerchantExternalId?: string;
-    currency?: string;
-    /** Pre-tax amount — what we charged. `total` adds the tax Waffo collects as merchant of record. */
-    subtotal?: string;
-    total?: string;
-    paymentId?: string;
-    paymentStatus?: string;
-    buyerEmail?: string;
-  };
-};
 
 const fail = (message: string, status: number) => NextResponse.json({ ok: false, message }, { status });
 
 /** The buyer's email belongs to Waffo, the seller of record; we keep the payment record without it. */
-function withoutBuyerEmail(event: WaffoEvent): Record<string, unknown> {
-  const data = { ...(event.data ?? {}) };
+function withoutBuyerEmail(event: WebhookEvent): Record<string, unknown> {
+  const data: Partial<WebhookEventData> = { ...event.data };
   delete data.buyerEmail;
   return { ...event, data };
 }
 
 /**
- * Waffo Pancake webhook. Verifies the RSA signature over the raw body, records the event once and
- * flips the matching order to paid. Only `order.completed` grants access; refund events are recorded
- * for the payment history and never revoke a report. Waffo retries on non-2xx.
+ * Waffo Pancake webhook. The SDK verifies the RSA signature over the raw body with the key for our
+ * environment; the event is recorded once and the matching order flips to paid. Only
+ * `order.completed` grants access; refund events are recorded for the payment history and never
+ * revoke a report. Waffo retries on non-2xx.
  */
 export async function POST(req: Request) {
   if (paymentModeFor("en") !== "waffo") return fail("provider disabled", 404);
+  const config = waffoConfig();
 
   const body = await req.text();
-  // The test and production public keys differ, so a verified event always belongs to our environment.
-  if (!verifyWebhook(body, req.headers.get("x-waffo-signature"), waffoConfig().webhookPublicKey)) {
+  let event: WebhookEvent;
+  try {
+    // Re-serialising parsed JSON would change the bytes, so the SDK gets the body exactly as received.
+    event = verifyWebhook<WebhookEventData>(body, req.headers.get("x-waffo-signature"), {
+      environment: config.environment,
+      publicKeys: config.webhookPublicKey,
+    });
+  } catch (e) {
+    console.error("[waffo webhook] rejected", e instanceof Error ? e.message : e);
     return fail("signature verification failed", 401);
   }
 
-  let event: WaffoEvent;
-  try {
-    event = JSON.parse(body) as WaffoEvent;
-  } catch (e) {
-    console.error("[waffo webhook] decode failed", e);
-    return fail("bad payload", 400);
+  // Waffo signs every merchant's events with the same platform key, so a valid signature only proves
+  // the event came from Waffo. Anyone can point their own store's webhook here with our order id.
+  if (event.mode !== config.environment || event.storeId !== config.storeId) {
+    console.error("[waffo webhook] event for another store or environment", event.storeId, event.mode);
+    return fail("unknown store", 400);
   }
 
-  const data = event.data ?? {};
+  const data: Partial<WebhookEventData> = event.data ?? {};
   const order = data.orderMerchantExternalId ? await getOrderByIdUnchecked(data.orderMerchantExternalId) : null;
   // `eventId` identifies the payment or refund, so the type keeps one payment's events apart.
   await recordPaymentEvent({
@@ -67,10 +56,11 @@ export async function POST(req: Request) {
   });
   if (!order) return fail("unknown order", 404);
 
-  if (event.eventType === "order.completed" && data.paymentStatus !== "failed") {
-    const charged = amountToCents(data.subtotal ?? "");
+  if (event.eventType === WebhookEventType.OrderCompleted && data.paymentStatus !== "failed") {
+    // The pre-tax list price is what we charged; tax is added on top. `subtotal` is its deprecated name.
+    const charged = amountToCents(data.listPrice?.subtotal ?? data.subtotal ?? "");
     if (data.currency !== order.currency || charged === null || charged < order.amountFen) {
-      console.error("[waffo webhook] amount mismatch", order.id, data.currency, data.subtotal, order.amountFen);
+      console.error("[waffo webhook] amount mismatch", order.id, data.currency, data.listPrice?.subtotal ?? data.subtotal, order.amountFen);
       return fail("amount mismatch", 400);
     }
     // A callback that arrives after the order expired still unlocks it: the card was already charged.
