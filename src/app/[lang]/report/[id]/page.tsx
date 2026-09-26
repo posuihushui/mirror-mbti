@@ -15,7 +15,6 @@ import { SampleCta } from "@/components/result/sample-cta";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { trackAttrs } from "@/lib/analytics/events";
-import { paymentModeFor } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
@@ -61,7 +60,7 @@ export default async function ReportPage({ params }: Params) {
     if (!result.unlocked) redirect(href(locale, `/result/${id}?unlock=1`));
   }
 
-  const data: ReportData = buildReportData(result.profile, { sample: result.sample, demo: paymentModeFor(locale) === "mock", locale });
+  const data: ReportData = buildReportData(result.profile, { sample: result.sample, locale });
   const [continuations, pairing] = !data.sample && visitorId
     ? await Promise.all([listComparisonContinuations(visitorId, id), resultPairingStatus(id, visitorId, locale)])
     : [[], null];

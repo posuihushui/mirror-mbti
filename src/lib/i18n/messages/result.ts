@@ -72,7 +72,6 @@ const zh = {
     heading: "属于你的故事，\n还未开始。",
     body: "这是一份示例报告。选择 32 题或 64 题版本，免费了解自己的四维偏好。",
     start: "开始认识自己",
-    footnote: "免费测试与性格概览",
   },
   sampleNotice: {
     eyebrow: "示例报告",
@@ -157,7 +156,6 @@ const en: typeof zh = {
     heading: "Your story\nhasn’t started yet.",
     body: "This is a sample report. Choose the 32- or 64-item version to explore your four preferences for free.",
     start: "Start exploring",
-    footnote: "Free test and overview",
   },
   sampleNotice: {
     eyebrow: "SAMPLE REPORT",

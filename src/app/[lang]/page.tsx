@@ -35,7 +35,7 @@ export default async function HomePage() {
   const t = pageMessages[locale].home;
   const copy = siteCopy(locale);
   const url = appUrl();
-  // Mirrors only facts visible on this page: the test and the overview are free, and nothing here is sold.
+  // Mirrors only facts visible on this page: the test is free (the dock's 免费测试), and nothing here is sold.
   const appJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -105,7 +105,6 @@ export default async function HomePage() {
               <Suspense fallback={<HeroLink locale={locale} mine={false} />}>
                 <HomeHeroLink locale={locale} />
               </Suspense>
-              <p className="col-span-full text-xs text-mist">{t.freeLine}</p>
             </div>
           </div>
           <p className="absolute bottom-2 left-0 hidden text-xs text-mist md:block">{t.bottomLine}</p>

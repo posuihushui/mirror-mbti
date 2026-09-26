@@ -76,7 +76,7 @@ describe("English content", () => {
       { type: "ISFP", values: [55, 55, 55, 55], balanced: [true, true, true, true] },
     ];
     for (const profile of profiles) {
-      const report = buildReportData(profile, { sample: false, demo: true, locale: "en" });
+      const report = buildReportData(profile, { sample: false, locale: "en" });
       expect(JSON.stringify(report)).not.toMatch(CJK);
     }
     expect(JSON.stringify(faqsFor("en"))).not.toMatch(CJK);

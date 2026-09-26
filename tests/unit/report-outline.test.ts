@@ -16,7 +16,7 @@ describe("reportOutline", () => {
   it.each(["zh", "en"] as const)("gives the result page titles and cut openings, never the paid reading (%s)", (locale) => {
     for (const profile of profiles) {
       const outline = reportOutline(profile, locale);
-      const data = buildReportData(profile, { sample: false, demo: false, locale });
+      const data = buildReportData(profile, { sample: false, locale });
       expect(outline.map((chapter) => chapter.label)).toEqual([...chapterLabelsFor(locale)]);
       expect(outline.map((chapter) => chapter.rest.length)).toEqual([3, 3, 3, 3]);
       expect(outline[1].extra).toEqual({ kind: "blindspots", count: 4 });

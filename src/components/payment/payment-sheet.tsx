@@ -267,7 +267,6 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
           <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-full bg-warm text-ink"><Check size={24} weight="bold" /></span>
           <h3 className="mb-3 text-3xl leading-heading font-normal">{g.ready}</h3>
           <p className="text-sm text-mist">{g.readyBody}</p>
-          {mode === "mock" && <p className="mt-2 text-xs text-mist">{g.demoPaid}</p>}
           {orderId && <div className="mt-6 border-t border-line pt-5 text-left"><OrderReceipt orderId={orderId} /></div>}
           <button type="button" onClick={() => onOpenChange(false)} className="pill mt-6 min-h-11">{gift.backLabel ?? g.backToCenter}<ArrowRight size={18} /></button>
         </div>
@@ -276,7 +275,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
           <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-full bg-warm text-ink"><Check size={24} weight="bold" /></span>
           <p className="eyebrow text-mist">{t.readyEyebrow}</p>
           <h3 className="mt-4 mb-3 text-3xl leading-heading font-normal whitespace-pre-line">{t.readyHeading}</h3>
-          <p className="text-sm text-mist">{mode === "mock" ? t.demoSuccess : t.paidSuccess}</p>
+          {mode !== "mock" && <p className="text-sm text-mist">{t.paidSuccess}</p>}
           <AccessActions resultId={resultId} locale={locale} surface="payment_sheet" onReady={onUnlocked} />
           {orderId && <div className="mt-6 border-t border-line pt-5 text-left"><OrderReceipt orderId={orderId} /></div>}
           <TextLink href={href(locale, "/my/report")} prefetch={false} className="mt-3" {...trackAttrs("my_report", "payment_success")}>{t.allRecords}</TextLink>
@@ -332,23 +331,26 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
                   <p className="text-xs text-mist">{t.scanHint}</p>
                 </div>
               )}
-              <p className="mt-5 mb-3 text-center text-xs text-warm-ink">
-                {mode === "mock" ? t.demoNote : mode === "waffo" ? t.cardSecureNote : t.secureNote}
-              </p>
+              {mode !== "mock" && (
+                <p className="mt-5 mb-3 text-center text-xs text-warm-ink">
+                  {mode === "waffo" ? t.cardSecureNote : t.secureNote}
+                </p>
+              )}
               {state === "cancelled" && (
                 <p role="status" className="my-2 text-sm text-warm-ink">
                   {t.cancelledStatus}
                 </p>
               )}
-              <Button variant="pill" className="min-h-[54px]" disabled={state === "processing"} onClick={pay}>
+              {/* Mock mode has no payment note above, so the button keeps that gap itself. */}
+              <Button variant="pill" className={mode === "mock" ? "mt-5 min-h-[54px]" : "min-h-[54px]"} disabled={state === "processing"} onClick={pay}>
                 {state === "processing" ? (
                   <>
                     <CircleNotch className="animate-spin" size={20} />
-                    {mode === "mock" ? t.demoProcessing : t.waiting}
+                    {mode === "mock" ? t.mockProcessing : t.waiting}
                   </>
                 ) : (
                   <>
-                    {mode === "mock" ? t.demoPay(priceLabel) : mode === "waffo" ? t.payCard(priceLabel) : t.pay(priceLabel)}
+                    {mode === "mock" ? t.mockPay(priceLabel) : mode === "waffo" ? t.payCard(priceLabel) : t.pay(priceLabel)}
                     {/* ↗ only for the hosted card checkout, which leaves the site. */}
                     {mode === "waffo" ? <ArrowUpRight size={18} /> : <ArrowRight size={18} />}
                   </>

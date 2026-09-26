@@ -105,7 +105,6 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
   const { name, summary, typeLabel } = profileMeta(profile, locale);
   const poles = polesFor(locale);
   const own = questionnaireLocale(result.questionnaireId);
-  const demo = order?.provider === "mock";
   const dateFormat = new Intl.DateTimeFormat(t.dateLocale, {
     timeZone: t.timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
   });
@@ -113,7 +112,7 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
     <article aria-label={t.recordLabel(typeLabel)} className="border border-line bg-card px-6 py-6 md:px-8 md:py-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {createdAt && <time dateTime={createdAt.toISOString()} className="text-xs text-mist">{dateFormat.format(createdAt)}</time>}
-        <Badge variant={unlocked ? "unlocked" : "tag"}>{unlocked ? t.unlocked(demo) : t.brief}</Badge>
+        <Badge variant={unlocked ? "unlocked" : "tag"}>{unlocked ? t.unlocked : t.brief}</Badge>
       </div>
       <div className="mt-5 flex items-center justify-between gap-4">
         <div className="min-w-0">
@@ -147,7 +146,7 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
       {order && (
         <Accordion type="single" collapsible className="mt-5">
           <AccordionItem value="order">
-            <AccordionTrigger {...trackAttrs("order_receipt", "history_item")}>{t.orderAccordion(demo)}</AccordionTrigger>
+            <AccordionTrigger {...trackAttrs("order_receipt", "history_item")}>{t.orderAccordion}</AccordionTrigger>
             <AccordionContent><OrderReceipt orderId={order.id} /></AccordionContent>
           </AccordionItem>
         </Accordion>

@@ -94,7 +94,7 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
       <div className="mt-7 flex items-center justify-between gap-4 border-t border-line pt-5">
         <span className="text-sm font-medium">
           {gift ? g.product : t.productLabel}
-          <small className="mt-1 block text-xs font-normal text-mist">{order.provider === "mock" ? t.demoOrder : t.oneTime}</small>
+          <small className="mt-1 block text-xs font-normal text-mist">{t.oneTime}</small>
         </span>
         <strong className="shrink-0 text-2xl font-medium tracking-tight">
           <small className="mr-1 text-base">{messages.currency}</small>

@@ -16,8 +16,8 @@ test.describe("core flow", () => {
     await page.goto("/zh");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("向内看见");
     await expect(page.getByRole("link", { name: /开始人格测试/ }).first()).toBeVisible();
-    // Desktop shows "免费测试与性格概览"; the phone dock shows just "免费测试".
-    await expect(page.getByText(/免费测试/).filter({ visible: true }).first()).toBeVisible();
+    // The hero carries no "免费测试与性格概览" line under its CTA.
+    await expect(page.getByText(/性格概览/)).toHaveCount(0);
     // Nothing before the test may quote a price or hint that anything is sold.
     expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
   });
@@ -99,9 +99,11 @@ test.describe("core flow", () => {
     await expect(page.getByText("支付已取消，测试结果已保留")).toBeVisible();
 
     await page.getByRole("button", { name: /解锁报告与/ }).first().click();
-    await page.getByRole("button", { name: /模拟支付 ¥6\.9/ }).click();
-    await expect(page.getByText("正在演示解锁…")).toBeVisible();
-    await expect(page.getByText("演示解锁成功，本次未产生扣款。")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: /确认支付 ¥6\.9/ }).click();
+    await expect(page.getByText("正在处理…")).toBeVisible();
+    await expect(page.getByRole("link", { name: "阅读我的报告", exact: true })).toBeVisible({ timeout: 15_000 });
+    // Mock payment is set by PAYMENT_PROVIDER and carries no 演示 label.
+    await expect(page.getByRole("dialog").getByText(/演示/)).toHaveCount(0);
     await page.getByRole("link", { name: "阅读我的报告", exact: true }).click();
     await page.waitForURL(/\/report\//);
     await expect(page.getByText("第一章")).toBeVisible();
@@ -128,7 +130,7 @@ test.describe("core flow", () => {
     await expect(page.getByText("你不止于此")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /解锁报告与/ })).toHaveCount(0);
     // no price and no hint that anything is sold, and both CTAs lead to the test
-    await expect(page.getByText(/免费测试与性格概览/)).toBeVisible();
+    await expect(page.getByText(/性格概览/)).toHaveCount(0);
     expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
     for (const cta of await page.getByRole("link", { name: /开始认识自己/ }).all()) {
       await expect(cta).toHaveAttribute("href", "/zh/quiz");
@@ -249,7 +251,7 @@ test.describe("core flow", () => {
     const created = await page.request.post("/api/results", { data: { answers: questions.map((q) => (q.reverse ? -2 : 2)) } });
     const result = (await created.json()).data;
     // The masks hide filler, not the reading: none of the paid passages reach the page, flight data included.
-    const data = buildReportData({ type: result.type, values: result.values, balanced: result.balanced }, { sample: false, demo: false, locale: "zh" });
+    const data = buildReportData({ type: result.type, values: result.values, balanced: result.balanced }, { sample: false, locale: "zh" });
     const html = await (await page.request.get(`/zh/result/${result.id}`)).text();
     const paid = [...data.strengths, ...data.blindspots, ...data.work, ...data.actionPlan].map((item) => item.body).concat(data.relationships.map((item) => item.say!));
     for (const text of paid) expect(html.includes(text), text).toBe(false);

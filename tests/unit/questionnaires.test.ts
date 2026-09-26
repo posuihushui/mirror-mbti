@@ -74,7 +74,7 @@ it("migrates only valid frozen legacy drafts and rejects reordered or malformed 
 });
 
 it("changes paid guidance for strength and balance without recycling the public encyclopedia", () => {
-  const options = { sample: false, demo: true };
+  const options = { sample: false };
   const strong = buildReportData({ type: "INFJ", values: [90, 85, 80, 95], balanced: [false, false, false, false] }, options);
   const mild = buildReportData({ type: "INFJ", values: [65, 66, 67, 68], balanced: [false, false, false, false] }, options);
   const balanced = buildReportData({ type: "INFJ", values: [55, 55, 55, 55], balanced: [true, true, true, true] }, options);

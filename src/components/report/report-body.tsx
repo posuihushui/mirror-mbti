@@ -24,7 +24,6 @@ export type ReportData = {
   summary: string;
   typeLabel: string;
   sample: boolean;
-  demo: boolean;
   needs: Need[];
   strengths: Insight[];
   blindspots: Insight[];
@@ -48,7 +47,7 @@ export type ReportData = {
 export async function ReportBody({ data, reportKey, banner, footer, aside, relationshipAction, closingAction }: { data: ReportData; reportKey: string; banner?: ReactNode; footer?: ReactNode; aside?: ReactNode; relationshipAction?: ReactNode; closingAction?: ReactNode }) {
   const locale = await getLocale();
   const t = reportMessages[locale].aside;
-  const { name, sample, demo, typeLabel, profile } = data;
+  const { name, sample, typeLabel, profile } = data;
   const image = href(locale, `/report/${reportKey}/image`);
 
   return (
@@ -74,7 +73,7 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
           ) : (
             <Badge variant="unlocked" className="mt-4">
               <Check size={12} />
-              {t.unlocked(demo)}
+              {t.unlocked}
             </Badge>
           )}
           <ChapterSidebarNav />
@@ -94,7 +93,7 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
                 <TypeName name={name} className="block text-xs text-night-body" />
               </span>
             </span>
-            <span className="shrink-0 text-xs text-night-body">{t.mobileLabel(sample, demo)}</span>
+            <span className="shrink-0 text-xs text-night-body">{t.mobileLabel(sample)}</span>
           </div>
           <ChapterTabs />
         </div>

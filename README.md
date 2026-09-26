@@ -91,8 +91,8 @@ npm run dev                   # http://localhost:3000（英文），中文在 /z
 
 - `APP_URL`：站点公网地址。它会写进预渲染页面的 canonical / OG / sitemap，因此 **构建时也要提供**（Docker 通过 `--build-arg APP_URL=`）。运行时也必须与浏览器访问的来源一致，订单找回接口以此校验 Origin。
 - `SESSION_SECRET`：访客 cookie 与 OAuth state 的 HMAC 密钥，生产环境必填。
-- `PAYMENT_PROVIDER`：中文订单的支付方式，`mock` 或 `wechat`。`mock` 下界面明确标注"支付演示 · 本次不会扣款"。
-- `EN_PAYMENT_PROVIDER`：英文订单的支付方式，`mock`、`waffo` 或 `crypto`，同一时间只启用一种（选 `waffo` 即取代链上收款，而不是并列）。`mock` 下英文界面同样标注 Demo。
+- `PAYMENT_PROVIDER`：中文订单的支付方式，`mock` 或 `wechat`。`mock` 不扣款，界面与真实支付一样不带“演示”字样（按钮为“确认支付”），是否为 mock 只由这个环境变量决定。
+- `EN_PAYMENT_PROVIDER`：英文订单的支付方式，`mock`、`waffo` 或 `crypto`，同一时间只启用一种（选 `waffo` 即取代链上收款，而不是并列）。`mock` 下英文界面同样不带 Demo 字样。
 - `PRICE_FEN` / `PRICE_USD_CENTS`：完整报告价格，分别按分（中文订单，默认 690 即 ¥6.9）和美分（英文订单，默认 690 即 $6.9）计。
 - `WAFFO_*`：`EN_PAYMENT_PROVIDER=waffo` 时必填。买家跳转到 Waffo Pancake 托管收银台付款后回到 `/pay/[orderId]`，本站不收集卡号；税费加在价格之上。Webhook 地址为 `${APP_URL}/api/payments/waffo/webhook`。没有退款流程：购买即为最终交易，退款事件只记录，不收回报告。
 - `CRYPTO_EVM_RECEIVER` + `ETHEREUM_RPC_URL`、`CRYPTO_SOLANA_RECEIVER` + `SOLANA_RPC_URL`：`EN_PAYMENT_PROVIDER=crypto` 时，收款地址与 RPC 都已配置的网络才会出现在结账中。付款直接进入收款地址，从链上读取确认；Ethereum 订单只认签署了订单挑战的钱包，Solana 订单各带独立的 Solana Pay reference。订单有效期 30 分钟，过期后 24 小时内仍会查询。

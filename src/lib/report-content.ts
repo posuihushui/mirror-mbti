@@ -103,7 +103,7 @@ const zhReportCopy = {
   daySeven: { title: "第 7 天 · 保留一个小调整", body: "回看这一周：哪项描述有具体经历支持？哪项不符合？选一个确实有帮助的安排保留一周。复测前先看这些记录，不追求得到某一种类型。" },
 };
 
-export function buildReportData(profile: Profile, options: { sample: boolean; demo: boolean; locale?: Locale }) {
+export function buildReportData(profile: Profile, options: { sample: boolean; locale?: Locale }) {
   const locale = options.locale ?? "zh";
   const en = locale === "en";
   const copy = en ? enReportCopy : zhReportCopy;
@@ -153,7 +153,7 @@ export function buildReportData(profile: Profile, options: { sample: boolean; de
     copy.daySix,
     copy.daySeven,
   ];
-  return { profile, name, line, summary, typeLabel, sample: options.sample, demo: options.demo, needs, strengths, blindspots, relationships, work, actionPlan };
+  return { profile, name, line, summary, typeLabel, sample: options.sample, needs, strengths, blindspots, relationships, work, actionPlan };
 }
 
 /** Cut to a teaser on the server, so the result page carries each chapter's opening and nothing more. */
@@ -186,7 +186,7 @@ export type ChapterOutline = {
  * Openings skip the report's "this lean is clear / slight" qualifier and start at the scene itself.
  */
 export function reportOutline(profile: Profile, locale: Locale): ChapterOutline[] {
-  const data = buildReportData(profile, { sample: false, demo: false, locale });
+  const data = buildReportData(profile, { sample: false, locale });
   const scene = (locale === "en" ? enScenes : scenes)[profile.type[0] as Letter];
   const balanced = profile.balanced[0];
   const need = data.needs[0];

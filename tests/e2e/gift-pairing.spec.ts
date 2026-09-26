@@ -67,11 +67,11 @@ for (const en of [false, true]) test(`relationship invitation, 请 TA and a cove
   await expect(giftSheet).toContainText(g.terms);
   await shot(page, `gift-sheet-${locale}-${device}`);
   const orderResponse = page.waitForResponse((r) => r.url().endsWith("/api/orders") && r.request().method() === "POST");
-  await giftSheet.getByRole("button", { name: pay.sheet.demoPay("6.9") }).click();
+  await giftSheet.getByRole("button", { name: pay.sheet.mockPay("6.9") }).click();
   const order = (await (await orderResponse).json()).data;
   expect(order).toMatchObject({ kind: "pair-gift", invitationId: invitation.id, resultId: host });
   await expect(giftSheet.locator("[data-gift-ready]")).toBeVisible();
-  await expect(giftSheet).toContainText(g.demoPaid);
+  await expect(giftSheet).not.toContainText(/演示|Demo/);
   await giftSheet.getByRole("button", { name: g.backToCenter }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator('[data-comparison-manager] [data-gift="covered"]')).toBeVisible();

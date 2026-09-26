@@ -117,7 +117,6 @@ const zh = {
     attaching: "正在使用名额…",
     ready: "已为 TA 备好",
     readyBody: "对方同意加入这份邀请时，TA 的完整报告会一起打开。",
-    demoPaid: "演示付款成功，本次未产生扣款。",
     statusPaid: "支付成功，已为 TA 备好",
     backToCenter: "回到我的双人指南",
     /* Seen by the participant. Before the test: no price and no purchase words. */
@@ -247,7 +246,6 @@ const en: typeof zh = {
     attaching: "Applying…",
     ready: "Their report is covered",
     readyBody: "When the other person agrees to join this invitation, their full report opens as well.",
-    demoPaid: "Demo payment complete — you were not charged.",
     statusPaid: "Payment complete — their report is covered",
     backToCenter: "Back to my guides for two",
     banner: "The host has covered your full report. Take the test and agree to join to read it together with your guide for two.",

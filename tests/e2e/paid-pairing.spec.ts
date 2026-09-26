@@ -31,13 +31,13 @@ for(const en of [false,true])test(`paid invitation → own overview → payment 
  const own=await seed(guest.request,en);await g.goto(`${prefix}/t/${invite.token}/join`);await g.getByRole('button',{name:m.choose}).click();await g.waitForURL(new RegExp(`/result/${own}`));await expect(g.locator('[data-pairing-continuations]')).toBeVisible();
  // Storage cannot authorize, and blocked storage cannot lose the server continuation.
  await g.addInitScript(()=>{for(const s of [localStorage,sessionStorage]){s.clear();Object.defineProperty(s,'setItem',{value:()=>{throw new Error('blocked');}});}});await g.reload();
- await g.getByRole('button',{name:/解锁报告与|Unlock report/}).filter({visible:true}).first().click();await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Demo payment \$/:/模拟支付 ¥/}).click();
+ await g.getByRole('button',{name:/解锁报告与|Unlock report/}).filter({visible:true}).first().click();await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Pay \$/:/确认支付 ¥/}).click();
  await expect(g.locator('[data-pairing-access="eligible"]')).toBeVisible();
  // Switching between the dialog and drawer must not return a paid buyer to checkout.
  const originalViewport=g.viewportSize()!;
  await g.setViewportSize({width:originalViewport.width>720?393:1363,height:originalViewport.height});
  await expect(g.getByRole('dialog').locator('[data-pairing-access="eligible"]')).toBeVisible();
- await expect(g.getByRole('button',{name:en?/^Demo payment \$/:/模拟支付 ¥/})).toHaveCount(0);
+ await expect(g.getByRole('button',{name:en?/^Pay \$/:/确认支付 ¥/})).toHaveCount(0);
  await g.setViewportSize(originalViewport);
  await expect(g.getByRole('dialog').locator('[data-pairing-access="eligible"]')).toBeVisible();
  await shot(g,`payment-ready-${locale}-${info.project.name}`);await g.getByRole('dialog').getByRole('link',{name:m.continue,exact:true}).click();await g.waitForURL(/\/join\?result=/);
@@ -179,7 +179,7 @@ test('the paid report invites someone, covers their report and follows the guide
  await expect(page.getByRole('dialog')).toContainText(g.product);
  await expect(page.getByRole('dialog')).toHaveCount(1);
  const orderResponse=page.waitForResponse(r=>r.url().endsWith('/api/orders')&&r.request().method()==='POST');
- await page.getByRole('dialog').getByRole('button',{name:pay$.sheet.demoPay('6.9')}).click();
+ await page.getByRole('dialog').getByRole('button',{name:pay$.sheet.mockPay('6.9')}).click();
  expect((await (await orderResponse).json()).data).toMatchObject({kind:'pair-gift',invitationId:invitation.id,resultId:host});
  await page.getByRole('dialog').getByRole('button',{name:m.giftBack}).click();
  await expect(page.getByRole('dialog')).toHaveCount(0);

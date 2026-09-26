@@ -78,7 +78,7 @@ test.describe("English site", () => {
     expect(html).not.toMatch(/示例报告/);
   });
 
-  test("English quiz → result → demo payment → English report", async ({ page }) => {
+  test("English quiz → result → mock payment → English report", async ({ page }) => {
     await page.goto("/quiz");
     await answerAllEnglish(page);
     await page.waitForURL(/\/result\//);
@@ -87,12 +87,13 @@ test.describe("English site", () => {
     await expect(page.getByText("YOUR PERSONALITY", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: /Unlock report/ }).filter({ visible: true }).first().click();
     // The price comes from PRICE_USD_CENTS, so match the label rather than one amount.
-    await page.getByRole("button", { name: /^Demo payment \$\d/ }).click();
+    await page.getByRole("button", { name: /^Pay \$\d/ }).click();
     await page.getByRole("link", { name: "Read my report", exact: true }).click();
     await page.waitForURL(new RegExp(`/report/${id}`));
     await expect(page.getByText("CHAPTER 01")).toBeVisible();
     // Desktop shows the sidebar badge; phones show the heading row instead.
-    await expect(page.getByText(/Unlocked · Demo|Full report · Demo/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(/^(Unlocked|Full report)$/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(/\bDemo\b/)).toHaveCount(0);
 
     // The Chinese URL of an English result lands on its English page.
     await page.goto(`/zh/result/${id}`);

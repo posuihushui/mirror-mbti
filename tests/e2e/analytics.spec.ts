@@ -73,8 +73,8 @@ test.describe("analytics", () => {
     await expectEvent(page, "cta_click", { cta_id: "unlock_report" });
     await expectEvent(page, "begin_checkout", { payment_mode: "mock", currency: "CNY", value: 6.9 });
 
-    await page.getByRole("button", { name: /模拟支付 ¥6\.9/ }).click();
-    await expect(page.getByText("演示解锁成功，本次未产生扣款。")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: /确认支付 ¥6\.9/ }).click();
+    await expect(page.getByRole("link", { name: "阅读我的报告", exact: true })).toBeVisible({ timeout: 15_000 });
     const orderId = (await page.locator("code").filter({ hasText: /^M\d{8}/ }).first().textContent())!.trim();
     await expectEvent(page, "add_payment_info", { payment_mode: "mock", payment_type: "mock" });
     await expectEvent(page, "purchase", { payment_mode: "mock", payment_type: "mock", currency: "CNY", value: 6.9 });

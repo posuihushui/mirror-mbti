@@ -6,8 +6,8 @@ const zh = {
     eyebrow: "你的内在世界",
     reportOf: (name: string, sample: boolean) => `${name} · ${sample ? "示例报告" : "完整报告"}`,
     sampleBadge: "示例报告",
-    unlocked: (demo: boolean) => `已解锁${demo ? " · 演示" : ""}`,
-    mobileLabel: (sample: boolean, demo: boolean) => (sample ? "示例报告" : `完整报告${demo ? " · 演示" : ""}`),
+    unlocked: "已解锁",
+    mobileLabel: (sample: boolean): string => (sample ? "示例报告" : "完整报告"),
   },
   one: {
     heading: "先看清偏好，\n再慢慢理解自己。",
@@ -73,8 +73,8 @@ const en: typeof zh = {
     eyebrow: "YOUR INNER WORLD",
     reportOf: (name: string, sample: boolean) => `${sample ? "Sample report" : "Your report"} · ${name}`,
     sampleBadge: "Sample report",
-    unlocked: (demo: boolean) => `Unlocked${demo ? " · Demo" : ""}`,
-    mobileLabel: (sample: boolean, demo: boolean) => (sample ? "Sample report" : `Full report${demo ? " · Demo" : ""}`),
+    unlocked: "Unlocked",
+    mobileLabel: (sample: boolean) => (sample ? "Sample report" : "Full report"),
   },
   one: {
     heading: "See your preferences clearly first,\nthen get to know yourself slowly.",

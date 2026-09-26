@@ -40,9 +40,6 @@ export async function SampleCta() {
             {t.start}
           </PrimaryButton>
         </div>
-        <p className="mt-4 text-xs text-night-mist">
-          {t.footnote}
-        </p>
       </div>
     </section>
   );
