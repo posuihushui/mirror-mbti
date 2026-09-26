@@ -47,14 +47,13 @@ export async function POST(req: Request) {
   }
 
   const order = await getOrderByIdUnchecked(txn.out_trade_no);
-  const isNew = await recordPaymentEvent({
+  await recordPaymentEvent({
     orderId: order?.id ?? null,
     provider: "wechat",
     eventId: notify.id,
     kind: notify.event_type,
     raw: { ...notify, decrypted: txn } as Record<string, unknown>,
   });
-  if (!isNew) return NextResponse.json(okBody);
   if (!order) return NextResponse.json(failBody("unknown order"), { status: 404 });
 
   if (txn.trade_state === "SUCCESS") {
@@ -62,6 +61,8 @@ export async function POST(req: Request) {
       console.error("[wechat notify] amount mismatch", order.id, txn.amount.total, order.amountFen);
       return NextResponse.json(failBody("amount mismatch"), { status: 400 });
     }
+    // A prior delivery can fail after its event was recorded. Replaying this idempotent
+    // transition lets WeChat's retry complete the unlock rather than acknowledging it early.
     await markOrderPaid(order.id, txn.transaction_id ?? null, txn.success_time ? new Date(txn.success_time) : new Date());
   } else if (txn.trade_state === "CLOSED" || txn.trade_state === "REVOKED" || txn.trade_state === "PAYERROR") {
     await setOrderStatus(order.id, txn.trade_state === "PAYERROR" ? "failed" : "cancelled");
