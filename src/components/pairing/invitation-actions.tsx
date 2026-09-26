@@ -8,6 +8,7 @@ import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { shareMessages } from "@/lib/i18n/messages/share";
 import { isWeChat } from "@/lib/ua";
+import { useCopy } from "@/hooks/use-copy";
 
 const noopSubscribe = () => () => {};
 
@@ -31,14 +32,9 @@ export function InvitationActions({ url, locale, relationship = null, covered = 
     setLastCovered(covered);
     if (text === invitationMessage(locale, url, relationship, lastCovered)) setText(invitationMessage(locale, url, relationship, covered));
   }
-  const [status, setStatus] = useState("");
-  const [manual, setManual] = useState(false);
   const inWeChat = useSyncExternalStore(noopSubscribe, () => isWeChat(navigator.userAgent), () => false);
   const m = pairingUiMessages[locale]; const s = shareMessages[locale];
-  async function copy(value: string, label: string) {
-    try { await navigator.clipboard.writeText(value); setStatus(label); setManual(false); }
-    catch { setManual(true); setStatus(s.manualCopy); }
-  }
+  const { status, manual, copy } = useCopy(s.manualCopy);
   return <div className="space-y-4 print:hidden">
     <label className="block text-xs text-mist">{m.invitationText}<textarea value={text} onChange={e => setText(e.target.value)} className="mt-2 min-h-32 w-full border border-line bg-transparent p-3 text-sm text-ink" /></label>
     <button type="button" className="pill min-h-[52px] md:w-auto md:min-w-60" onClick={() => copy(text, m.copiedText)}>{m.copyText}<Copy size={18} weight="light" aria-hidden /></button>

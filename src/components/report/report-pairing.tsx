@@ -78,6 +78,7 @@ export function ReportPairing({ resultId, locale, checkout, availableGifts, invi
           type=""
           name=""
           priceLabel={checkout.priceLabel}
+          listPriceLabel={checkout.listPriceLabel}
           mode={checkout.mode}
           networks={checkout.networks ? [...checkout.networks] : undefined}
           onUnlocked={() => { paid.current = true; }}
@@ -168,7 +169,7 @@ function PanelActions({ locale, resultId, invitations, checkout, onGift }: Actio
                     : <ArrowRight size={15} aria-hidden className="text-mist transition-transform group-hover:translate-x-0.5 group-hover:text-ink motion-reduce:transition-none" />}
                 </span>
                 <span className="text-base font-medium">{m.relationshipLabels[relationship]}</span>
-                <span className="text-xs text-mist">{t.topic(m.byRelationship[relationship].topic.title)}</span>
+                <span className="text-xs text-balance break-keep text-mist">{t.topic(m.byRelationship[relationship].topic.title)}</span>
               </button>
             </li>
           );

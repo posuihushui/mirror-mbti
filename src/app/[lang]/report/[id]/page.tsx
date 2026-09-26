@@ -5,6 +5,10 @@ import { listComparisonContinuations } from "@/lib/comparison-continuations";
 import { resultPairingStatus } from "@/lib/comparisons";
 import { ReportInvite } from "@/components/report/report-invite";
 import { giftCheckout } from "@/lib/pair-gifts";
+import { ensureInviteCode, inviteLinkFor } from "@/lib/invite-codes";
+import { invitePriceMinorFor } from "@/lib/env";
+import { paymentMessages } from "@/lib/i18n/messages/payment";
+import { formatPriceFen } from "@/lib/site";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { TrackView } from "@/components/analytics/track-view";
@@ -65,6 +69,10 @@ export default async function ReportPage({ params }: Params) {
     ? await Promise.all([listComparisonContinuations(visitorId, id), resultPairingStatus(id, visitorId, locale)])
     : [[], null];
   const checkout = giftCheckout(locale);
+  // Every unlocked report has an invite code; the first view creates it.
+  const code = pairing && visitorId ? await ensureInviteCode(id, visitorId) : null;
+  const invite = code ? { code, url: inviteLinkFor(locale, code) } : null;
+  const invitePrice = `${paymentMessages[locale].currency}${formatPriceFen(invitePriceMinorFor(locale))}`;
 
   return (
     <>
@@ -73,9 +81,9 @@ export default async function ReportPage({ params }: Params) {
         data={data}
         reportKey={data.sample ? "sample" : id}
         banner={<>{data.sample && <SampleNotice />}<p className="mx-6 my-4 text-xs text-mist md:mx-0 md:mt-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>{!data.sample && <div className="mx-6 md:mx-0 md:mb-6"><PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker></div>}</>}
-        aside={pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="aside" />}
-        relationshipAction={data.sample ? <SamplePairing /> : pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="relationship" />}
-        closingAction={pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="closing" />}
+        aside={pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="aside" invitePrice={invitePrice} />}
+        relationshipAction={data.sample ? <SamplePairing /> : pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="relationship" invitePrice={invitePrice} invite={invite} />}
+        closingAction={pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="closing" invitePrice={invitePrice} invite={invite} />}
         footer={data.sample ? <SampleCta /> : <div className="mx-6 md:mx-0"><ContinuationList items={continuations} locale={locale} surface="report" /></div>}
       />
       {data.sample && (

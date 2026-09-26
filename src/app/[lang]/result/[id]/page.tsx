@@ -1,4 +1,8 @@
-import { getPublicInvitation } from "@/lib/comparisons";
+import { cookies } from "next/headers";
+import { getPublicInvitation, guestPairUrl } from "@/lib/comparisons";
+import { compareMessages } from "@/lib/i18n/messages/compare";
+import { INVITE_COOKIE } from "@/lib/invite-code-format";
+import { quoteReport } from "@/lib/pricing";
 import { PairingBenefit } from "@/components/pairing/pairing-benefit";
 import { PairingTracker } from "@/components/pairing/pairing-tracker";
 import { ContinuationAction } from "@/components/pairing/continuation-action";
@@ -86,7 +90,6 @@ export default async function ResultPage({ params, searchParams }: Params) {
   const { profile, sample } = result;
   const { name } = profileMeta(profile, locale);
   const even = profile.balanced.every(Boolean);
-  const price = priceLabelFor(locale);
   const mode = paymentModeFor(locale);
   const secureNote = mode === "mock" ? t.secureMock : mode === "waffo" ? t.secureCard : t.secureLive;
 
@@ -95,6 +98,18 @@ export default async function ResultPage({ params, searchParams }: Params) {
   // 请 TA: an invitation this reader came from (or saved) covers their report; joining opens it.
   const coveredToken = offer && eligibility === "locked" ? (invitation?.covered ? compare : null) ?? continuations.find((item) => item.covered)?.invitationToken ?? null : null;
   const covered = coveredToken ? { href: href(locale, `/t/${coveredToken}/join?result=${id}`), buyHref: href(locale, `/result/${id}?compare=${coveredToken}&unlock=1`) } : undefined;
+
+  // The price is quoted by the same function that prices the order: the invite price for a first
+  // report through someone's invitation or invite link. It appears here, after the test, and not before.
+  const quote = offer && visitorId
+    ? await quoteReport({ visitorId, locale, resultId: id, invitationToken: compare, cookieCode: (await cookies()).get(INVITE_COOKIE)?.value, savedTokens: continuations.map((item) => item.invitationToken) })
+    : null;
+  const price = quote?.label ?? priceLabelFor(locale);
+  const listPriceLabel = quote?.pricing === "invite" ? quote.listLabel : undefined;
+  // Pay-to-pair: a locked reader who came from someone else's open invitation (the quote found it)
+  // and has not joined it yet can join it as they pay. A covered reader joins on the gift instead.
+  const pairHost = !covered && quote?.invitation && visitorId && !(await guestPairUrl(quote.invitation.id, visitorId)) ? quote.invitation : null;
+  const pair = pairHost ? { relationship: pairHost.relationship ? compareMessages[locale].relationshipLabels[pairHost.relationship] : null } : undefined;
 
   const actionProps = {
     resultId: result.id,
@@ -107,6 +122,9 @@ export default async function ResultPage({ params, searchParams }: Params) {
     unlocked: result.owner && result.unlocked,
     syncing: eligibility === "syncing",
     covered: covered?.href,
+    listPriceLabel,
+    invitationToken: pairHost?.token ?? compare ?? undefined,
+    pair,
   } as const;
 
   // The report's chapters, masked until the report is unlocked, under a sticky nav (16personalities-style).
@@ -165,7 +183,8 @@ export default async function ResultPage({ params, searchParams }: Params) {
         {!sample && result.owner && <>
           <ContinuationList items={continuations} locale={locale} />
           {/* When the invitation covers this report, the panel's accept action already continues it. */}
-          {compare && !covered && !continuations.some(item => item.invitationToken === compare) && <section className="mx-6 my-7 border-t border-line pt-5 md:mx-0"><h2 className="text-xl">{ui.continue}</h2><p className="my-4 text-sm">{invitation ? ui.continuationNote : ui.continuationExpired}</p>{invitation && <ContinuationAction invitationToken={compare} resultId={id} resultLocale={locale} locale={locale} />}</section>}
+          {/* Pay-to-pair takes over for a locked reader: the payment sheet asks and joins in one step. */}
+          {compare && !covered && !pair && !continuations.some(item => item.invitationToken === compare) && <section className="mx-6 my-7 border-t border-line pt-5 md:mx-0"><h2 className="text-xl">{ui.continue}</h2><p className="my-4 text-sm">{invitation ? ui.continuationNote : ui.continuationExpired}</p>{invitation && <ContinuationAction invitationToken={compare} resultId={id} resultLocale={locale} locale={locale} />}</section>}
           {eligibility === "syncing" && <section className="mx-6 md:mx-0"><AccessActions resultId={id} locale={locale} surface="result" /></section>}
         </>}
         <ReportChapters outline={outline} readHref={readable ? href(locale, `/report/${id}`) : undefined} action={chapterAction} sample={sample} />
@@ -177,6 +196,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
           <UnlockPanel
             covered={covered}
             priceLabel={price}
+            listPriceLabel={listPriceLabel}
             secureNote={secureNote}
             action={
               <Suspense fallback={null}>
@@ -210,7 +230,7 @@ export default async function ResultPage({ params, searchParams }: Params) {
       )}
       {productJsonLd && <JsonLd data={productJsonLd} />}
       <TrackView event="result_view" params={{ questionnaire_id: result.questionnaireId, question_count: result.questionCount, is_sample: sample, result_owner: result.owner, result_even: even, result_uniform: result.uniform, result_unlocked: result.owner && result.unlocked }} />
-      {!sample && result.owner && !result.unlocked && <TrackView event="view_item" params={reportCommerce(currencyFor(locale), priceMinorFor(locale))} />}
+      {!sample && result.owner && !result.unlocked && <TrackView event="view_item" params={{ ...reportCommerce(currencyFor(locale), quote?.amount ?? priceMinorFor(locale)), price_type: quote?.pricing ?? "list" }} />}
     </>
   );
 }

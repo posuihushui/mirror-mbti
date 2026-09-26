@@ -2,7 +2,7 @@ import "server-only";
 import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { OrderKind, OrderRow, PaymentChannel } from "@/db/schema";
-import { appUrl, env, paymentModeFor, priceMinorFor } from "@/lib/env";
+import { appUrl, env, paymentModeFor } from "@/lib/env";
 import { href, type Locale } from "@/lib/i18n/locale";
 import { isValidOrderId, newOrderId } from "@/lib/ids";
 import { typeMeta } from "@/lib/personality";
@@ -12,6 +12,10 @@ import { questionnaireLocale } from "@/lib/questionnaires";
 import { getResult } from "@/lib/results";
 import { getPairingEligibility, reconcilePaidResult } from "@/lib/pairing-eligibility";
 import { fulfillGiftOrder, giftPurchaseBlock } from "@/lib/pair-gifts";
+import { giftQuote, quoteReport } from "@/lib/pricing";
+import { guestPairUrl, joinComparison } from "@/lib/comparisons";
+import { COMPARE_GUEST_CONSENT_VERSION } from "@/lib/compare-types";
+import { ShareError } from "@/lib/share-policy";
 import { pickWeChatChannel } from "@/lib/ua";
 
 export const ORDER_TTL_MS = 15 * 60 * 1000;
@@ -41,6 +45,8 @@ const orderMessages = {
     giftCovered: "这份邀请已经请过 TA，对方同意加入时就会生效。",
     giftAvailable: "你还有未使用的请 TA 名额，可以直接用在这份邀请上。",
     hostLocked: "请先解锁发起这份邀请的报告。",
+    joinClosed: "这份邀请已结束，可以只解锁自己的报告。",
+    alreadyJoined: "你已经加入过这份邀请，可以只解锁自己的报告。",
   },
   en: {
     notFound: "Result not found.",
@@ -57,6 +63,8 @@ const orderMessages = {
     giftCovered: "This invitation is already covered. It takes effect when the other person agrees to join.",
     giftAvailable: "You have an unused cover. Use it on this invitation instead.",
     hostLocked: "Unlock the report this invitation was created from first.",
+    joinClosed: "This invitation has ended. You can still unlock your own report.",
+    alreadyJoined: "You have already joined this invitation. You can still unlock your own report.",
   },
 };
 
@@ -83,6 +91,9 @@ export function toOrderView(order: OrderRow): OrderView {
     invitationId: order.invitationId,
     status: order.status,
     amountFen: order.amountFen,
+    pricing: order.pricing,
+    listAmountFen: order.listAmountFen,
+    joinRequested: Boolean(order.joinInvitationId),
     currency: order.currency,
     provider: order.provider,
     channel: order.channel,
@@ -99,7 +110,15 @@ function orderTtlMs(mode: PaymentProvider["mode"]): number {
 }
 
 type OrderInput = { visitorId: string; userAgent: string | null; clientIp: string; openid?: string | null; locale?: Locale; network?: CryptoNetwork }
-  & ({ kind?: "report"; resultId: string } | { kind: "pair-gift"; invitationId: string });
+  & ({
+    kind?: "report"; resultId: string;
+    /** The invitation this reader came from (the result page's `?compare=`), for the invite price. */
+    invitationToken?: string | null;
+    /** Pay-to-pair: the buyer pressed 同意并支付, agreeing to join `invitationToken` once paid. */
+    join?: boolean;
+    /** An invite link's code from the `minv` cookie. */
+    inviteCode?: string | null;
+  } | { kind: "pair-gift"; invitationId: string });
 
 /**
  * A `pair-gift` order is for one of the host's own open invitations that carries no gift yet. It
@@ -147,6 +166,21 @@ export async function createOrder(input: OrderInput) {
   }
   if (channel === "jsapi" && !input.openid) throw new OrderError(428, "OPENID_REQUIRED", t.openid);
 
+  // The price is decided here, on the server, by the same quote the result page showed.
+  const report = input.kind === "pair-gift" ? null : input;
+  const quote = report
+    ? await quoteReport({ visitorId: input.visitorId, locale, resultId, invitationToken: report.invitationToken, cookieCode: report.inviteCode, record: true })
+    : { ...giftQuote(locale), pricing: "gift" as const, inviteCode: null, invitation: null };
+  // Pay-to-pair: consent is taken only for a join that can happen — the invitation the page showed,
+  // still open, someone else's, its host still reading their report, and not already joined.
+  let joinInvitationId: string | null = null;
+  if (report?.join) {
+    const host = quote.invitation;
+    if (!host || host.token !== report.invitationToken) throw new OrderError(410, "INVITATION_UNAVAILABLE", t.joinClosed);
+    if (await guestPairUrl(host.id, input.visitorId)) throw new OrderError(409, "ALREADY_JOINED", t.alreadyJoined);
+    joinInvitationId = host.id;
+  }
+
   const now = new Date();
   const id = newOrderId(now);
   const [order] = await db()
@@ -157,7 +191,12 @@ export async function createOrder(input: OrderInput) {
       visitorId: input.visitorId,
       resultId,
       invitationId: invitation?.id ?? null,
-      amountFen: priceMinorFor(locale),
+      amountFen: quote.amount,
+      pricing: quote.pricing,
+      listAmountFen: quote.list,
+      inviteCode: quote.inviteCode,
+      joinInvitationId,
+      joinConsentVersion: joinInvitationId ? COMPARE_GUEST_CONSENT_VERSION : null,
       currency: locale === "en" ? "USD" : "CNY",
       provider: provider.mode,
       channel,
@@ -220,10 +259,35 @@ export async function markOrderPaid(orderId: string, txnId: string | null, paidA
   return current;
 }
 
-/** What a paid order grants: its result's report, or one gift for the host's invitation. Idempotent. */
+/**
+ * What a paid order grants: its result's report, or one gift for the host's invitation. A report
+ * bought with 同意并支付 then joins its invitation, on the consent given with the payment. Idempotent.
+ */
 export async function fulfillOrder(order: OrderRow) {
-  if (order.kind === "pair-gift") await fulfillGiftOrder(order);
-  else await reconcilePaidResult(order.resultId, order.visitorId);
+  if (order.kind === "pair-gift") return fulfillGiftOrder(order);
+  await reconcilePaidResult(order.resultId, order.visitorId);
+  if (order.joinInvitationId && order.joinConsentVersion) await joinOnPayment(order);
+}
+
+/**
+ * The join a pay-to-pair order agreed to. The report is already unlocked by now; if the invitation
+ * ended or the guide already exists, the report stands on its own and nothing else happens.
+ */
+async function joinOnPayment(order: OrderRow) {
+  if (await guestPairUrl(order.joinInvitationId!, order.visitorId)) return;
+  const invitation = await db().query.comparisonInvitations.findFirst({ where: eq(schema.comparisonInvitations.id, order.joinInvitationId!), columns: { token: true } });
+  if (!invitation) return;
+  try {
+    await joinComparison(order.visitorId, { invitationToken: invitation.token, resultId: order.resultId, consentVersion: order.joinConsentVersion as typeof COMPARE_GUEST_CONSENT_VERSION });
+  } catch (e) {
+    if (!(e instanceof ShareError)) throw e;
+    console.warn("[orders] pay-to-pair join skipped", e.code);
+  }
+}
+
+/** The guide a paid pay-to-pair order led to, for the payment sheet's success. Owner-only, like the order. */
+export async function orderPairUrl(order: OrderRow) {
+  return order.status === "paid" && order.joinInvitationId ? guestPairUrl(order.joinInvitationId, order.visitorId) : null;
 }
 
 export async function setOrderStatus(orderId: string, status: OrderRow["status"]) {

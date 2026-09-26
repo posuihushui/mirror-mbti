@@ -26,14 +26,17 @@ export function reportCommerce(currency: string, minor: number): ReportCommerce 
   return { currency, value, items: [{ item_id: "full_report", item_name: "Full report", item_category: "report", price: value, quantity: 1 }] };
 }
 
-/** 请 TA: a host covering someone else's report. Same price, its own item so GA can tell them apart. */
+/** 请 TA: a host covering someone else's report, at its own price and item so GA can tell them apart. */
 export function giftCommerce(currency: string, minor: number): ReportCommerce {
   const value = minorToValue(minor);
   return { currency, value, items: [{ item_id: "pair_gift", item_name: "Covered report", item_category: "gift", price: value, quantity: 1 }] };
 }
 
-export function orderCommerce(order: Pick<OrderView, "kind" | "currency" | "amountFen">): ReportCommerce {
-  return (order.kind === "pair-gift" ? giftCommerce : reportCommerce)(order.currency, order.amountFen);
+/** What a price was set from: the list price, the invite price, or 请 TA. Never the code itself. */
+export type PriceType = "list" | "invite" | "gift";
+
+export function orderCommerce(order: Pick<OrderView, "kind" | "currency" | "amountFen" | "pricing">): ReportCommerce & { price_type: PriceType } {
+  return { ...(order.kind === "pair-gift" ? giftCommerce : reportCommerce)(order.currency, order.amountFen), price_type: order.pricing };
 }
 
 /** `mock`, `wechat_jsapi` / `wechat_h5` / `wechat_native`, `crypto_ethereum` / `crypto_solana`, `waffo_card`. */

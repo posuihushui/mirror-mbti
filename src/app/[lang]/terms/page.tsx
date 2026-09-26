@@ -7,8 +7,8 @@ import { getLocale } from "@/lib/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 
 const copy = {
-  zh: { title: "用户协议", description: "使用观己 mirror 与购买完整人格报告的条款。", updated: "2026-09-25" },
-  en: { title: "Terms of service", description: "The terms for using mirror and buying a full personality report.", updated: "2026-09-25" },
+  zh: { title: "用户协议", description: "使用观己 mirror 与购买完整人格报告的条款。", updated: "2026-09-26" },
+  en: { title: "Terms of service", description: "The terms for using mirror and buying a full personality report.", updated: "2026-09-26" },
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,6 +34,8 @@ export default async function TermsPage() {
       <p>“我的报告”会列出当前访客的全部测试记录。清除浏览器数据或更换设备后，可凭完整的网站订单号找回对应访客的记录；找回操作不会解锁其他未支付的报告。请仅使用自己的订单号，并妥善保管该找回凭据。</p>
       <p>由于报告在支付成功后即时交付并可完整阅读，除法律法规另有规定或报告因我们的原因无法访问外，不支持退款。若支付成功但报告未能解锁，请保留订单编号并发送邮件至 <a href={`mailto:${site.supportEmail}`}>{site.supportEmail}</a>，我们会核实并处理。</p>
       <p>双人指南的发起人可以为一份邀请“请 TA”：按支付页面显示的价格，为一位加入者购买完整报告。名额在对方同意加入这份邀请时使用，打开其所选测试结果的完整报告和双方的双人指南；对方已解锁报告时不使用，留给下一位加入者；邀请关闭或到期仍未使用的名额，会转到发起人之后的同语言邀请。付款不会替任何一方同意加入，对方的同意只由其本人作出。名额与报告同样不支持退款。</p>
+      <p>通过他人的双人指南邀请或邀请链接来到本站，并完成测试的访客，购买自己的第一份完整报告时享邀请价，价格以支付页面显示为准。邀请价每位访客限用一次，不能用于自己的邀请或邀请码。</p>
+      <p>被邀请的人在支付页面选择“同意并支付”时，这一次点击即表示同意加入这份邀请：付款成功后，其完整报告解锁，双方的双人指南随即生成，任何一方之后都可以撤回。选择只解锁自己的报告，则不会加入；若付款期间邀请已关闭或到期，报告照常解锁，不生成指南。</p>
       <p>四个维度均接近均衡时，本次不生成确定类型，也不提供新的付费解锁。可以检查答案或重新作答；已购报告的访问权益不受影响。版本之间尚未做等值校准，题数更多不代表结果更准确。</p>
       <h2>你的义务</h2>
       <ul>

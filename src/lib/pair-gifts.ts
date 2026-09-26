@@ -4,7 +4,8 @@ import { and, asc, eq, gt, inArray, isNotNull, isNull, lte, or } from "drizzle-o
 import { db, schema, type Db } from "@/db";
 import type { OrderRow } from "@/db/schema";
 import type { Locale } from "@/lib/i18n/locale";
-import { paymentModeFor, priceLabelFor } from "@/lib/env";
+import { giftPriceMinorFor, paymentModeFor, priceLabelFor } from "@/lib/env";
+import { formatPriceFen } from "@/lib/site";
 import { cryptoNetworks } from "@/lib/payments/crypto/config";
 import type { PairingTx as Tx } from "@/lib/pairing-eligibility";
 import { ShareError } from "@/lib/share-policy";
@@ -139,8 +140,8 @@ export async function hostGiftState(visitorId: string) {
   return { covered, available };
 }
 
-/** 请 TA is bought in the invitation's language, at that language's price and provider. */
+/** 请 TA is bought in the invitation's language, at that language's gift price and provider. */
 export function giftCheckout(locale: Locale) {
   const mode = paymentModeFor(locale);
-  return { priceLabel: priceLabelFor(locale), mode, networks: mode === "crypto" ? cryptoNetworks() : [] };
+  return { priceLabel: formatPriceFen(giftPriceMinorFor(locale)), listPriceLabel: priceLabelFor(locale), mode, networks: mode === "crypto" ? cryptoNetworks() : [] };
 }

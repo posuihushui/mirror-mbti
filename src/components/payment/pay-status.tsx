@@ -108,8 +108,18 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
           paid ? <PrimaryButton href={center} {...trackAttrs("my_pairing", "pay_status")}>{g.backToCenter}</PrimaryButton>
             : pending ? <TextLink href={center} {...trackAttrs("my_pairing", "pay_status")}>{g.backToCenter}</TextLink>
               : <PrimaryButton href={`${center}?gift=${order.invitationId}`} {...trackAttrs("retry_payment", "pay_status")}>{t.retry}</PrimaryButton>
+        ) : paid && order.pairUrl ? (
+          // Pay-to-pair: the payment also joined the invitation, so the guide leads.
+          <div data-pair-ready>
+            <PrimaryButton href={order.pairUrl} prefetch={false} {...trackAttrs("read_guide", "pay_status")}>{messages.sheet.readPair}</PrimaryButton>
+            <TextLink href={href(locale, `/report/${order.resultId}`)} prefetch={false} className="mt-3" {...trackAttrs("read_report", "pay_status")}>{messages.sheet.readReport}</TextLink>
+          </div>
         ) : paid ? (
-          <AccessActions resultId={order.resultId} locale={locale} surface="pay_status" />
+          <>
+            {/* Paid with the join agreed, but no guide: the invitation ended or could not be joined meanwhile. */}
+            {order.joinRequested && <p role="status" className="mb-4 text-sm text-warm-ink" data-pair-missed>{messages.sheet.pairMissed}</p>}
+            <AccessActions resultId={order.resultId} locale={locale} surface="pay_status" />
+          </>
         ) : pending ? (
           <TextLink href={href(locale, `/result/${order.resultId}`)} {...trackAttrs("back_to_result", "pay_status")}>{t.backToResult}</TextLink>
         ) : (

@@ -11,7 +11,8 @@ import type { CryptoNetwork } from "@/lib/payments/types";
 import type { PaymentMode } from "@/lib/site";
 
 /** Price and checkout settings for 请 TA, resolved on the server for the host's language. */
-export type GiftCheckout = { priceLabel: string; mode: PaymentMode; networks?: readonly CryptoNetwork[]; available: number };
+/** `listPriceLabel`: the report's list price, which 请 TA is read against. */
+export type GiftCheckout = { priceLabel: string; listPriceLabel?: string; mode: PaymentMode; networks?: readonly CryptoNetwork[]; available: number };
 
 type Props = {
   invitationId: string;
@@ -83,7 +84,7 @@ export function GiftOffer({ invitationId, resultId, locale, covered: initiallyCo
       : <button type="button" className="text-link font-medium" onClick={onCheckout ?? (() => change(true))}>{`${g.cta} · ${currency}${checkout.priceLabel}`}<ArrowRight size={15} aria-hidden /></button>}
     <p role="status" className="text-sm">{error}</p>
     {checkout.available === 0 && !checkoutHref && !onCheckout && <PaymentSheet open={open} onOpenChange={change} gift={{ invitationId }} resultId={resultId} type="" name=""
-      priceLabel={checkout.priceLabel} mode={checkout.mode} networks={checkout.networks ? [...checkout.networks] : undefined}
+      priceLabel={checkout.priceLabel} listPriceLabel={checkout.listPriceLabel} mode={checkout.mode} networks={checkout.networks ? [...checkout.networks] : undefined}
       onUnlocked={() => { paid.current = true; }} />}
   </div>;
 }

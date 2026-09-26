@@ -58,7 +58,7 @@ for (const en of [false, true]) test(`relationship invitation, 请 TA and a cove
   await expect(sheet.getByRole("textbox")).toHaveValue(p.invitationTexts.partner(invitation.url));
   // Inside the invitation sheet, 请 TA leads to the pairing center rather than stacking a second sheet.
   const cover = sheet.getByRole("link", { name: new RegExp(`^${g.cta}`) });
-  await expect(cover).toContainText(`${pay.currency}6.9`);
+  await expect(cover).toContainText(`${pay.currency}4.9`);
   await cover.click();
   await page.waitForURL(new RegExp(`/my/pairing\\?gift=${invitation.id}$`));
   const giftSheet = page.getByRole("dialog");
@@ -67,7 +67,7 @@ for (const en of [false, true]) test(`relationship invitation, 请 TA and a cove
   await expect(giftSheet).toContainText(g.terms);
   await shot(page, `gift-sheet-${locale}-${device}`);
   const orderResponse = page.waitForResponse((r) => r.url().endsWith("/api/orders") && r.request().method() === "POST");
-  await giftSheet.getByRole("button", { name: pay.sheet.mockPay("6.9") }).click();
+  await giftSheet.getByRole("button", { name: pay.sheet.mockPay("4.9") }).click();
   const order = (await (await orderResponse).json()).data;
   expect(order).toMatchObject({ kind: "pair-gift", invitationId: invitation.id, resultId: host });
   await expect(giftSheet.locator("[data-gift-ready]")).toBeVisible();

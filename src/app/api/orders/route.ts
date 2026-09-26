@@ -1,14 +1,22 @@
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { clientIp, fail, ok, readJson } from "@/lib/api";
 import { requestLocale } from "@/lib/i18n/request";
+import { INVITE_COOKIE } from "@/lib/invite-code-format";
 import { createOrder, OrderError, toOrderView } from "@/lib/orders";
 import { getVisitorId } from "@/lib/session";
 import { getVisitorOpenid } from "@/lib/visitors";
 
 const network = z.enum(["ethereum", "solana"]).optional();
-/** A report for one of the visitor's results, or a gift (请 TA) for one of their open invitations. */
+/**
+ * A report for one of the visitor's results, or a gift (请 TA) for one of their open invitations.
+ * A report may name the invitation its reader came from (for the invite price) and, with `join`,
+ * carry their agreement to join it once paid (pay-to-pair).
+ */
 const bodySchema = z.union([
-  z.object({ kind: z.literal("report").optional(), resultId: z.string().min(1).max(32), network }).strict(),
+  z.object({ kind: z.literal("report").optional(), resultId: z.string().min(1).max(32), network,
+    invitationToken: z.string().regex(/^[A-Za-z0-9_-]{32}$/).optional(), join: z.literal(true).optional() }).strict()
+    .refine((body) => !body.join || body.invitationToken, { path: ["invitationToken"] }),
   z.object({ kind: z.literal("pair-gift"), invitationId: z.uuid(), network }).strict(),
 ]);
 
@@ -31,7 +39,7 @@ export async function POST(req: Request) {
     const base = { visitorId, userAgent: req.headers.get("user-agent"), clientIp: clientIp(req), openid, locale, network: parsed.data.network };
     const order = await createOrder(parsed.data.kind === "pair-gift"
       ? { ...base, kind: "pair-gift", invitationId: parsed.data.invitationId }
-      : { ...base, resultId: parsed.data.resultId });
+      : { ...base, resultId: parsed.data.resultId, invitationToken: parsed.data.invitationToken, join: parsed.data.join, inviteCode: (await cookies()).get(INVITE_COOKIE)?.value });
     return ok(toOrderView(order), { status: 201 });
   } catch (e) {
     if (e instanceof OrderError) return fail(e.status, e.code, e.message);

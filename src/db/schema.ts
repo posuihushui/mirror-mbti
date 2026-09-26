@@ -45,7 +45,22 @@ export const results = pgTable(
   (t) => [index("results_visitor_created_idx").on(t.visitorId, t.createdAt)],
 );
 
+/**
+ * One invite code per unlocked report. It is a random value of its own, never derived from an
+ * order number (order numbers are recovery credentials). A visitor's first report bought through
+ * someone's invitation or invite link is charged the invite price; the code records whose it was.
+ */
+export const inviteCodes = pgTable("invite_codes", {
+  code: varchar("code", { length: 8 }).primaryKey(),
+  resultId: text("result_id").notNull().unique().references(() => results.id),
+  visitorId: uuid("visitor_id").notNull().references(() => visitors.id),
+  disabledAt: timestamp("disabled_at", { withTimezone: true }),
+  ...timestamps,
+}, (t) => [index("invite_codes_visitor_idx").on(t.visitorId)]);
+
 export type OrderKind = "report" | "pair-gift";
+/** `list`: the report price; `invite`: a first report through someone's invitation; `gift`: 请 TA. */
+export type OrderPricing = "list" | "invite" | "gift";
 
 /**
  * One purchase attempt. `id` doubles as the provider `out_trade_no`. A `report` order unlocks its
@@ -66,6 +81,18 @@ export const orders = pgTable(
     /** `pair-gift` only: the invitation the host bought it for. Where the gift sits now is `pair_gifts.invitation_id`. */
     invitationId: uuid("invitation_id").references((): AnyPgColumn => comparisonInvitations.id),
     amountFen: integer("amount_fen").notNull(),
+    /** What `amountFen` was set from, decided on the server when the order is created. */
+    pricing: text("pricing").$type<OrderPricing>().default("list").notNull(),
+    /** The list price at the time, so an invite price can be read as a discount. Null on older orders. */
+    listAmountFen: integer("list_amount_fen"),
+    /** The invite code the invite price came from: the host's for an invitation, or the link's. */
+    inviteCode: varchar("invite_code", { length: 8 }).references(() => inviteCodes.code),
+    /**
+     * Pay-to-pair: the invitation this report's buyer agreed to join when they paid. Paying with it is
+     * the explicit guest consent (`joinConsentVersion`); the join runs once the payment is confirmed.
+     */
+    joinInvitationId: uuid("join_invitation_id").references((): AnyPgColumn => comparisonInvitations.id),
+    joinConsentVersion: text("join_consent_version"),
     currency: char("currency", { length: 3 }).default("CNY").notNull(),
     provider: paymentProviderEnum("provider").notNull(),
     channel: paymentChannelEnum("channel").notNull(),
@@ -83,7 +110,7 @@ export const orders = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     ...timestamps,
   },
-  (t) => [index("orders_visitor_created_idx").on(t.visitorId, t.createdAt), index("orders_result_status_idx").on(t.resultId, t.status), check("orders_kind", sql`${t.kind} in ('report', 'pair-gift')`), check("orders_gift_invitation", sql`(${t.kind} = 'pair-gift') = (${t.invitationId} is not null)`)],
+  (t) => [index("orders_visitor_created_idx").on(t.visitorId, t.createdAt), index("orders_result_status_idx").on(t.resultId, t.status), check("orders_kind", sql`${t.kind} in ('report', 'pair-gift')`), check("orders_gift_invitation", sql`(${t.kind} = 'pair-gift') = (${t.invitationId} is not null)`), check("orders_pricing", sql`${t.pricing} in ('list', 'invite', 'gift')`), check("orders_join_consent", sql`(${t.joinInvitationId} is null) = (${t.joinConsentVersion} is null)`), index("orders_invite_code_idx").on(t.inviteCode)],
 );
 
 /** Raw provider callbacks, keyed by the provider event id for idempotency. */

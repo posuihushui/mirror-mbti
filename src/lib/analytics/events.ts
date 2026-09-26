@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n/locale";
 import type { CryptoNetwork } from "@/lib/payments/types";
 import type { PaymentMode } from "@/lib/site";
-import type { ReportCommerce } from "./commerce";
+import type { PriceType, ReportCommerce } from "./commerce";
 
 /**
  * The GA4 event catalog. `docs/analytics.md` lists what each event answers and which parameters to
@@ -100,7 +100,7 @@ export function progressMilestone(before: number, after: number, total: number):
 
 type Empty = Record<never, never>;
 type Quiz = { questionnaire_id: string; question_count: number };
-type Checkout = ReportCommerce & { payment_mode: PaymentMode };
+type Checkout = ReportCommerce & { payment_mode: PaymentMode; price_type: PriceType };
 
 export type AnalyticsEvents = {
   // Site
@@ -133,13 +133,15 @@ export type AnalyticsEvents = {
   report_tab_switch: { tab: "strengths" | "blindspots" };
   report_practice_check: { day_number: number; checked: boolean };
   report_image_open: Empty;
+  /** The reader copied their invite (code link). The code itself is never sent. */
+  invite_link_copy: { surface: "report" };
   my_report_view: { record_count: number; unlocked_count: number };
   recover_submit: Empty;
   recover_success: Empty;
   recover_error: { error_code: string };
 
   // Checkout: GA4's recommended ecommerce events, so the monetization reports work unchanged
-  view_item: ReportCommerce;
+  view_item: ReportCommerce & { price_type: PriceType };
   begin_checkout: Checkout;
   add_payment_info: Checkout & { payment_type: string };
   purchase: Checkout & { payment_type: string; transaction_id?: string };

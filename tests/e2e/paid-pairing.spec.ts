@@ -31,7 +31,10 @@ for(const en of [false,true])test(`paid invitation → own overview → payment 
  const own=await seed(guest.request,en);await g.goto(`${prefix}/t/${invite.token}/join`);await g.getByRole('button',{name:m.choose}).click();await g.waitForURL(new RegExp(`/result/${own}`));await expect(g.locator('[data-pairing-continuations]')).toBeVisible();
  // Storage cannot authorize, and blocked storage cannot lose the server continuation.
  await g.addInitScript(()=>{for(const s of [localStorage,sessionStorage]){s.clear();Object.defineProperty(s,'setItem',{value:()=>{throw new Error('blocked');}});}});await g.reload();
- await g.getByRole('button',{name:/解锁报告与|Unlock report/}).filter({visible:true}).first().click();await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Pay \$/:/确认支付 ¥/}).click();
+ await g.getByRole('button',{name:/解锁报告与|Unlock report/}).filter({visible:true}).first().click();
+ // An invited reader is offered pay-to-pair; unlocking only the report keeps joining a separate, later consent.
+ const sheetCopy=paymentMessages[locale].sheet;await expect(g.getByRole('dialog').getByRole('button',{name:sheetCopy.payJoin('5.5')})).toBeVisible();
+ await g.getByRole('dialog').getByRole('button',{name:sheetCopy.reportOnly}).click();await expect(g.getByRole('dialog')).toContainText(sheetCopy.reportOnlyChosen);await expect(g.getByRole('dialog')).toContainText(p.feeRule);await g.getByRole('button',{name:en?/^Pay \$/:/确认支付 ¥/}).click();
  await expect(g.locator('[data-pairing-access="eligible"]')).toBeVisible();
  // Switching between the dialog and drawer must not return a paid buyer to checkout.
  const originalViewport=g.viewportSize()!;
@@ -159,12 +162,17 @@ test('the paid report invites someone, covers their report and follows the guide
  if(info.project.name==='mobile')await expect(aside).toBeHidden();
  else await expect(aside.getByRole('button',{name:m.invite})).toBeVisible();
  await page.goto(`/zh/report/${host}?chapter=3`);
- await expect(page.locator('[data-report-invite="relationship"] [data-relationship-cards] button')).toHaveCount(4);
+ const relationship=page.locator('[data-report-invite="relationship"]');
+ await expect(relationship.locator('[data-relationship-cards] button')).toHaveCount(4);
+ // Chapter 03 carries each moment between two people; the card explains the guide from the reader's side before it asks.
+ await expect(page.locator('#chapter-panel-3 [data-pair-scene]')).toHaveCount(4);
+ await expect(relationship.locator('[data-pair-lines]')).toBeVisible();
+ for(const copy of [m.headings.relationship.split('\n')[0],m.gainsTitle,m.assureTitle,m.assures[0].title])await expect(relationship).toContainText(copy);
  // Choosing a relationship on the card opens the invitation with it chosen, on the report itself.
  await page.goto(`/zh/report/${host}?chapter=4`);
  const closing=page.locator('[data-report-invite="closing"]');
  await expect(closing).toHaveAttribute('data-report-invite-state','start');
- await expect(closing).toContainText(m.giftTitle('¥6.9'));
+ await expect(closing).toContainText(m.giftTitle('¥4.9'));
  await closing.getByRole('button',{name:new RegExp(c.relationshipLabels.partner)}).click();
  const sheet=page.getByRole('dialog');
  await expect(sheet.getByRole('radio',{name:c.relationshipLabels.partner})).toBeChecked();
@@ -179,7 +187,7 @@ test('the paid report invites someone, covers their report and follows the guide
  await expect(page.getByRole('dialog')).toContainText(g.product);
  await expect(page.getByRole('dialog')).toHaveCount(1);
  const orderResponse=page.waitForResponse(r=>r.url().endsWith('/api/orders')&&r.request().method()==='POST');
- await page.getByRole('dialog').getByRole('button',{name:pay$.sheet.mockPay('6.9')}).click();
+ await page.getByRole('dialog').getByRole('button',{name:pay$.sheet.mockPay('4.9')}).click();
  expect((await (await orderResponse).json()).data).toMatchObject({kind:'pair-gift',invitationId:invitation.id,resultId:host});
  await page.getByRole('dialog').getByRole('button',{name:m.giftBack}).click();
  await expect(page.getByRole('dialog')).toHaveCount(0);

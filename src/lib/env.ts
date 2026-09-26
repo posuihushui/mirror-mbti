@@ -15,6 +15,12 @@ const schema = z.object({
   // English site: card via Waffo Pancake (`waffo`), USDT/USDC on Ethereum or Solana (`crypto`), or `mock`.
   EN_PAYMENT_PROVIDER: z.enum(["mock", "crypto", "waffo"]).default("mock"),
   PRICE_USD_CENTS: z.coerce.number().int().positive().default(690),
+  // Invite price: a visitor's first report when they came through someone's invitation or invite link.
+  INVITE_PRICE_FEN: z.coerce.number().int().positive().default(550),
+  INVITE_PRICE_USD_CENTS: z.coerce.number().int().positive().default(550),
+  // 请 TA: a host covering one participant's report.
+  GIFT_PRICE_FEN: z.coerce.number().int().positive().default(490),
+  GIFT_PRICE_USD_CENTS: z.coerce.number().int().positive().default(490),
   CRYPTO_EVM_RECEIVER: z.string().optional(),
   CRYPTO_SOLANA_RECEIVER: z.string().optional(),
   ETHEREUM_RPC_URL: z.string().url().optional(),
@@ -92,4 +98,14 @@ export function priceMinorFor(locale: Locale) {
 
 export function priceLabelFor(locale: Locale) {
   return formatPriceFen(priceMinorFor(locale));
+}
+
+/** The invite price, never above the list price, in the locale's minor unit. */
+export function invitePriceMinorFor(locale: Locale) {
+  return Math.min(locale === "en" ? env().INVITE_PRICE_USD_CENTS : env().INVITE_PRICE_FEN, priceMinorFor(locale));
+}
+
+/** 请 TA, never above the list price, in the locale's minor unit. */
+export function giftPriceMinorFor(locale: Locale) {
+  return Math.min(locale === "en" ? env().GIFT_PRICE_USD_CENTS : env().GIFT_PRICE_FEN, priceMinorFor(locale));
 }

@@ -131,6 +131,19 @@ export async function getPublicInvitation(token: string) {
     .where(and(eq(I.token, token), eq(I.accessPolicy, "paid-pair-v2"), isNull(I.revokedAt), invitationParentOpen, gt(I.expiresAt, new Date()))).limit(1);
   return row ? { ...row, locale: row.locale as Locale, expiresAt: row.expiresAt.toISOString() } : null;
 }
+/** Server-only: who is behind an invitation still open for joining, for pricing and pay-to-pair. */
+export async function openInvitationHost(token: string) {
+  if (!shareTokenSchema.safeParse(token).success) return null;
+  const [row] = await db().select({ id: I.id, token: I.token, visitorId: I.visitorId, resultId: I.resultId, relationship: I.relationship, locale: I.locale }).from(I).leftJoin(S, eq(S.id, I.shareId))
+    .where(and(eq(I.token, token), eq(I.accessPolicy, "paid-pair-v2"), isNull(I.revokedAt), invitationParentOpen, gt(I.expiresAt, new Date()))).limit(1);
+  return row ? { ...row, locale: row.locale as Locale } : null;
+}
+/** The guide a guest has on one invitation, if any: where pay-to-pair leads after payment. */
+export async function guestPairUrl(invitationId: string, visitorId: string) {
+  const [row] = await db().select({ id: P.id, locale: P.locale }).from(P)
+    .where(and(eq(P.invitationId, invitationId), eq(P.guestVisitorId, visitorId), isNull(P.revokedAt))).limit(1);
+  return row ? href(row.locale as Locale, `/compare/${row.id}`) : null;
+}
 async function completeContinuations(tx: Tx, invitationId: string, visitorId: string) {
   await tx.update(C).set({ completedAt: new Date(), updatedAt: new Date() }).where(and(eq(C.invitationId, invitationId), eq(C.visitorId, visitorId), isNull(C.completedAt)));
 }

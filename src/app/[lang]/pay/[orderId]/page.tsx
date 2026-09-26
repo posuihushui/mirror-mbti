@@ -5,7 +5,7 @@ import { PayStatus } from "@/components/payment/pay-status";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
-import { getOrder, refreshOrder, toOrderView } from "@/lib/orders";
+import { getOrder, refreshOrder, toOrderView, orderPairUrl } from "@/lib/orders";
 import { questionnaireLocale } from "@/lib/questionnaires";
 import { getResult } from "@/lib/results";
 import { getVisitorId } from "@/lib/session";
@@ -34,7 +34,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
       <AppHeader variant="page" title={t.title} backHref={href(locale, order.kind === "pair-gift" ? "/my/pairing" : `/result/${order.resultId}`)} />
       <main className="mx-auto max-w-lg px-6 pt-6 pb-20 md:pt-14">
         <section className="border border-line bg-card px-6 py-7 md:px-8 md:py-8">
-          <PayStatus initial={toOrderView(fresh)} priceLabel={formatPriceFen(fresh.amountFen)} />
+          <PayStatus initial={{ ...toOrderView(fresh), pairUrl: await orderPairUrl(fresh) }} priceLabel={formatPriceFen(fresh.amountFen)} />
         </section>
       </main>
     </>

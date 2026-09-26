@@ -26,6 +26,7 @@
 
 - **网址脱敏**：`page_location` / `page_referrer` 经过 `sanitizeLocation` / `sanitizeReferrer`。`/result/<id>` → `/result/[id]`，`/report/<id>` → `/report/[id]`，`/pay/<订单号>` → `/pay/[orderId]`，其他位置出现的订单号也会被替换。查询参数只保留 `utm_*`、`gclid`、`gbraid`、`wbraid` 与微信分享附加的 `from`。
 - **订单号是找回凭据**，永远不发送。`purchase.transaction_id` 是订单号的 SHA-256 截断摘要，不可还原。
+- **邀请码不发送**。价格只记 `price_type`（`list` 原价 / `invite` 邀请价 / `gift` 请 TA），邀请码会把它定价的订单与一位读者联系起来。
 - **不发送**：作答、分数、人格类型、订单号、微信 openid、钱包地址、链上交易哈希。隐私政策承诺不向第三方共享作答与结果。
 - 广告相关 consent 默认 `denied`，Google 信号与广告个性化关闭。
 - 新增事件或参数若改变了发送的数据类别，需同步更新 `/privacy` 中英文页面。
@@ -125,13 +126,14 @@
 | 事件 | 触发时机 | 参数 |
 | --- | --- | --- |
 | `result_view` | 结果页（含示例） | `questionnaire_id` `question_count` `is_sample` `result_owner` `result_even` `result_uniform` `result_unlocked` |
-| `view_item` | 本人、倾向明确且未解锁的结果页 | `currency` `value` `items` |
+| `view_item` | 本人、倾向明确且未解锁的结果页 | `currency` `value` `items` `price_type` |
 | `result_answers_review` | 倾向不明确时点击回看作答 | `outcome`（loaded / failed） |
 | `report_view` | 报告页（含示例） | `questionnaire_id` `question_count` `is_sample` |
 | `report_chapter_view` | 切换到另一章 | `chapter_number` `nav_method`（tab / sidebar / next / contents：示例报告说明里的章节目录） |
 | `report_tab_switch` | 第二章「优势 / 容易忽略的」切换 | `tab`（strengths / blindspots） |
 | `report_practice_check` | 第四章七天练习里勾选或取消某一天（勾选状态只存在本浏览器） | `day_number`（1–7）、`checked` |
 | `report_image_open` | 在报告里打开「把报告摘要存成图片」 | 无 |
+| `invite_link_copy` | 在报告第三、四章的邀请卡里复制自己的邀请（邀请码链接） | `surface`（`report`）；不含邀请码 |
 | `my_report_view` | 「我的报告」页 | `record_count` `unlocked_count` |
 | `recover_submit` / `recover_success` / `recover_error` | 用订单号找回记录 | `recover_error`：`error_code` |
 
@@ -141,9 +143,9 @@
 
 | 事件 | 触发时机 | 参数 |
 | --- | --- | --- |
-| `begin_checkout` | 支付弹层打开（解锁按钮或 `?unlock=1` 链接） | 电商参数、`payment_mode` |
-| `add_payment_info` | 订单创建成功 | 电商参数、`payment_mode` `payment_type` |
-| `purchase` | 首次观察到订单已支付 | 电商参数、`payment_mode` `payment_type` `transaction_id` |
+| `begin_checkout` | 支付弹层打开（解锁按钮或 `?unlock=1` 链接） | 电商参数、`payment_mode` `price_type` |
+| `add_payment_info` | 订单创建成功 | 电商参数、`payment_mode` `payment_type` `price_type` |
+| `purchase` | 首次观察到订单已支付 | 电商参数、`payment_mode` `payment_type` `transaction_id` `price_type` |
 | `payment_cancel` | 点击「暂不支付」，或在微信收银台内取消 | `payment_mode` `stage`（before_order / processing / wechat_jsapi） |
 | `payment_error` | 创建订单失败、订单关闭或过期、微信支付调起失败 | `payment_mode` `error_code` |
 | `payment_redirect` | 跳转微信网页授权、H5 收银台，或 Waffo 银行卡收银台 | `payment_mode` `target`（wechat_oauth / wechat_h5 / waffo_checkout） |

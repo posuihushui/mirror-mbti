@@ -211,6 +211,7 @@ test.describe("core flow", () => {
       "在独处中恢复能量", // chapter 02 strengths
       "精力的边界", // chapter 02 blind spots
       "让精力的需要变得可见", // chapter 03
+      "如果 TA 和你相反 · 恋人之间", // chapter 03, the same moment between two people
       "适合你的工作节奏", // chapter 04
     ]) {
       expect(html.includes(copy), copy).toBe(true);

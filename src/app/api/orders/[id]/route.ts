@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { fail, ok } from "@/lib/api";
 import { requestLocale } from "@/lib/i18n/request";
-import { getOrder, refreshOrder, toOrderView } from "@/lib/orders";
+import { getOrder, orderPairUrl, refreshOrder, toOrderView } from "@/lib/orders";
 import { getVisitorId } from "@/lib/session";
 
 const messages = {
@@ -19,5 +19,5 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const order = await getOrder(id, visitorId);
   if (!order) return fail(404, "NOT_FOUND", t.notFound);
   const fresh = await refreshOrder(order);
-  return ok(toOrderView(fresh), { headers: { "cache-control": "no-store" } });
+  return ok({ ...toOrderView(fresh), pairUrl: await orderPairUrl(fresh) }, { headers: { "cache-control": "no-store" } });
 }

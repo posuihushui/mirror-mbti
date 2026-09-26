@@ -7,12 +7,14 @@ import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { TextLink } from "@/components/site/text-link";
 import { PaymentSheet } from "@/components/payment/payment-sheet";
+import { ListPrice } from "@/components/payment/list-price";
 import { trackAttrs } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { writeLastResultId } from "@/lib/client-storage";
 import { href } from "@/lib/i18n/locale";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
+import { paymentMessages } from "@/lib/i18n/messages/payment";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import type { CryptoNetwork } from "@/lib/payments/types";
 import type { PaymentMode } from "@/lib/site";
@@ -38,13 +40,18 @@ type Props = {
    * so it replaces the price in every slot; buying one's own stays available from the panel.
    */
   covered?: string;
+  /** The list price, when `priceLabel` is the invite price. */
+  listPriceLabel?: string;
+  /** The invitation this reader came from; pay-to-pair when `pair` is set. See `PaymentSheet`. */
+  invitationToken?: string;
+  pair?: { relationship: string | null };
 };
 
 /**
  * Unlock / read CTA for the result page. The payment sheet is owned by the "dock" instance
  * (mounted once); the "panel" instance only triggers it through the `?unlock=1` search param.
  */
-export function ResultActions({ resultId, type, name, priceLabel, mode, networks, owner, unlocked, syncing = false, slot, covered }: Props) {
+export function ResultActions({ resultId, type, name, priceLabel, mode, networks, owner, unlocked, syncing = false, slot, covered, listPriceLabel, invitationToken, pair }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -80,6 +87,8 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
   const trackLocation = slot === "panel" ? "result_panel" : slot === "nav" ? "result_nav" : "dock";
   let button: React.ReactNode;
   const gift = pairingUiMessages[locale].gift;
+  const sheet = paymentMessages[locale].sheet;
+  const struck = listPriceLabel && <ListPrice was={sheet.was} currency={messages.currency} price={listPriceLabel} className="text-mist" />;
   if (isUnlocked) {
     button = (
       <PrimaryButton href={readHref} light={slot === "panel"} className={dockClass} {...trackAttrs("read_report", trackLocation)}>
@@ -112,6 +121,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
   if (slot === "nav") {
     return canPay && !covered ? (
       <div className="flex items-center gap-4">
+        {struck && <span className="text-xs whitespace-nowrap text-warm-ink" data-invite-price>{sheet.invitePrice} · {struck}</span>}
         <strong className="text-xl font-normal tracking-tight whitespace-nowrap">
           <small className="mr-0.5 text-sm">{messages.currency}</small>
           {priceLabel}
@@ -128,7 +138,7 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
         <div className="flex w-full min-w-0 items-center gap-3">
           {!isUnlocked && !syncing && covered && <p className="flex min-w-[88px] items-center gap-2 text-xs text-slate"><CheckCircle size={18} weight="fill" className="shrink-0 text-warm-ink" aria-hidden />{gift.dockLabel}</p>}
           {!isUnlocked && !syncing && !covered && <div className="min-w-[88px]">
-            <small className="block text-xs text-mist">{t.dockLabel}</small>
+            {struck ? <small className="block text-xs whitespace-nowrap text-warm-ink" data-invite-price>{sheet.invitePrice} · {struck}</small> : <small className="block text-xs text-mist">{t.dockLabel}</small>}
             <strong className="mt-0.5 block text-2xl leading-tight font-medium tracking-tight">
               {messages.currency}{priceLabel}
               <span className="text-xs font-normal tracking-normal text-mist">{t.perTime}</span>
@@ -147,6 +157,9 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
           type={type}
           name={name}
           priceLabel={priceLabel}
+          listPriceLabel={listPriceLabel}
+          invitationToken={invitationToken}
+          pair={pair}
           mode={mode}
           networks={networks ? [...networks] : undefined}
           onUnlocked={() => setUnlockedNow(true)}

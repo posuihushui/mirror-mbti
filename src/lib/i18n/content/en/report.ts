@@ -73,6 +73,7 @@ export const enReportCopy = {
   relationshipBalancedBody: (balanced: string) => `${balanced} You could start with:`,
   relationshipBalancedSay: "I have different needs in different situations — this time I’d like… What about you?",
   relationshipBody: (qualifier: string) => `${qualifier} You could try opening with this, then invite the other person to respond in their own words, rather than guessing them from a type:`,
+  relationshipPair: (between: string, balanced: boolean) => (balanced ? `When this shifts with the moment · ${between}` : `If they lean the other way · ${between}`),
   workTitles: ["A work rhythm that suits you", "Turn understanding into visible results", "Set discussable conditions for choices", "Balance moving forward with adjusting"],
   workBalancedBody: (balanced: string) => `${balanced} Try each approach once in study or work, and note which suits the task at hand, rather than choosing a fixed career label.`,
   dayOne: { title: "Day 1 · Keep one honest record", body: "Pick a small situation from today and note the task, who you interacted with, your first reaction and how your energy shifted. Describe the facts first, without applying a personality label." },

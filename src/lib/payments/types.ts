@@ -53,6 +53,14 @@ export type OrderView = {
   status: OrderRow["status"];
   /** Minor units of `currency`: fen for CNY, cents for USD. */
   amountFen: number;
+  /** What the amount was set from: the list price, the invite price or 请 TA. */
+  pricing: OrderRow["pricing"];
+  /** The list price at the time (null on older orders). */
+  listAmountFen: number | null;
+  /** Pay-to-pair: whether the buyer agreed to join an invitation with this payment. */
+  joinRequested: boolean;
+  /** Pay-to-pair: the guide this paid order joined, once it exists. Owner-only, like the order. */
+  pairUrl?: string | null;
   currency: string;
   provider: OrderRow["provider"];
   channel: PaymentChannel;

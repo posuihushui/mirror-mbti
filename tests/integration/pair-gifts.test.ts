@@ -94,7 +94,7 @@ describe("请 TA gifts", () => {
     const host = await owner(true), invitation = await invite(host);
     const historyBefore = await resultsForVisitor(host.visitor);
     const order = await buyGift(host, invitation.item.id);
-    expect(order).toMatchObject({ kind: "pair-gift", status: "paid", resultId: host.id, invitationId: invitation.item.id, amountFen: 690, currency: "CNY" });
+    expect(order).toMatchObject({ kind: "pair-gift", status: "paid", resultId: host.id, invitationId: invitation.item.id, amountFen: 490, pricing: "gift", listAmountFen: 690, currency: "CNY" });
     await markOrderPaid(order!.id, "again"); await fulfillGiftOrder(order!); await fulfillGiftOrder(order!);
     const rows = await gifts(host);
     expect(rows).toHaveLength(1);

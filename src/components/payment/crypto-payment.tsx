@@ -33,7 +33,7 @@ const walletName = (wallet: DiscoveredWallet) => wallet.info.name.slice(0, 40);
 
 type Props = {
   /** What the order is for: `{ resultId }` for a report, `{ kind: "pair-gift", invitationId }` for 请 TA. */
-  orderBody: Record<string, string>;
+  orderBody: Record<string, string | boolean>;
   networks: CryptoNetwork[];
   onPaid: (order: OrderView) => void;
   onAlreadyUnlocked: () => void;

@@ -13,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         // Private routes exist in both languages; derive their paths from the published locales.
         allow: publishedLocales.flatMap(locale => [href(locale, "/"), href(locale, "/result/sample"), href(locale, "/report/sample")]),
-        disallow: ["/api/", ...publishedLocales.flatMap(locale => ["/s/", "/t/", "/compare/", "/report/", "/pay/", "/my/", "/result/"].map(path => href(locale, path)))],
+        disallow: ["/api/", ...publishedLocales.flatMap(locale => ["/s/", "/t/", "/i/", "/compare/", "/report/", "/pay/", "/my/", "/result/"].map(path => href(locale, path)))],
       },
     ],
     sitemap: `${APP_URL}/sitemap.xml`,

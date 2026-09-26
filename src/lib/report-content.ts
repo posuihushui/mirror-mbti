@@ -1,11 +1,19 @@
 import { enReportCopy, enScenes } from "@/lib/i18n/content/en/report";
+import type { CompareRelationship } from "@/lib/compare-types";
 import type { Locale } from "@/lib/i18n/locale";
+import { compareMessages } from "@/lib/i18n/messages/compare";
 import { dimensions, polesFor, profileMeta, type Letter, type Profile } from "@/lib/personality";
 import { dimensionReading } from "@/lib/preference-content";
 import { blindspotTitles, chapterLabelsFor } from "@/lib/site";
 
-/** `say` is a sentence to try out loud; the report sets it apart as speech. */
-export type Insight = { title: string; body: string; say?: string };
+/**
+ * `say` is a sentence to try out loud; the report sets it apart as speech. `pair` (chapter 03 only)
+ * is the same moment between two people, taken from the guide for two's own scenes.
+ */
+export type Insight = { title: string; body: string; say?: string; pair?: { label: string; scene: string } };
+
+/** Chapter 03 shows each dimension between a different pair, so the four cards cover all four relationships. */
+const PAIR_RELATIONSHIPS: CompareRelationship[] = ["partner", "friend", "family", "colleague"];
 
 /**
  * Chapter 01's reading of one dimension. A clear lean gets its usual strength and one thing to try;
@@ -94,6 +102,7 @@ const zhReportCopy = {
   relationshipBalancedBody: (balanced: string) => `${balanced}可以这样开始：`,
   relationshipBalancedSay: "我在不同情境下会有不同需要，这一次我更希望……你呢？",
   relationshipBody: (qualifier: string) => `${qualifier}可以试着这样开口，然后邀请对方用自己的话回应，避免用类型猜测对方：`,
+  relationshipPair: (between: string, balanced: boolean) => (balanced ? `这一维会随情境变 · ${between}` : `如果 TA 和你相反 · ${between}`),
   workTitles: ["适合你的工作节奏", "让理解变成可见的成果", "给选择设定可讨论的条件", "兼顾推进与调整"],
   workBalancedBody: (balanced: string) => `${balanced}在学习或工作中各试用一次，记录哪种安排更适合当前任务，而非为自己选择固定职业标签。`,
   dayOne: { title: "第 1 天 · 留下一次真实记录", body: "选一个今天发生的小情境，记下当时的任务、与你互动的人、你的第一反应和精力变化。先描述事实，暂时不套用人格标签。" },
@@ -123,11 +132,20 @@ export function buildReportData(profile: Profile, options: { sample: boolean; lo
   const blindspots = contexts.map(({ reading, scene, qualifier }, i) => ({
     title: copy.blindspotTitles[i], body: profile.balanced[i] ? copy.blindspotBalancedBody(reading.pair, reading.question) : join(qualifier, scene.watch),
   }));
-  const relationships = contexts.map(({ reading, scene, qualifier }, i) => ({
-    title: copy.relationshipTitles[i],
-    body: profile.balanced[i] ? copy.relationshipBalancedBody(reading.balanced) : copy.relationshipBody(qualifier),
-    say: profile.balanced[i] ? copy.relationshipBalancedSay : scene.phrase,
-  }));
+  const pairCopy = compareMessages[locale];
+  const relationships = contexts.map(({ reading, scene, qualifier }, i) => {
+    const relationship = PAIR_RELATIONSHIPS[i];
+    const scenes = pairCopy.byRelationship[relationship].scenes[dimensions[i]];
+    return {
+      title: copy.relationshipTitles[i],
+      body: profile.balanced[i] ? copy.relationshipBalancedBody(reading.balanced) : copy.relationshipBody(qualifier),
+      say: profile.balanced[i] ? copy.relationshipBalancedSay : scene.phrase,
+      pair: {
+        label: copy.relationshipPair(pairCopy.relationshipBetween[relationship], profile.balanced[i]),
+        scene: profile.balanced[i] ? scenes["includes-balanced"] : scenes.opposite,
+      },
+    };
+  });
   const work = contexts.map(({ reading, scene, qualifier }, i) => ({
     title: copy.workTitles[i],
     body: profile.balanced[i] ? copy.workBalancedBody(reading.balanced) : join(qualifier, scene.work),

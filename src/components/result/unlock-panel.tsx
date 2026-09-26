@@ -7,6 +7,8 @@ import { trackAttrs } from "@/lib/analytics/events";
 import { href } from "@/lib/i18n/locale";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
+import { paymentMessages } from "@/lib/i18n/messages/payment";
+import { ListPrice } from "@/components/payment/list-price";
 import { getLocale } from "@/lib/i18n/server";
 import { unlockBulletsFor } from "@/lib/site";
 
@@ -22,13 +24,15 @@ type Props = {
    * (which opens the report) instead of a price, and keeps buying it oneself as a quiet link.
    */
   covered?: { href: string; buyHref: string };
+  /** The list price, when `priceLabel` is the invite price: named, and struck through. */
+  listPriceLabel?: string;
 };
 
 /**
  * `.unlock-panel`: the page's one dark conversion moment. The chapters above it already show how
  * the report opens and what stays masked, so it carries the price, what unlocking brings, and the rules.
  */
-export async function UnlockPanel({ priceLabel, action, secureNote, covered }: Props) {
+export async function UnlockPanel({ priceLabel, action, secureNote, covered, listPriceLabel }: Props) {
   const locale = await getLocale();
   const messages = resultMessages[locale];
   const t = messages.unlock;
@@ -42,6 +46,11 @@ export async function UnlockPanel({ priceLabel, action, secureNote, covered }: P
         <TextLink href={href(locale, "/report/sample")} className="mt-5 text-night-body hover:text-paper" {...trackAttrs("read_sample_report", "unlock_panel")}>{t.sampleLink}</TextLink>
       </div>
       <div className="mt-8 md:mt-0">
+        {!covered && listPriceLabel && (
+          <p className="mb-3 text-sm text-warm" data-invite-price>
+            {paymentMessages[locale].sheet.invitePrice} · <ListPrice was={paymentMessages[locale].sheet.was} currency={messages.currency} price={listPriceLabel} className="text-night-mist" />
+          </p>
+        )}
         {covered ? <p className="flex items-center gap-3 text-xl"><CheckCircle size={28} weight="fill" className="shrink-0 text-warm" aria-hidden />{g.dockLabel}</p> : <div className="flex items-end justify-between gap-5">
           <strong className="text-5xl leading-none font-normal tracking-tight text-warm">
             <small className="mr-1 text-2xl">{messages.currency}</small>

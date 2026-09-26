@@ -280,6 +280,16 @@ function InsightList({ items, variant = "lines" }: { items: Insight[]; variant?:
             <h3 className="text-base font-medium">{item.title}</h3>
             <p className="mt-2 text-base text-slate">{item.body}</p>
             {item.say && <p className="mt-3 rounded-[16px] rounded-bl-[4px] border border-line bg-paper px-4 py-3 text-base text-ink">“{item.say}”</p>}
+            {item.pair && (
+              <div data-pair-scene className="mt-5 border-t border-line pt-4">
+                {/* The guide for two's legend: you a filled dot, the other a warm ring. */}
+                <p className="flex items-center gap-2 text-xs text-warm-ink">
+                  <span aria-hidden className="flex shrink-0 gap-1"><span className="size-2 rounded-full bg-ink" /><span className="size-2 rounded-full border border-warm-ink" /></span>
+                  {item.pair.label}
+                </p>
+                <p className="mt-2 text-base text-ink">{item.pair.scene}</p>
+              </div>
+            )}
           </div>
         </section>
       ))}
