@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
-import { bigint, boolean, char, check, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid, varchar, uniqueIndex } from "drizzle-orm/pg-core";
+import { bigint, boolean, char, check, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid, varchar, uniqueIndex, type AnyPgColumn } from "drizzle-orm/pg-core";
 import type { PublicShareSnapshot } from "@/lib/share-types";
-import type { CompareSnapshot, CompareContent } from "@/lib/compare-types";
+import type { CompareSnapshot, CompareContent, CompareRelationship } from "@/lib/compare-types";
 import { LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type ResponseItem } from "@/lib/questionnaires";
 
 export const paymentProviderEnum = pgEnum("payment_provider", ["mock", "wechat", "crypto", "waffo"]);
@@ -45,17 +45,26 @@ export const results = pgTable(
   (t) => [index("results_visitor_created_idx").on(t.visitorId, t.createdAt)],
 );
 
-/** One purchase attempt for a result. `id` doubles as the provider `out_trade_no`. */
+export type OrderKind = "report" | "pair-gift";
+
+/**
+ * One purchase attempt. `id` doubles as the provider `out_trade_no`. A `report` order unlocks its
+ * result; a `pair-gift` order is bought by an invitation's host, whose own result it carries, and
+ * becomes a `pair_gifts` row that covers one participant's report when they join.
+ */
 export const orders = pgTable(
   "orders",
   {
     id: text("id").primaryKey(),
+    kind: text("kind").$type<OrderKind>().default("report").notNull(),
     visitorId: uuid("visitor_id")
       .notNull()
       .references(() => visitors.id),
     resultId: text("result_id")
       .notNull()
       .references(() => results.id),
+    /** `pair-gift` only: the invitation the host bought it for. Where the gift sits now is `pair_gifts.invitation_id`. */
+    invitationId: uuid("invitation_id").references((): AnyPgColumn => comparisonInvitations.id),
     amountFen: integer("amount_fen").notNull(),
     currency: char("currency", { length: 3 }).default("CNY").notNull(),
     provider: paymentProviderEnum("provider").notNull(),
@@ -74,7 +83,7 @@ export const orders = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     ...timestamps,
   },
-  (t) => [index("orders_visitor_created_idx").on(t.visitorId, t.createdAt), index("orders_result_status_idx").on(t.resultId, t.status)],
+  (t) => [index("orders_visitor_created_idx").on(t.visitorId, t.createdAt), index("orders_result_status_idx").on(t.resultId, t.status), check("orders_kind", sql`${t.kind} in ('report', 'pair-gift')`), check("orders_gift_invitation", sql`(${t.kind} = 'pair-gift') = (${t.invitationId} is not null)`)],
 );
 
 /** Raw provider callbacks, keyed by the provider event id for idempotency. */
@@ -154,6 +163,8 @@ export const comparisonInvitations = pgTable("comparison_invitations", {
   publicSnapshot: jsonb("public_snapshot").$type<CompareSnapshot>().notNull(),
   /** Optional plain-text line the host wrote for this invitation; public to anyone holding the link. */
   hostNote: varchar("host_note", { length: 30 }),
+  /** Chosen by the host under `compare-host-v4` and public to anyone holding the link; null before it. */
+  relationship: text("relationship").$type<CompareRelationship>(),
   contentVersion: text("content_version").notNull(),
   consentVersion: text("consent_version").notNull(),
   requestId: uuid("request_id").notNull(),
@@ -161,7 +172,7 @@ export const comparisonInvitations = pgTable("comparison_invitations", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   ...timestamps,
-}, (t) => [uniqueIndex("comparison_invitation_request_idx").on(t.visitorId, t.requestId), index("comparison_invitation_share_idx").on(t.shareId), index("comparison_invitation_result_idx").on(t.resultId, t.createdAt), check("invitation_access_policy", sql`${t.accessPolicy} in ('legacy-free-v1', 'paid-pair-v2')`)]);
+}, (t) => [uniqueIndex("comparison_invitation_request_idx").on(t.visitorId, t.requestId), index("comparison_invitation_share_idx").on(t.shareId), index("comparison_invitation_result_idx").on(t.resultId, t.createdAt), check("invitation_access_policy", sql`${t.accessPolicy} in ('legacy-free-v1', 'paid-pair-v2')`), check("invitation_relationship", sql`${t.relationship} in ('partner', 'friend', 'family', 'colleague')`)]);
 
 export const comparisons = pgTable("comparisons", {
   accessPolicy: text("access_policy").$type<PairingAccessPolicy>().default("paid-pair-v2").notNull(),
@@ -173,13 +184,36 @@ export const comparisons = pgTable("comparisons", {
   hostSnapshot: jsonb("host_snapshot").$type<CompareSnapshot>().notNull(),
   guestSnapshot: jsonb("guest_snapshot").$type<CompareSnapshot>().notNull(),
   contentVersion: text("content_version").notNull(),
+  /** Copied from the invitation at join; null for guides made before relationships existed. */
+  relationship: text("relationship").$type<CompareRelationship>(),
   locale: varchar("locale", { length: 2 }).notNull(),
   outputSnapshot: jsonb("output_snapshot").$type<CompareContent>().notNull(),
   guestConsentVersion: text("guest_consent_version").notNull(),
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   revokedBy: uuid("revoked_by").references(() => visitors.id),
   ...timestamps,
-}, (t) => [uniqueIndex("comparison_invitation_guest_idx").on(t.invitationId, t.guestVisitorId), index("comparison_host_created_idx").on(t.hostVisitorId, t.createdAt), index("comparison_guest_created_idx").on(t.guestVisitorId, t.createdAt), check("comparison_access_policy", sql`${t.accessPolicy} in ('legacy-free-v1', 'paid-pair-v2')`)]);
+}, (t) => [uniqueIndex("comparison_invitation_guest_idx").on(t.invitationId, t.guestVisitorId), index("comparison_host_created_idx").on(t.hostVisitorId, t.createdAt), index("comparison_guest_created_idx").on(t.guestVisitorId, t.createdAt), check("comparison_access_policy", sql`${t.accessPolicy} in ('legacy-free-v1', 'paid-pair-v2')`), check("comparison_relationship", sql`${t.relationship} in ('partner', 'friend', 'family', 'colleague')`)]);
+
+/**
+ * One participant's report, covered by an invitation's host (a paid `pair-gift` order). It sits on
+ * one invitation until someone who has not unlocked their result joins it; a gift whose invitation
+ * closes or expires unclaimed moves to the host's next invitation in the same language.
+ */
+export const pairGifts = pgTable("pair_gifts", {
+  id: uuid("id").primaryKey(),
+  orderId: text("order_id").notNull().unique().references(() => orders.id),
+  visitorId: uuid("visitor_id").notNull().references(() => visitors.id),
+  locale: varchar("locale", { length: 2 }).notNull(),
+  invitationId: uuid("invitation_id").references(() => comparisonInvitations.id),
+  claimedAt: timestamp("claimed_at", { withTimezone: true }),
+  claimedVisitorId: uuid("claimed_visitor_id").references(() => visitors.id),
+  claimedResultId: text("claimed_result_id").unique().references(() => results.id),
+  ...timestamps,
+}, (t) => [
+  uniqueIndex("pair_gifts_open_invitation_idx").on(t.invitationId).where(sql`${t.claimedAt} is null`),
+  index("pair_gifts_owner_idx").on(t.visitorId, t.createdAt),
+  check("pair_gifts_claim", sql`(${t.claimedAt} is null) = (${t.claimedResultId} is null) and (${t.claimedAt} is null) = (${t.claimedVisitorId} is null)`),
+]);
 
 export const comparisonContinuations = pgTable("comparison_continuations", {
   id: uuid("id").primaryKey(),

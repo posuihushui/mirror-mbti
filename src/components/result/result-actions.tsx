@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { CheckCircle } from "@phosphor-icons/react";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { TextLink } from "@/components/site/text-link";
@@ -28,17 +29,22 @@ type Props = {
   unlocked: boolean;
   syncing?: boolean;
   /**
-   * Which slot this instance renders: the desktop button in the dark panel, the desktop bar under the
-   * result, or the phone dock. Only the dock instance owns the payment sheet.
+   * Which slot this instance renders: the desktop button in the dark panel, the right end of the
+   * sticky section nav (desktop), or the phone dock. Only the dock instance owns the payment sheet.
    */
-  slot: "panel" | "bar" | "dock";
+  slot: "panel" | "nav" | "dock";
+  /**
+   * The join page of an invitation whose host covered this reader's report. Joining opens the report,
+   * so it replaces the price in every slot; buying one's own stays available from the panel.
+   */
+  covered?: string;
 };
 
 /**
  * Unlock / read CTA for the result page. The payment sheet is owned by the "dock" instance
  * (mounted once); the "panel" instance only triggers it through the `?unlock=1` search param.
  */
-export function ResultActions({ resultId, type, name, priceLabel, mode, networks, owner, unlocked, syncing = false, slot }: Props) {
+export function ResultActions({ resultId, type, name, priceLabel, mode, networks, owner, unlocked, syncing = false, slot, covered }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -70,19 +76,26 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
     if (unlockedNow && !unlocked) router.refresh();
   };
 
-  const dockClass = slot === "dock" ? "min-h-[52px] px-5 text-sm" : undefined;
-  const trackLocation = slot === "panel" ? "result_panel" : slot === "bar" ? "result_bar" : "dock";
+  const dockClass = slot === "dock" ? "min-h-[52px] px-5 text-sm" : slot === "nav" ? "min-h-11 w-auto gap-3 px-5 text-sm" : undefined;
+  const trackLocation = slot === "panel" ? "result_panel" : slot === "nav" ? "result_nav" : "dock";
   let button: React.ReactNode;
+  const gift = pairingUiMessages[locale].gift;
   if (isUnlocked) {
     button = (
       <PrimaryButton href={readHref} light={slot === "panel"} className={dockClass} {...trackAttrs("read_report", trackLocation)}>
-        {slot === "panel" ? t.readFull : t.read}
+        {slot === "dock" ? t.read : t.readFull}
+      </PrimaryButton>
+    );
+  } else if (canPay && covered) {
+    button = (
+      <PrimaryButton href={covered} prefetch={false} light={slot === "panel"} className={dockClass} {...trackAttrs("accept_covered", trackLocation)}>
+        {gift.accept}
       </PrimaryButton>
     );
   } else if (canPay) {
     button = (
       <PrimaryButton onClick={() => setOpen(true)} light={slot === "panel"} className={dockClass} {...trackAttrs("unlock_report", trackLocation)}>
-        {slot === "dock" ? pairingUiMessages[locale].unlockShort : t.unlock}
+        {slot === "panel" ? t.unlock : pairingUiMessages[locale].unlockShort}
       </PrimaryButton>
     );
   } else if (syncing) {
@@ -95,13 +108,26 @@ export function ResultActions({ resultId, type, name, priceLabel, mode, networks
     );
   }
 
+  // The nav names the price beside its button, as the dock does, so the report is an offer at every scroll depth.
+  if (slot === "nav") {
+    return canPay && !covered ? (
+      <div className="flex items-center gap-4">
+        <strong className="text-xl font-normal tracking-tight whitespace-nowrap">
+          <small className="mr-0.5 text-sm">{messages.currency}</small>
+          {priceLabel}
+        </strong>
+        {button}
+      </div>
+    ) : button;
+  }
   if (slot !== "dock") return button;
 
   return (
     <>
       <Dock>
         <div className="flex w-full min-w-0 items-center gap-3">
-          {!isUnlocked && !syncing && <div className="min-w-[88px]">
+          {!isUnlocked && !syncing && covered && <p className="flex min-w-[88px] items-center gap-2 text-xs text-slate"><CheckCircle size={18} weight="fill" className="shrink-0 text-warm-ink" aria-hidden />{gift.dockLabel}</p>}
+          {!isUnlocked && !syncing && !covered && <div className="min-w-[88px]">
             <small className="block text-xs text-mist">{t.dockLabel}</small>
             <strong className="mt-0.5 block text-2xl leading-tight font-medium tracking-tight">
               {messages.currency}{priceLabel}

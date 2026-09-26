@@ -7,6 +7,7 @@ import { cn } from "cn";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { AccessActions } from "@/components/pairing/access-actions";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
+import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { trackAttrs } from "@/lib/analytics/events";
 import { track, trackPurchase } from "@/lib/analytics/track";
@@ -68,6 +69,10 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
   const paid = order.status === "paid";
   const qr = order.payload?.kind === "native" ? order.payload.qrSvg : null;
   const StatusIcon = icons[order.status];
+  // 请 TA: the order covers someone else's report, so it leads back to the invitations, not a result.
+  const g = pairingUiMessages[locale].gift;
+  const gift = order.kind === "pair-gift";
+  const center = href(locale, "/my/pairing");
 
   return (
     <div>
@@ -76,8 +81,8 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
           <StatusIcon size={22} weight={paid ? "bold" : "regular"} />
         </span>
         <div className="min-w-0 pt-1.5">
-          <h1 className="text-2xl leading-heading">{t.labels[order.status]}</h1>
-          <p className="mt-2 text-sm text-mist">{t.detail[order.status]}</p>
+          <h1 className="text-2xl leading-heading">{gift && paid ? g.statusPaid : t.labels[order.status]}</h1>
+          <p className="mt-2 text-sm text-mist">{gift && paid ? g.readyBody : t.detail[order.status]}</p>
         </div>
       </div>
       {pending && qr && (
@@ -88,7 +93,7 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
       )}
       <div className="mt-7 flex items-center justify-between gap-4 border-t border-line pt-5">
         <span className="text-sm font-medium">
-          {t.productLabel}
+          {gift ? g.product : t.productLabel}
           <small className="mt-1 block text-xs font-normal text-mist">{order.provider === "mock" ? t.demoOrder : t.oneTime}</small>
         </span>
         <strong className="shrink-0 text-2xl font-medium tracking-tight">
@@ -96,10 +101,14 @@ export function PayStatus({ initial, priceLabel }: { initial: OrderView; priceLa
           {priceLabel}
         </strong>
       </div>
-      <p className="mt-3 text-xs text-mist">{pairingMessages[locale].feeRule}</p>
+      <p className="mt-3 text-xs text-mist">{gift ? g.terms : pairingMessages[locale].feeRule}</p>
       <div className="mt-6">
         {/* While payment is pending, going back is secondary; after a failed payment, retrying is the action. */}
-        {paid ? (
+        {gift ? (
+          paid ? <PrimaryButton href={center} {...trackAttrs("my_pairing", "pay_status")}>{g.backToCenter}</PrimaryButton>
+            : pending ? <TextLink href={center} {...trackAttrs("my_pairing", "pay_status")}>{g.backToCenter}</TextLink>
+              : <PrimaryButton href={`${center}?gift=${order.invitationId}`} {...trackAttrs("retry_payment", "pay_status")}>{t.retry}</PrimaryButton>
+        ) : paid ? (
           <AccessActions resultId={order.resultId} locale={locale} surface="pay_status" />
         ) : pending ? (
           <TextLink href={href(locale, `/result/${order.resultId}`)} {...trackAttrs("back_to_result", "pay_status")}>{t.backToResult}</TextLink>

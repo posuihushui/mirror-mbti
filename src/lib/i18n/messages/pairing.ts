@@ -30,6 +30,24 @@ const zh = {
     secondLine: "先留一点余地，临时再看看。",
   },
   invitationText: (url: string) => `想和你一起看看，我们哪些地方容易理解彼此，哪些话可以换个方式说。这里能生成一份只给我们双方看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
+  /** The same promise, opened for the relationship the host chose. */
+  invitationTexts: {
+    partner: (url: string) => `想和你一起看看，我们俩哪些地方很像、哪些地方容易想岔，哪些话可以换个方式说。这里能生成一份只给我们两个人看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
+    friend: (url: string) => `想和你一起看看，我们做朋友时哪些地方很合拍、哪些地方容易误会。这里能生成一份只给我们双方看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
+    family: (url: string) => `想和你一起看看，我们在家里哪些地方容易理解彼此，哪些话可以换个方式说。这里能生成一份只给我们双方看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
+    colleague: (url: string) => `想和你一起看看，我们一起做事时哪些地方配合顺手，哪些地方可以提前说清楚。这里能生成一份只给我们双方看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
+  },
+  /** Appended to the invitation text when the host has covered the other person's report. */
+  coveredLine: "你的完整报告我已经为你备好了。",
+  /** Fictional examples, one per relationship. Friend keeps the original example. */
+  examples: {
+    partner: { title: "纪念日怎么过，为什么总聊不到一起？", firstLine: "先把餐厅订好，我才放心。", secondLine: "到时候看心情，别排得那么满。" },
+    friend: { title: "同样是约周末，为什么总聊不到一起？", firstLine: "先把时间定下来，我才放心。", secondLine: "先留一点余地，临时再看看。" },
+    family: { title: "假期回家，为什么总在安排上起争执？", firstLine: "回家的每一天，我想提前安排好。", secondLine: "回去再看吧，别排得那么满。" },
+    colleague: { title: "同一个截止日期，为什么节奏总对不上？", firstLine: "先把每天的进度排出来，我才踏实。", secondLine: "先做起来，边做边调整更快。" },
+  },
+  relationshipsTitle: "同一个差异，四种关系里的样子",
+  relationshipsIntro: "同样是一个想先定下来、一个想再看看，放进不同的关系里，是不同的一幕，也需要不同的说法。邀请时选好关系，指南会按它来写。",
 };
 
 const en: typeof zh = {
@@ -62,6 +80,21 @@ const en: typeof zh = {
     secondLine: "I'd rather leave some room and decide closer to the day.",
   },
   invitationText: (url: string) => `I'd like to explore where we may understand each other easily and what we could explain differently. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
+  invitationTexts: {
+    partner: (url: string) => `I'd like to explore where the two of us are alike, where we tend to misread each other, and what we could say differently. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
+    friend: (url: string) => `I'd like to explore where we click as friends and where we tend to misunderstand each other. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
+    family: (url: string) => `I'd like to explore where we understand each other easily at home, and what we could say differently. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
+    colleague: (url: string) => `I'd like to explore where we work well together and what we could agree on up front. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
+  },
+  coveredLine: "I've covered your full report.",
+  examples: {
+    partner: { title: "Why is planning an anniversary such a different conversation?", firstLine: "I'll feel better once the restaurant is booked.", secondLine: "Let's see how we feel on the day and not plan too much." },
+    friend: { title: "Why is planning the same weekend such a different conversation?", firstLine: "I feel more at ease once we have set a time.", secondLine: "I'd rather leave some room and decide closer to the day." },
+    family: { title: "Why do visits home keep turning into arguments about plans?", firstLine: "I'd like every day of the visit planned in advance.", secondLine: "Let's see once we're there, and not fill every day." },
+    colleague: { title: "Why do we work to different rhythms towards the same deadline?", firstLine: "I feel settled once each day's progress is planned.", secondLine: "Let's start and adjust as we go; it's quicker." },
+  },
+  relationshipsTitle: "One difference, four relationships",
+  relationshipsIntro: "One person wants to settle things, the other wants to wait. In each relationship that plays out as a different moment and needs different words. Choose the relationship when you invite someone, and the guide is written for it.",
 };
 
 export const pairingMessages: Record<Locale, typeof zh> = { zh, en };

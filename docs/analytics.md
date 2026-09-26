@@ -128,7 +128,7 @@
 | `view_item` | 本人、倾向明确且未解锁的结果页 | `currency` `value` `items` |
 | `result_answers_review` | 倾向不明确时点击回看作答 | `outcome`（loaded / failed） |
 | `report_view` | 报告页（含示例） | `questionnaire_id` `question_count` `is_sample` |
-| `report_chapter_view` | 切换到另一章 | `chapter_number` `nav_method`（tab / sidebar / next） |
+| `report_chapter_view` | 切换到另一章 | `chapter_number` `nav_method`（tab / sidebar / next / contents：示例报告说明里的章节目录） |
 | `report_tab_switch` | 第二章「优势 / 容易忽略的」切换 | `tab`（strengths / blindspots） |
 | `report_practice_check` | 第四章七天练习里勾选或取消某一天（勾选状态只存在本浏览器） | `day_number`（1–7）、`checked` |
 | `report_image_open` | 在报告里打开「把报告摘要存成图片」 | 无 |
@@ -137,7 +137,7 @@
 
 ### 结账（GA4 推荐电商事件）
 
-商品固定为 `items: [{ item_id: "full_report", item_name: "Full report", item_category: "report", price, quantity: 1 }]`，`value` 以元或美元计。
+报告订单的商品为 `items: [{ item_id: "full_report", item_name: "Full report", item_category: "report", price, quantity: 1 }]`；「请 TA」订单（`pair-gift`，发起人为一位加入者买下完整报告）为 `items: [{ item_id: "pair_gift", item_name: "Covered report", item_category: "gift", price, quantity: 1 }]`，同价、独立商品，便于区分。`value` 以元或美元计。「请 TA」通常在 `/my/pairing` 购买，该页不加载 gtag，因此 GA 只在 `/pay/[orderId]` 回跳时记到它；收入以增长报告的 `gift_revenue` 为准。
 
 | 事件 | 触发时机 | 参数 |
 | --- | --- | --- |
@@ -181,10 +181,11 @@
 | `view_about` `view_help` `view_preferences` `view_types` `view_type` `view_privacy` `view_terms` | 站内内容页链接 |
 | `contact_email` | 帮助页的客服邮箱 |
 | `order_receipt` / `recover_other` | 展开订单号 / 展开「找回其他记录」 |
+| `accept_covered` / `buy_own_report` | 发起人已「请 TA」时，结果页的「接受邀请并阅读」/「不加入，自己购买报告」 |
 | `pairing_info` / `invite_pairing` / `my_pairing` | 双人指南介绍 / 邀请入口 / 我的双人指南；仅通用名称，不附带结果或邀请编号 |
 | `home` | 回到首页（报告结尾、404） |
 
-`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`result_bar`（桌面结果首屏下方的报告入口）、`home_sample`（桌面首页照片上的示例结果卡）、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`、`pairing_benefit`、`pairing_center`。
+`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`sample_bar`（桌面示例结果首屏下方的示例报告入口）、`sample_preview`（示例结果里按章节摘录的示例报告）、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`result_nav`（结果页吸顶章节导航右端的解锁按钮，桌面）、`result_chapter`（结果页遮盖章节底部的解锁或阅读入口）、`home_sample`（桌面首页照片上的示例结果卡）、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`、`pairing_benefit`、`pairing_center`。
 
 ## 新增埋点
 
@@ -234,6 +235,7 @@ SHARE_GROWTH_DATABASE_URL=postgres://... npx tsx scripts/report-share-growth.ts 
 - `invited_result_selection`：按 visitor/invitation/result 选定事实分为已具备资格、需解锁、同步中、无法新购买；仅 `locked` 组统计随后7日同一结果的真实支付。
 - `comparisons` 分新旧 policy；`both_read_7d` 只计生成后7日内双方各有一次有效阅读。迟到的双方阅读另列。
 - 上述转化率的 numerator / denominator 仅来自完整成熟的7／14日队列；`observed_*` 与 `observing_count` 单列，分母为0时 value 为 null。
+- 所有报告队列与 `revenue`、`pairing_revenue` 只计 `kind = 'report'` 的订单。「请 TA」订单单列为 `gift_revenue`（按付款时间落在报告期内；`claimed_in_period` 为期内被使用的名额数，不论何时购买），**不得与报告收入相加**。
 - `pairing_revenue` 仅统计成熟的未购权益曝光队列，同一 visitor/result 在7日内付款的订单。`revenue` 保留 P0 首次推荐完成后7日、同一首次结果的收入。两个归因视角可能重合，**不得相加**；所有真实收入都排除 mock，CNY/USD 分币种，paid/refunded 分状态，不充当退款流水。
 - 保留 P0 顶层指标键 `first_completion_card_creation_7d`、`first_touch_completion_7d`、`first_completion_referral_7d`、`share_seed_referral_14d`、`real_payment_7d` 与 `next_generation`，严格限制为单人卡来源。口径版本已升级，观察截止固定为 end；不能与旧脚本按运行时刻观察的数值直接混比。
 

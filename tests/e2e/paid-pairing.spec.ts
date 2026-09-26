@@ -20,7 +20,7 @@ async function shot(page:Page,name:string){
 }
 for(const en of [false,true])test(`paid invitation → own overview → payment → independent consent ${en?'en':'zh'}`,async({page,browser},info)=>{
  const locale=en?'en':'zh', prefix=en?'':'/zh',m=pairingUiMessages[locale],p=pairingMessages[locale];const host=await seed(page.request,en);
- const inviteInput={resultId:host,requestId:randomUUID(),consentVersion:'compare-host-v3'};
+ const inviteInput={resultId:host,requestId:randomUUID(),relationship:'partner',consentVersion:'compare-host-v4'};
  const denied=await page.request.post('/api/comparison-invitations',{headers:{origin},data:inviteInput});expect(denied.status()).toBe(403);
  await page.goto(`${prefix}/result/${host}`);await expect(page.locator('[data-pairing-benefit="preview"]')).toBeVisible();await shot(page,`benefit-${locale}-${info.project.name}`);
  await pay(page.request,host);await page.reload();await expect(page.locator('[data-pairing-benefit="unlocked"]')).toBeVisible();await expect(page.getByRole('button',{name:/解锁报告与|Unlock report/})).toHaveCount(0);await shot(page,`paid-entry-${locale}-${info.project.name}`);
@@ -39,7 +39,7 @@ for(const en of [false,true])test(`paid invitation → own overview → payment 
  await g.setViewportSize(originalViewport);
  await expect(g.getByRole('dialog').locator('[data-pairing-access="eligible"]')).toBeVisible();
  await shot(g,`payment-ready-${locale}-${info.project.name}`);await g.getByRole('dialog').getByRole('link',{name:m.continue,exact:true}).click();await g.waitForURL(/\/join\?result=/);
- const consent=g.locator('[data-compare-consent="guest"]');await expect(consent.getByRole('checkbox')).not.toBeChecked();await expect(consent.getByRole('button',{name:p.guestAgree})).toBeDisabled();await consent.getByRole('checkbox').check();await consent.getByRole('button',{name:p.guestAgree}).click();await g.waitForURL(/\/compare\//);await expect(g.locator('[data-compare-motion="section"]')).toHaveCount(6);await expect(g.locator('[data-compare-card]')).toHaveCount(4);
+ const consent=g.locator('[data-compare-consent="guest"]');await expect(consent.getByRole('checkbox')).not.toBeChecked();await expect(consent.getByRole('button',{name:p.guestAgree})).toBeDisabled();await consent.getByRole('checkbox').check();await consent.getByRole('button',{name:p.guestAgree}).click();await g.waitForURL(/\/compare\//);await expect(g.locator('[data-compare-motion="section"]')).toHaveCount(7);await expect(g.locator('[data-compare-topic="partner"]')).toBeVisible();await expect(g.locator('[data-compare-card]')).toHaveCount(4);
  const resultPage=await guest.request.get(`${prefix}/result/${own}`);expect(await resultPage.text()).not.toContain('data-pairing-continuations');
  await g.goto(`${prefix}/my/pairing`);await expect(g.locator('[data-comparison-manager] a[href*="/compare/"]')).toBeVisible();await shot(g,`center-history-${locale}-${info.project.name}`);
  await guest.close();
@@ -57,7 +57,7 @@ test('pairing page, narrow widths, no-JS, print and reduced motion',async({page,
 });
 
 test('owner-only access, strict continuation inputs and closed invite keep personal report',async({page,browser})=>{
- const host=await seed(page.request);await pay(page.request,host);const invite=(await (await page.request.post('/api/comparison-invitations',{headers:{origin},data:{resultId:host,requestId:randomUUID(),consentVersion:'compare-host-v3'}})).json()).data;
+ const host=await seed(page.request);await pay(page.request,host);const invite=(await (await page.request.post('/api/comparison-invitations',{headers:{origin},data:{resultId:host,requestId:randomUUID(),relationship:'partner',consentVersion:'compare-host-v4'}})).json()).data;
  const guest=await browser.newContext({baseURL:origin});const own=await seed(guest.request);const body={invitationToken:invite.token,resultId:own};
  expect((await guest.request.get(`/api/pairing-access?resultId=${host}`)).status()).toBe(404);
  expect((await guest.request.post('/api/comparison-continuations',{headers:{origin:'https://example.org'},data:body})).status()).toBe(403);
@@ -111,7 +111,7 @@ test('empty center, report entry and recovered order retain separate invitations
   const tokens:string[]=[];
   for(let i=0;i<2;i++) {
    const host=await seed(page.request,en);await pay(page.request,host);
-   const response=await page.request.post('/api/comparison-invitations',{headers:{origin},data:{resultId:host,requestId:randomUUID(),consentVersion:'compare-host-v3'}});
+   const response=await page.request.post('/api/comparison-invitations',{headers:{origin},data:{resultId:host,requestId:randomUUID(),relationship:'partner',consentVersion:'compare-host-v4'}});
    expect(response.status()).toBe(201);const invitation=(await response.json()).data;
    tokens.push(invitation.token);
    expect((await guest.request.post('/api/comparison-continuations',{headers:{origin},data:{invitationToken:invitation.token,resultId:own}})).ok()).toBe(true);

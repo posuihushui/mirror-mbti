@@ -3,7 +3,7 @@ import { defaultLocale, href, ogLocale, publishedLocales, type Locale } from "@/
 import { siteCopy } from "@/lib/site";
 
 /** Last substantive update of the public, indexable copy. Bump it with content changes so the sitemap and structured data stay honest. */
-export const contentUpdatedAt = "2026-09-24";
+export const contentUpdatedAt = "2026-09-25";
 
 type PageSeo = {
   /** Defaults to English, whose URLs are unprefixed. */

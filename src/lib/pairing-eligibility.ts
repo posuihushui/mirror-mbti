@@ -7,12 +7,15 @@ export type PairingEligibility = "eligible" | "locked" | "syncing";
 export type PairingTx = Parameters<Parameters<ReturnType<typeof db>["transaction"]>[0]>[0];
 type Reader = Db | PairingTx;
 
-/** Read only. Paid legacy/balanced reports keep their entitlement; every unpaid result is simply locked. */
+/**
+ * Read only. Paid legacy/balanced reports keep their entitlement; every unpaid result is simply locked.
+ * Only `report` orders unlock the result they carry: a host's `pair-gift` order also carries their own result.
+ */
 export async function getPairingEligibility(resultId: string, visitorId: string, reader: Reader = db()): Promise<PairingEligibility> {
   const result = await reader.query.results.findFirst({ where: and(eq(schema.results.id, resultId), eq(schema.results.visitorId, visitorId)), columns: { unlockedAt: true } });
   if (!result) throw new ShareError(404, "NOT_FOUND");
   if (result.unlockedAt) return "eligible";
-  const paid = await reader.query.orders.findFirst({ where: and(eq(schema.orders.resultId, resultId), eq(schema.orders.visitorId, visitorId), eq(schema.orders.status, "paid")), columns: { id: true } });
+  const paid = await reader.query.orders.findFirst({ where: and(eq(schema.orders.resultId, resultId), eq(schema.orders.visitorId, visitorId), eq(schema.orders.kind, "report"), eq(schema.orders.status, "paid")), columns: { id: true } });
   if (paid) return "syncing";
   return "locked";
 }
@@ -28,7 +31,7 @@ export async function reconcilePaidResult(resultId: string, visitorId: string) {
     const result = await tx.query.results.findFirst({ where: and(eq(schema.results.id, resultId), eq(schema.results.visitorId, visitorId)), columns: { unlockedAt: true } });
     if (!result) throw new ShareError(404, "NOT_FOUND");
     if (result.unlockedAt) return;
-    const order = await tx.query.orders.findFirst({ where: and(eq(schema.orders.resultId, resultId), eq(schema.orders.visitorId, visitorId), eq(schema.orders.status, "paid")), orderBy: [asc(schema.orders.paidAt), asc(schema.orders.id)], columns: { id: true, paidAt: true } });
+    const order = await tx.query.orders.findFirst({ where: and(eq(schema.orders.resultId, resultId), eq(schema.orders.visitorId, visitorId), eq(schema.orders.kind, "report"), eq(schema.orders.status, "paid")), orderBy: [asc(schema.orders.paidAt), asc(schema.orders.id)], columns: { id: true, paidAt: true } });
     if (!order) return;
     await tx.update(schema.results).set({ unlockedAt: order.paidAt ?? new Date(), unlockOrderId: order.id })
       .where(and(eq(schema.results.id, resultId), eq(schema.results.visitorId, visitorId), isNull(schema.results.unlockedAt)));

@@ -7,7 +7,7 @@ import { notFound, redirect } from "next/navigation";
 import { TrackView } from "@/components/analytics/track-view";
 import { AppHeader } from "@/components/site/app-header";
 import { ReportBody, type ReportData } from "@/components/report/report-body";
-import { SampleNotice } from "@/components/report/sample-notice";
+import { SampleNotice, SamplePairing } from "@/components/report/sample-notice";
 import { SampleCta } from "@/components/result/sample-cta";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
@@ -69,7 +69,7 @@ export default async function ReportPage({ params }: Params) {
         data={data}
         reportKey={data.sample ? "sample" : id}
         banner={<>{data.sample && <SampleNotice />}<p className="mx-6 my-4 text-xs text-mist md:mx-0 md:mt-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>{!data.sample && <div className="mx-6 md:mx-0 md:mb-6"><PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker></div>}</>}
-        relationshipAction={!data.sample ? <PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker> : undefined}
+        relationshipAction={data.sample ? <SamplePairing /> : <PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker>}
         footer={data.sample ? <SampleCta /> : <div className="mx-6 md:mx-0"><ContinuationList items={continuations} locale={locale} surface="report" /></div>}
       />
       {data.sample && (

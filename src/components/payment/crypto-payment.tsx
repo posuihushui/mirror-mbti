@@ -6,7 +6,7 @@ import { cn } from "cn";
 import { toast } from "sonner";
 import { createWalletClient, custom, erc20Abi, getAddress, UserRejectedRequestError } from "viem";
 import { Button } from "@/components/ui/button";
-import { paymentTypeOf, reportCommerce } from "@/lib/analytics/commerce";
+import { orderCommerce, paymentTypeOf } from "@/lib/analytics/commerce";
 import { track } from "@/lib/analytics/track";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cryptoMessages as t } from "@/lib/i18n/messages/crypto";
@@ -32,7 +32,8 @@ async function api<T>(input: string, init?: RequestInit): Promise<T> {
 const walletName = (wallet: DiscoveredWallet) => wallet.info.name.slice(0, 40);
 
 type Props = {
-  resultId: string;
+  /** What the order is for: `{ resultId }` for a report, `{ kind: "pair-gift", invitationId }` for 请 TA. */
+  orderBody: Record<string, string>;
   networks: CryptoNetwork[];
   onPaid: (order: OrderView) => void;
   onAlreadyUnlocked: () => void;
@@ -43,7 +44,7 @@ type Props = {
  * An order is created per chosen network; the server reads the chain and this island polls the
  * order until it is paid. Solana uses a Solana Pay request; Ethereum ties the order to a signed wallet.
  */
-export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }: Props) {
+export function CryptoPayment({ orderBody, networks, onPaid, onAlreadyUnlocked }: Props) {
   const compact = useMediaQuery("(max-width: 720px)", true);
   const [network, setNetwork] = useState<CryptoNetwork | null>(null);
   const [orders, setOrders] = useState<Partial<Record<CryptoNetwork, OrderView>>>({});
@@ -97,14 +98,14 @@ export function CryptoPayment({ resultId, networks, onPaid, onAlreadyUnlocked }:
     }
     setCreating(true);
     try {
-      const order = await api<OrderView>("/api/orders", { method: "POST", body: JSON.stringify({ resultId, network: next }) });
+      const order = await api<OrderView>("/api/orders", { method: "POST", body: JSON.stringify({ ...orderBody, network: next }) });
       if (unmounted.current) return;
-      track("add_payment_info", { ...reportCommerce(order.currency, order.amountFen), payment_mode: order.provider, payment_type: paymentTypeOf(order) });
+      track("add_payment_info", { ...orderCommerce(order), payment_mode: order.provider, payment_type: paymentTypeOf(order) });
       setOrders((previous) => ({ ...previous, [next]: order }));
       poll(order.id, next);
     } catch (e) {
       const err = e as Error & { code?: string };
-      if (err.code === "ALREADY_UNLOCKED") return onAlreadyUnlocked();
+      if (err.code === "ALREADY_UNLOCKED" || err.code === "GIFT_ALREADY_COVERED") return onAlreadyUnlocked();
       track("payment_error", { payment_mode: "crypto", error_code: err.code ?? err.name });
       toast(err.message || t.createFailed);
       setNetwork(null);

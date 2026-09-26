@@ -107,7 +107,8 @@ export async function resultsForVisitor(visitorId: string): Promise<ResultHistor
       columns: { answers: false, responses: false },
     }),
     db().query.orders.findMany({
-      where: eq(schema.orders.visitorId, visitorId),
+      // A result's own purchase only; gifts a host bought for an invitation carry the host's result too.
+      where: and(eq(schema.orders.visitorId, visitorId), eq(schema.orders.kind, "report")),
       orderBy: [desc(schema.orders.createdAt), desc(schema.orders.id)],
       columns: { id: true, resultId: true, provider: true, status: true },
     }),

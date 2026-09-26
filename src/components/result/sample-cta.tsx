@@ -1,20 +1,14 @@
 import { PrimaryButton } from "@/components/site/primary-button";
-import { TextLink } from "@/components/site/text-link";
 import { trackAttrs } from "@/lib/analytics/events";
 import { href } from "@/lib/i18n/locale";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { getLocale } from "@/lib/i18n/server";
 
-type Props = {
-  /** Optional secondary link, e.g. from the sample result page into the sample report. `href` is already localized. */
-  secondary?: { href: string; label: string };
-};
-
 /**
  * Closing block of the public sample. Everything here is already free to read, so the
  * invitation is to take the test; the price is not quoted here at all (owner decision, 2026-09-17).
  */
-export async function SampleCta({ secondary }: Props) {
+export async function SampleCta() {
   const locale = await getLocale();
   const t = resultMessages[locale].sampleCta;
 
@@ -46,11 +40,6 @@ export async function SampleCta({ secondary }: Props) {
             {t.start}
           </PrimaryButton>
         </div>
-        {secondary && (
-          <TextLink href={secondary.href} className="mt-4 text-night-body hover:text-paper" {...trackAttrs("read_sample_report", "sample_cta")}>
-            {secondary.label}
-          </TextLink>
-        )}
         <p className="mt-4 text-xs text-night-mist">
           {t.footnote}
         </p>

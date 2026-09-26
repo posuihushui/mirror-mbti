@@ -31,7 +31,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
   const fresh = await refreshOrder(order);
   return (
     <>
-      <AppHeader variant="page" title={t.title} backHref={href(locale, `/result/${order.resultId}`)} />
+      <AppHeader variant="page" title={t.title} backHref={href(locale, order.kind === "pair-gift" ? "/my/pairing" : `/result/${order.resultId}`)} />
       <main className="mx-auto max-w-lg px-6 pt-6 pb-20 md:pt-14">
         <section className="border border-line bg-card px-6 py-7 md:px-8 md:py-8">
           <PayStatus initial={toOrderView(fresh)} priceLabel={formatPriceFen(fresh.amountFen)} />

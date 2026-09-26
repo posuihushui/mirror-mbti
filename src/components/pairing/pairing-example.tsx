@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n/locale";
+import type { CompareRelationship } from "@/lib/compare-types";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { getPairingExample } from "@/lib/pairing-example";
 import { ComparisonReading } from "@/components/compare/comparison-reading";
@@ -7,11 +8,13 @@ import { PairingReveal } from "./pairing-reveal";
 /**
  * Always a preview: the emphasis and one dimension, never the four-card reading a pair receives.
  * One level of containers only: the two voices are quotes, the reading brings its own cards.
+ * With a relationship, the fictional pair and their reading are written for it.
  */
-export function PairingExample({ locale }: { locale: Locale }) {
-  const m = pairingMessages[locale].example;
-  const example = getPairingExample(locale);
-  return <section data-pairing-example>
+export function PairingExample({ locale, relationship = null }: { locale: Locale; relationship?: CompareRelationship | null }) {
+  const p = pairingMessages[locale];
+  const m = { ...p.example, ...(relationship ? p.examples[relationship] : {}) };
+  const example = getPairingExample(locale, relationship);
+  return <section data-pairing-example={relationship ?? ""}>
     <p className="eyebrow text-mist">{m.label}</p>
     <p className="mt-2 text-sm text-mist">{m.disclaimer}</p>
     <h3 className="mt-5 text-2xl leading-heading">{m.title}</h3>

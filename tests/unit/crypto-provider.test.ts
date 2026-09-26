@@ -19,7 +19,7 @@ const config: CryptoConfig = {
 
 function order(over: Partial<OrderRow>): OrderRow {
   return {
-    id: "M20260914000000000000000000ABCD", visitorId: "v", resultId: "r", amountFen: 100, currency: "USD", provider: "crypto", channel: "solana", status: "created",
+    id: "M20260914000000000000000000ABCD", kind: "report", visitorId: "v", resultId: "r", invitationId: null, amountFen: 100, currency: "USD", provider: "crypto", channel: "solana", status: "created",
     providerTxnId: null, prepayPayload: null, paidAt: null, payerAddress: null, paymentReference: null, startBlock: null,
     expiresAt: new Date("2026-09-14T00:30:00Z"), updatedAt: new Date(), createdAt: new Date("2026-09-14T00:00:00Z"), ...over,
   };

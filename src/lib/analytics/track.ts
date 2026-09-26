@@ -1,6 +1,6 @@
 import type { OrderView } from "@/lib/payments/types";
 import { isWeChat } from "@/lib/ua";
-import { paymentTypeOf, reportCommerce, transactionId } from "./commerce";
+import { orderCommerce, paymentTypeOf, transactionId } from "./commerce";
 import type { AnalyticsEventName, AnalyticsEvents, CtaId, CtaLocation } from "./events";
 import { pageInfo, sanitizeLocation, sanitizeReferrer } from "./url";
 
@@ -168,7 +168,7 @@ export async function trackPurchase(order: OrderView) {
     const id = await transactionId(order.id);
     if (id && !firstPurchaseReport(id)) return;
     track("purchase", {
-      ...reportCommerce(order.currency, order.amountFen),
+      ...orderCommerce(order),
       payment_mode: order.provider,
       payment_type: paymentTypeOf(order),
       transaction_id: id,

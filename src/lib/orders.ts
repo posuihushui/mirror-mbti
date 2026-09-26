@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { db, schema } from "@/db";
-import type { OrderRow, PaymentChannel } from "@/db/schema";
+import type { OrderKind, OrderRow, PaymentChannel } from "@/db/schema";
 import { appUrl, env, paymentModeFor, priceMinorFor } from "@/lib/env";
 import { href, type Locale } from "@/lib/i18n/locale";
 import { isValidOrderId, newOrderId } from "@/lib/ids";
@@ -11,6 +11,7 @@ import type { CryptoNetwork, OrderView, PaymentPayload, PaymentProvider } from "
 import { questionnaireLocale } from "@/lib/questionnaires";
 import { getResult } from "@/lib/results";
 import { getPairingEligibility, reconcilePaidResult } from "@/lib/pairing-eligibility";
+import { fulfillGiftOrder, giftPurchaseBlock } from "@/lib/pair-gifts";
 import { pickWeChatChannel } from "@/lib/ua";
 
 export const ORDER_TTL_MS = 15 * 60 * 1000;
@@ -35,6 +36,11 @@ const orderMessages = {
     payerLocked: "该订单已绑定其他付款钱包。",
     notEthereum: "该订单不需要绑定钱包。",
     description: (type: string, name: string) => `观己 mirror 完整人格报告 · ${type} ${name}`,
+    giftDescription: "观己 mirror 请 TA 读完整报告",
+    invitationClosed: "这份邀请已关闭或到期。",
+    giftCovered: "这份邀请已经请过 TA，对方同意加入时就会生效。",
+    giftAvailable: "你还有未使用的请 TA 名额，可以直接用在这份邀请上。",
+    hostLocked: "请先解锁发起这份邀请的报告。",
   },
   en: {
     notFound: "Result not found.",
@@ -46,6 +52,11 @@ const orderMessages = {
     payerLocked: "This order is already linked to a different wallet. Start a new payment to use another wallet.",
     notEthereum: "This order doesn’t use a connected wallet.",
     description: (type: string) => `mirror full personality report · ${type}`,
+    giftDescription: "mirror · cover their full report",
+    invitationClosed: "This invitation is closed or has expired.",
+    giftCovered: "This invitation is already covered. It takes effect when the other person agrees to join.",
+    giftAvailable: "You have an unused cover. Use it on this invitation instead.",
+    hostLocked: "Unlock the report this invitation was created from first.",
   },
 };
 
@@ -67,7 +78,9 @@ export function orderLocale(order: Pick<OrderRow, "currency">): Locale {
 export function toOrderView(order: OrderRow): OrderView {
   return {
     id: order.id,
+    kind: order.kind,
     resultId: order.resultId,
+    invitationId: order.invitationId,
     status: order.status,
     amountFen: order.amountFen,
     currency: order.currency,
@@ -85,15 +98,41 @@ function orderTtlMs(mode: PaymentProvider["mode"]): number {
   return ORDER_TTL_MS;
 }
 
-export async function createOrder(input: { visitorId: string; resultId: string; userAgent: string | null; clientIp: string; openid?: string | null; locale?: Locale; network?: CryptoNetwork }) {
-  const result = await getResult(input.resultId, input.visitorId);
+type OrderInput = { visitorId: string; userAgent: string | null; clientIp: string; openid?: string | null; locale?: Locale; network?: CryptoNetwork }
+  & ({ kind?: "report"; resultId: string } | { kind: "pair-gift"; invitationId: string });
+
+/**
+ * A `pair-gift` order is for one of the host's own open invitations that carries no gift yet. It
+ * records the invitation and the host's result (the one the invitation was made from), so its
+ * price, currency and provider follow that result's language like any other order.
+ */
+async function giftTarget(input: OrderInput & { kind: "pair-gift" }) {
+  const t = orderMessages[input.locale ?? "zh"];
+  const block = await giftPurchaseBlock(input.visitorId, input.invitationId);
+  if ("code" in block) {
+    if (block.code === "NOT_FOUND") throw new OrderError(404, "INVITATION_NOT_FOUND", t.notFound);
+    if (block.code === "INVITATION_UNAVAILABLE") throw new OrderError(410, "INVITATION_UNAVAILABLE", t.invitationClosed);
+    if (block.code === "GIFT_ALREADY_COVERED") throw new OrderError(409, "GIFT_ALREADY_COVERED", t.giftCovered);
+    throw new OrderError(409, "GIFT_AVAILABLE", t.giftAvailable);
+  }
+  if (await getPairingEligibility(block.invitation.resultId, input.visitorId) !== "eligible") throw new OrderError(403, "PAIRING_UNLOCK_REQUIRED", t.hostLocked);
+  return block.invitation;
+}
+
+export async function createOrder(input: OrderInput) {
+  const kind: OrderKind = input.kind ?? "report";
+  const invitation = input.kind === "pair-gift" ? await giftTarget(input) : null;
+  const resultId = invitation ? invitation.resultId : (input as { resultId: string }).resultId;
+  const result = await getResult(resultId, input.visitorId);
   if (!result || result.sample) throw new OrderError(404, "RESULT_NOT_FOUND", orderMessages[input.locale ?? "zh"].notFound);
   // Price, currency, provider and copy follow the language the result was taken in.
   const locale = questionnaireLocale(result.questionnaireId);
   const t = orderMessages[locale];
   if (!result.owner) throw new OrderError(403, "NOT_OWNER", t.notOwner);
-  if (result.unlocked) throw new OrderError(409, "ALREADY_UNLOCKED", t.unlocked);
-  if (await getPairingEligibility(input.resultId, input.visitorId) === "syncing") throw new OrderError(409, "PAIRING_ENTITLEMENT_SYNCING", locale === "zh" ? "付款已确认，正在核对权益，请勿重复购买。" : "Payment is confirmed. Access is being checked. Please do not purchase again.");
+  if (!invitation) {
+    if (result.unlocked) throw new OrderError(409, "ALREADY_UNLOCKED", t.unlocked);
+    if (await getPairingEligibility(resultId, input.visitorId) === "syncing") throw new OrderError(409, "PAIRING_ENTITLEMENT_SYNCING", locale === "zh" ? "付款已确认，正在核对权益，请勿重复购买。" : "Payment is confirmed. Access is being checked. Please do not purchase again.");
+  }
 
   const provider = await getPaymentProvider(paymentModeFor(locale));
   let channel: PaymentChannel;
@@ -114,8 +153,10 @@ export async function createOrder(input: { visitorId: string; resultId: string; 
     .insert(schema.orders)
     .values({
       id,
+      kind,
       visitorId: input.visitorId,
-      resultId: input.resultId,
+      resultId,
+      invitationId: invitation?.id ?? null,
       amountFen: priceMinorFor(locale),
       currency: locale === "en" ? "USD" : "CNY",
       provider: provider.mode,
@@ -132,7 +173,7 @@ export async function createOrder(input: { visitorId: string; resultId: string; 
     openid: input.openid,
     clientIp: input.clientIp,
     userAgent: input.userAgent,
-    description: t.description(result.profile.type, name),
+    description: invitation ? t.giftDescription : t.description(result.profile.type, name),
     notifyUrl: env().WECHAT_PAY_NOTIFY_URL || `${base}/api/payments/wechat/notify`,
     returnUrl: `${base}${href(locale, `/pay/${id}`)}`,
     network: input.network,
@@ -175,8 +216,14 @@ export async function markOrderPaid(orderId: string, txnId: string | null, paidA
     .where(and(eq(schema.orders.id, orderId), inArray(schema.orders.status, from)))
     .returning();
   const current = order ?? await getOrderByIdUnchecked(orderId);
-  if (current?.status === "paid") await reconcilePaidResult(current.resultId, current.visitorId);
+  if (current?.status === "paid") await fulfillOrder(current);
   return current;
+}
+
+/** What a paid order grants: its result's report, or one gift for the host's invitation. Idempotent. */
+export async function fulfillOrder(order: OrderRow) {
+  if (order.kind === "pair-gift") await fulfillGiftOrder(order);
+  else await reconcilePaidResult(order.resultId, order.visitorId);
 }
 
 export async function setOrderStatus(orderId: string, status: OrderRow["status"]) {
@@ -196,7 +243,7 @@ export async function setOrderStatus(orderId: string, status: OrderRow["status"]
  */
 export async function refreshOrder(order: OrderRow): Promise<OrderRow> {
   if (order.status === "paid") {
-    await reconcilePaidResult(order.resultId, order.visitorId);
+    await fulfillOrder(order);
     return order;
   }
   const crypto = order.provider === "crypto";
@@ -272,7 +319,7 @@ export async function confirmOrderPayer(order: OrderRow, payer: string, signatur
 export async function latestOrderForResult(resultId: string, visitorId: string) {
   return (
     (await db().query.orders.findFirst({
-      where: and(eq(schema.orders.resultId, resultId), eq(schema.orders.visitorId, visitorId)),
+      where: and(eq(schema.orders.resultId, resultId), eq(schema.orders.visitorId, visitorId), eq(schema.orders.kind, "report")),
       orderBy: [desc(schema.orders.createdAt)],
     })) ?? null
   );

@@ -34,7 +34,7 @@ export function ChapterPanel({ index, children, after }: { index: number; childr
 }
 
 /** Switches chapter; a view is recorded only when the reader lands on a different one. */
-function openChapter(index: number, current: number, method: "tab" | "sidebar" | "next") {
+function openChapter(index: number, current: number, method: "tab" | "sidebar" | "next" | "contents") {
   setChapter(index);
   if (index !== current) track("report_chapter_view", { chapter_number: index + 1, nav_method: method });
 }
@@ -60,6 +60,25 @@ export function ChapterSidebarNav() {
         </button>
       ))}
     </nav>
+  );
+}
+
+/** An entry in the sample notice's contents: opens its chapter and brings the reading into view. */
+export function ChapterJump({ index, className, children }: { index: number; className?: string; children: ReactNode }) {
+  const chapter = useChapter();
+  return (
+    <button
+      type="button"
+      aria-controls={chapterPanelId(index)}
+      onClick={() => {
+        openChapter(index, chapter, "contents");
+        // the reading starts with the phone chapter tabs, so they come into view with the chapter
+        document.getElementById(chapterPanelId(index))?.closest("article")?.scrollIntoView({ block: "start" });
+      }}
+      className={className}
+    >
+      {children}
+    </button>
   );
 }
 

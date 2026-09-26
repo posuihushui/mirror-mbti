@@ -10,6 +10,7 @@ import { deleteComparisonContinuation, listComparisonContinuations, registerComp
 import { getPairingEligibility, reconcilePaidResult } from "@/lib/pairing-eligibility";
 import { recordShareEvent } from "@/lib/share-analytics";
 import { createOrder } from "@/lib/orders";
+import type { CompareRelationship } from "@/lib/compare-types";
 const url = process.env.TEST_SHARE_DATABASE_URL;
 const visitors: string[] = [];
 let sql: postgres.Sql;
@@ -24,10 +25,11 @@ afterAll(async () => {
     await sql`delete from share_events where actor_visitor_id in ${sql(visitors)}`;
     await sql`delete from referral_attributions where visitor_id in ${sql(visitors)}`;
     await sql`delete from comparison_continuations where visitor_id in ${sql(visitors)}`;
+    await sql`delete from pair_gifts where visitor_id in ${sql(visitors)} or claimed_visitor_id in ${sql(visitors)}`;
     await sql`delete from comparisons where host_visitor_id in ${sql(visitors)} or guest_visitor_id in ${sql(visitors)}`;
+    await sql`delete from orders where visitor_id in ${sql(visitors)}`;
     await sql`delete from comparison_invitations where visitor_id in ${sql(visitors)}`;
     await sql`delete from result_shares where visitor_id in ${sql(visitors)}`;
-    await sql`delete from orders where visitor_id in ${sql(visitors)}`;
     await sql`delete from results where visitor_id in ${sql(visitors)}`;
     await sql`delete from visitors where id in ${sql(visitors)}`;
   }
@@ -40,7 +42,7 @@ async function owner(paid = false, visitor = randomUUID(), balanced = false) {
   if (paid) await sql`update results set unlocked_at = now() where id=${result.id}`;
   return { visitor, id: result.id };
 }
-function invite(o: {visitor:string;id:string}, requestId=randomUUID()) { return createComparisonInvitation(o.visitor, { resultId:o.id, requestId, consentVersion:"compare-host-v3" }); }
+function invite(o: {visitor:string;id:string}, requestId=randomUUID(), relationship: CompareRelationship="partner") { return createComparisonInvitation(o.visitor, { resultId:o.id, requestId, relationship, consentVersion:"compare-host-v4" }); }
 function join(o: {visitor:string;id:string}, token:string) { return joinComparison(o.visitor, { invitationToken:token, resultId:o.id, consentVersion:"compare-guest-v2" }); }
 
 describe("paid pairing server contracts", () => {
@@ -57,7 +59,7 @@ describe("paid pairing server contracts", () => {
     const pair = await join(guest, invitation.item.token);
     expect(await getOwnedComparison(pair.item.id,host.visitor)).not.toBeNull();
     expect(await getOwnedComparison(pair.item.id,randomUUID())).toBeNull();
-    expect(pair.item.outputSnapshot.contentVersion).toBe("compare-v2");
+    expect(pair.item.outputSnapshot.contentVersion).toBe("compare-v4");
     expect((await sql`select count(*)::int n from result_shares where visitor_id=${host.visitor}`)[0].n).toBe(0);
   });
   it("rejects stale consent and serializes one active invitation per result and idempotency keys", async () => {
@@ -137,8 +139,9 @@ describe("paid pairing server contracts", () => {
     await reconcilePaidResult(o.id,o.visitor);
     expect((await sql`select unlocked_at,unlock_order_id from results where id=${o.id}`)[0]).toEqual(original);
     expect(original.unlock_order_id).toBe(id);
+    // Every completed questionnaire can be unlocked (2026-09-21), near-even ones included.
     const balanced=await owner(false,randomUUID(),true);
-    expect(await getPairingEligibility(balanced.id,balanced.visitor)).toBe("unavailable");
+    expect(await getPairingEligibility(balanced.id,balanced.visitor)).toBe("locked");
     await sql`update results set unlocked_at=now() where id=${balanced.id}`;
     expect(await getPairingEligibility(balanced.id,balanced.visitor)).toBe("eligible");
   });

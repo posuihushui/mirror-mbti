@@ -24,7 +24,7 @@ export function PairingBenefit({ locale, resultId, unlocked = false, compact = f
         <p className="eyebrow text-warm-ink">{unlocked ? ui.included : ui.benefit}</p>
         <h2 className="mt-3 text-2xl leading-heading">{unlocked ? m.title : m.heading}</h2>
         <p className="mt-3 max-w-2xl text-sm text-mist">{m.summary}</p>
-        <ul className="mt-4 space-y-1.5 text-sm">{ui.outputs.map(item => <li key={item} className="flex gap-3"><span aria-hidden className="text-warm">—</span>{item}</li>)}</ul>
+        <ul className="mt-4 space-y-1.5 text-sm">{[...ui.outputs, ui.relationshipOutput].map(item => <li key={item} className="flex gap-3"><span aria-hidden className="text-warm">—</span>{item}</li>)}</ul>
       </PairingReveal>
       <div className="mt-5 flex flex-wrap items-center gap-x-6 md:mt-0 md:flex-col md:items-end">{invite}<TextLink href={href(locale, "/pairing")}>{ui.learn}</TextLink></div>
     </div>

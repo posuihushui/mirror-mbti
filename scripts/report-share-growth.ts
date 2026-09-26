@@ -85,14 +85,14 @@ async function main() {
       ), card_paying as (
         select a.*, a.completed_at + interval '7 days' <= b.cutoff as mature,
           exists(select 1 from orders o where o.visitor_id = a.visitor_id and o.result_id = a.first_result_id
-            and o.provider <> 'mock' and o.status = 'paid' and o.paid_at >= a.completed_at
+            and o.kind = 'report' and o.provider <> 'mock' and o.status = 'paid' and o.paid_at >= a.completed_at
             and o.paid_at < a.completed_at + interval '7 days' and o.paid_at < b.cutoff) as purchased
         from card_completed a cross join bounds b where a.completed_at >= b.lo
       ), card_revenue as (
         select o.currency, o.status, count(distinct o.visitor_id)::int as visitors,
           count(*)::int as orders, coalesce(sum(o.amount_fen),0)::bigint as amount_minor
         from orders o join card_paying p on p.visitor_id = o.visitor_id and p.first_result_id = o.result_id cross join bounds b
-        where p.mature and o.provider <> 'mock' and o.status in ('paid','refunded')
+        where p.mature and o.kind = 'report' and o.provider <> 'mock' and o.status in ('paid','refunded')
           and o.paid_at >= p.completed_at and o.paid_at < p.completed_at + interval '7 days' and o.paid_at < b.cutoff
         group by o.currency, o.status
       ), exposure_first as (
@@ -106,7 +106,7 @@ async function main() {
         select e.*, e.first_at + interval '7 days' <= b.cutoff as mature,
           exists(select 1 from share_events c where c.event_name = 'pairing_checkout_opened' and c.actor_visitor_id = e.visitor_id
             and c.owner_result_id = e.result_id and c.occurred_at >= e.first_at and c.occurred_at < e.first_at + interval '7 days' and c.occurred_at < b.cutoff) as checkout,
-          exists(select 1 from orders o where o.visitor_id = e.visitor_id and o.result_id = e.result_id and o.provider <> 'mock' and o.status = 'paid'
+          exists(select 1 from orders o where o.visitor_id = e.visitor_id and o.result_id = e.result_id and o.kind = 'report' and o.provider <> 'mock' and o.status = 'paid'
             and o.paid_at >= e.first_at and o.paid_at < e.first_at + interval '7 days' and o.paid_at < b.cutoff) as purchased
         from exposure_first e cross join bounds b where e.eligibility = 'locked' and e.first_at >= b.lo
       ), eligible_cohort as (
@@ -131,7 +131,7 @@ async function main() {
         from comparison_invitations i cross join bounds b where i.access_policy = 'paid-pair-v2' and i.created_at >= b.lo and i.created_at < b.cutoff
       ), selected_cohort as (
         select e.*, e.occurred_at + interval '7 days' <= b.cutoff as mature,
-          exists(select 1 from orders o where o.visitor_id = e.actor_visitor_id and o.result_id = e.owner_result_id and o.provider <> 'mock' and o.status = 'paid'
+          exists(select 1 from orders o where o.visitor_id = e.actor_visitor_id and o.result_id = e.owner_result_id and o.kind = 'report' and o.provider <> 'mock' and o.status = 'paid'
             and o.paid_at >= e.occurred_at and o.paid_at < e.occurred_at + interval '7 days' and o.paid_at < b.cutoff) as purchased
         from share_events e cross join bounds b where e.event_name = 'pairing_result_selected' and e.rule_version = 'paid-pair-v2'
           and e.occurred_at >= b.lo and e.occurred_at < b.cutoff
@@ -146,9 +146,17 @@ async function main() {
       ), revenue as (
         select o.currency, o.status, count(*)::int as orders, coalesce(sum(o.amount_fen),0)::bigint as amount_minor
         from orders o cross join bounds b
-        where o.provider <> 'mock' and o.status in ('paid','refunded') and o.paid_at < b.cutoff
+        where o.kind = 'report' and o.provider <> 'mock' and o.status in ('paid','refunded') and o.paid_at < b.cutoff
           and exists(select 1 from locked_cohort e where e.mature and e.visitor_id = o.visitor_id and e.result_id = o.result_id
             and o.paid_at >= e.first_at and o.paid_at < e.first_at + interval '7 days')
+        group by o.currency, o.status
+      ), gift_revenue as (
+        -- 请 TA: hosts covering a participant's report, by when they paid; never mixed into the report cohorts.
+        select o.currency, o.status, count(*)::int as orders, coalesce(sum(o.amount_fen),0)::bigint as amount_minor,
+          (select count(*)::int from pair_gifts g join orders go on go.id = g.order_id cross join bounds b2
+            where go.currency = o.currency and g.claimed_at >= b2.lo and g.claimed_at < b2.cutoff) as claimed_in_period
+        from orders o cross join bounds b
+        where o.kind = 'pair-gift' and o.provider <> 'mock' and o.status in ('paid','refunded') and o.paid_at >= b.lo and o.paid_at < b.cutoff
         group by o.currency, o.status
       ), pair_summary as (
         select access_policy, count(*)::int as created, count(*) filter(where mature)::int as mature,
@@ -219,7 +227,8 @@ async function main() {
         (select count(*)::int from selected_cohort where eligibility_at_event = 'unavailable') as selected_unavailable,
         (select count(*)::int from selected_cohort where eligibility_at_event = 'syncing') as selected_syncing,
         (select coalesce(jsonb_agg(to_jsonb(p)), '[]'::jsonb) from pair_summary p) as pairs,
-        (select coalesce(jsonb_agg(to_jsonb(r)), '[]'::jsonb) from revenue r) as revenue
+        (select coalesce(jsonb_agg(to_jsonb(r)), '[]'::jsonb) from revenue r) as revenue,
+        (select coalesce(jsonb_agg(to_jsonb(g)), '[]'::jsonb) from gift_revenue g) as gift_revenue
       `;
     });
     const r = rows[0];
@@ -266,6 +275,9 @@ async function main() {
       pairing_revenue: { basis: "mature locked benefit-exposure cohorts; same visitor and result; payment in [first exposure,+7d)",
         amount_unit: "currency minor units (CNY fen / USD cents)", currencies_and_statuses: r.revenue,
         note: "Mock excluded. Currencies never combined. Paid and refunded order face values are separate; this is not a refund ledger." },
+      gift_revenue: { basis: "请 TA (pair-gift) orders paid in the period; claimed_in_period counts gifts used in the period, whenever bought",
+        amount_unit: "currency minor units (CNY fen / USD cents)", currencies_and_statuses: r.gift_revenue,
+        note: "Mock excluded. Never added to revenue or pairing_revenue, which count report orders only." },
       limitations: ["First-touch and exposure association, not causal uplift or natural-person identity.",
         "Missing or failed visible events are unknown and are not backfilled. Analytics failure never blocks valid quiz submission.",
         "Attribution has one mutually exclusive card/invitation source. Expired unconverted windows may be replaced; historical windows cannot be reconstructed.",

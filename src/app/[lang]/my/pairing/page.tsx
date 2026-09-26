@@ -14,12 +14,23 @@ import { getLocale } from "@/lib/i18n/server";
 import { href } from "@/lib/i18n/locale";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { questionnaireName } from "@/lib/questionnaires";
+import { paymentModeFor, priceLabelFor } from "@/lib/env";
+import { cryptoNetworks } from "@/lib/payments/crypto/config";
+import type { Locale } from "@/lib/i18n/locale";
+
+/** 请 TA is bought in the invitation's language, at that language's price and provider. */
+function giftCheckout(locale: Locale) {
+  const mode = paymentModeFor(locale);
+  return { priceLabel: priceLabelFor(locale), mode, networks: mode === "crypto" ? cryptoNetworks() : [] };
+}
 export async function generateMetadata(): Promise<Metadata> { const locale = await getLocale(); return { title: pairingUiMessages[locale].center, robots: { index: false, follow: false }, referrer: "no-referrer" }; }
-export default async function PairingCenter({ searchParams }: { searchParams: Promise<{ result?: string; share?: string }> }) {
+export default async function PairingCenter({ searchParams }: { searchParams: Promise<{ result?: string; share?: string; gift?: string }> }) {
   const locale = await getLocale(); const m = pairingUiMessages[locale]; const visitor = await getVisitorId(); const query = await searchParams;
   const [results, comparisons, continuations] = visitor ? await Promise.all([listComparisonResults(visitor), listOwnedComparisons(visitor), listComparisonContinuations(visitor)]) : [[], { items: [], invitations: [] }, []];
   const selected = typeof query.result === "string" && /^[A-Za-z0-9_-]{12}$/.test(query.result) ? query.result : null;
   const shareId = typeof query.share === "string" && /^[0-9a-f-]{36}$/.test(query.share) ? query.share : undefined;
+  const openGift = typeof query.gift === "string" && /^[0-9a-f-]{36}$/.test(query.gift) ? query.gift : undefined;
+  const checkouts = { zh: giftCheckout("zh"), en: giftCheckout("en") };
   const sorted = [...results].sort((a, b) => Number(b.id === selected) - Number(a.id === selected));
   const date = (iso: string) => new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(iso));
   return <><AppHeader variant="page" title={m.center} backHref={href(locale, "/my/report")} path="/my/pairing" /><main data-share-static className="mx-auto max-w-[1000px] px-6 py-8 md:px-10 md:py-14">
@@ -28,7 +39,7 @@ export default async function PairingCenter({ searchParams }: { searchParams: Pr
     <a href={href(locale, "/my/pairing")} className="text-link mt-2 text-mist hover:text-ink"><ArrowClockwise size={15} aria-hidden />{m.refresh}</a>
     <ContinuationList items={continuations} locale={locale} surface="my_pairing" />
     {/* What already exists comes first: guides, then open invitations, then starting another. */}
-    <ComparisonManager {...comparisons} locale={locale} />
+    <ComparisonManager {...comparisons} locale={locale} checkouts={checkouts} openGift={openGift} />
     <section className="mt-14 border-t border-line pt-8">
       <h2 className="text-2xl leading-heading">{m.newInvitation}</h2>
       <p className="mt-2 text-sm text-mist">{m.fromResult}</p>
@@ -43,7 +54,7 @@ export default async function PairingCenter({ searchParams }: { searchParams: Pr
             <MirrorMark profile={profile} size={48} className="shrink-0" />
           </div>
           <p className={item.eligibility === "eligible" ? "mt-4 text-sm text-[#4f6552]" : "mt-4 text-sm text-mist"}>{item.eligibility === "eligible" ? m.unlocked : item.eligibility === "syncing" ? m.syncing : m.locked}</p>
-          <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:gap-8">{item.eligibility === "eligible" ? <InvitationEntry resultId={item.id} shareId={item.id === selected ? shareId : undefined} locale={locale} /> : item.eligibility === "syncing" ? <AccessActions resultId={item.id} locale={locale} surface="result" /> : <TextLink href={href(item.locale, `/result/${item.id}`)} prefetch={false}>{m.learnBenefit}</TextLink>}<TextLink href={href(item.locale, `/result/${item.id}`)} prefetch={false}>{m.readResult}</TextLink></div>
+          <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:gap-8">{item.eligibility === "eligible" ? <InvitationEntry resultId={item.id} shareId={item.id === selected ? shareId : undefined} locale={locale} gift={checkouts[item.locale]} /> : item.eligibility === "syncing" ? <AccessActions resultId={item.id} locale={locale} surface="result" /> : <TextLink href={href(item.locale, `/result/${item.id}`)} prefetch={false}>{m.learnBenefit}</TextLink>}<TextLink href={href(item.locale, `/result/${item.id}`)} prefetch={false}>{m.readResult}</TextLink></div>
         </li>;
       })}</ul>
       {!results.length && <div className="mt-5"><p className="text-sm">{m.emptyInvitations}</p><TextLink href={href(locale, "/my/report")} prefetch={false} className="mt-3">{m.myReports}</TextLink></div>}

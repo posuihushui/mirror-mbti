@@ -8,9 +8,10 @@ import { ResponsiveSheet } from "@/components/site/responsive-sheet";
 import { Button } from "@/components/ui/button";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { TextLink } from "@/components/site/text-link";
-import { currencyFor, paymentTypeOf, priceLabelToMinor, reportCommerce } from "@/lib/analytics/commerce";
+import { currencyFor, giftCommerce, orderCommerce, paymentTypeOf, priceLabelToMinor, reportCommerce } from "@/lib/analytics/commerce";
 import { AccessActions } from "@/components/pairing/access-actions";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
+import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { emitPairingEvent } from "@/lib/pairing-tracking";
 import { trackAttrs } from "@/lib/analytics/events";
 import { track, trackPurchase } from "@/lib/analytics/track";
@@ -42,6 +43,11 @@ type Props = {
   networks?: CryptoNetwork[];
   onUnlocked: () => void;
   initiallyUnlocked?: boolean;
+  /**
+   * 请 TA: sell a gift for one of the host's invitations instead of the report for `resultId`
+   * (the host's own result, which the invitation was made from).
+   */
+  gift?: { invitationId: string };
 };
 
 type PayState = "ready" | "processing" | "success" | "cancelled";
@@ -73,9 +79,11 @@ async function api<T>(input: string, init?: RequestInit): Promise<T> {
  * on the environment and polls the order until the callback lands.
  */
 export function PaymentSheet({ open, onOpenChange, ...flow }: Props) {
-  const t = paymentMessages[useLocale()].sheet;
+  const locale = useLocale();
+  const t = paymentMessages[locale].sheet;
+  const g = pairingUiMessages[locale].gift;
   return (
-    <ResponsiveSheet open={open} onOpenChange={onOpenChange} title={t.title} description={t.description}>
+    <ResponsiveSheet open={open} onOpenChange={onOpenChange} title={flow.gift ? g.sheetTitle : t.title} description={flow.gift ? g.description : t.description}>
       {open && <PaymentFlow onOpenChange={onOpenChange} {...flow} />}
     </ResponsiveSheet>
   );
@@ -84,10 +92,12 @@ export function PaymentSheet({ open, onOpenChange, ...flow }: Props) {
 const noopSubscribe = () => () => {};
 
 /** Mounted only while the sheet is open, so every open starts from "ready" without effects. */
-function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, networks = [], onUnlocked, initiallyUnlocked = false }: Omit<Props, "open">) {
+function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, networks = [], onUnlocked, initiallyUnlocked = false, gift }: Omit<Props, "open">) {
   const locale = useLocale();
   const messages = paymentMessages[locale];
   const t = messages.sheet;
+  const g = pairingUiMessages[locale].gift;
+  const orderBody: Record<string, string> = gift ? { kind: "pair-gift", invitationId: gift.invitationId } : { resultId };
   const compact = useMediaQuery("(max-width: 720px)", true);
   const inWeChat = useSyncExternalStore(noopSubscribe, () => isWeChat(navigator.userAgent), () => false);
   const [state, setState] = useState<PayState>(initiallyUnlocked ? "success" : "ready");
@@ -108,9 +118,10 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
   useEffect(() => {
     if (checkoutTracked.current || initiallyUnlocked) return;
     checkoutTracked.current = true;
-    emitPairingEvent("pairing_checkout_opened", resultId, "payment_sheet");
-    track("begin_checkout", { ...reportCommerce(currencyFor(locale), priceLabelToMinor(priceLabel)), payment_mode: mode });
-  }, [locale, priceLabel, mode, resultId, initiallyUnlocked]);
+    // The pairing funnel counts report checkouts; a gift is the host paying for someone else.
+    if (!gift) emitPairingEvent("pairing_checkout_opened", resultId, "payment_sheet");
+    track("begin_checkout", { ...(gift ? giftCommerce : reportCommerce)(currencyFor(locale), priceLabelToMinor(priceLabel)), payment_mode: mode });
+  }, [locale, priceLabel, mode, resultId, initiallyUnlocked, gift]);
 
   function stopPolling() {
     if (pollRef.current) {
@@ -122,6 +133,8 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
   const succeed = () => {
     stopPolling();
     setState("success");
+    // A report reports readiness through AccessActions; a gift is ready as soon as it is paid.
+    if (gift) onUnlocked();
   };
 
   const purchased = (order: OrderView) => {
@@ -203,10 +216,10 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
     cancelledRef.current = false;
     setState("processing");
     try {
-      const order = await api<OrderView>("/api/orders", { method: "POST", body: JSON.stringify({ resultId }) });
+      const order = await api<OrderView>("/api/orders", { method: "POST", body: JSON.stringify(orderBody) });
       if (cancelledRef.current) return;
       setOrderId(order.id);
-      track("add_payment_info", { ...reportCommerce(order.currency, order.amountFen), payment_mode: order.provider, payment_type: paymentTypeOf(order) });
+      track("add_payment_info", { ...orderCommerce(order), payment_mode: order.provider, payment_type: paymentTypeOf(order) });
       if (order.provider === "mock") await runMock(order, startedAt);
       else if (order.payload?.kind === "redirect") runCard(order.payload);
       else if (order.payload) runWeChat(order, order.payload);
@@ -215,13 +228,13 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
       const err = e as Error & { code?: string };
       if (err.code === "OPENID_REQUIRED") {
         track("payment_redirect", { payment_mode: mode, target: "wechat_oauth" });
-        const back = `${window.location.pathname}?unlock=1`;
+        const back = gift ? `${window.location.pathname}?gift=${gift.invitationId}` : `${window.location.pathname}?unlock=1`;
         // The route handler 302s to open.weixin.qq.com, so this must be a full navigation.
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = `/api/wechat/oauth?return=${encodeURIComponent(back)}`;
         return;
       }
-      if (err.code === "ALREADY_UNLOCKED" || err.code === "PAIRING_ENTITLEMENT_SYNCING") {
+      if (err.code === "ALREADY_UNLOCKED" || err.code === "PAIRING_ENTITLEMENT_SYNCING" || err.code === "GIFT_ALREADY_COVERED") {
         succeed();
         return;
       }
@@ -249,7 +262,16 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
 
   return (
     <>
-      {state === "success" ? (
+      {state === "success" && gift ? (
+        <div className="pt-5 pb-4 text-center md:pt-8" data-gift-ready>
+          <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-full bg-warm text-ink"><Check size={24} weight="bold" /></span>
+          <h3 className="mb-3 text-3xl leading-heading font-normal">{g.ready}</h3>
+          <p className="text-sm text-mist">{g.readyBody}</p>
+          {mode === "mock" && <p className="mt-2 text-xs text-mist">{g.demoPaid}</p>}
+          {orderId && <div className="mt-6 border-t border-line pt-5 text-left"><OrderReceipt orderId={orderId} /></div>}
+          <button type="button" onClick={() => onOpenChange(false)} className="pill mt-6 min-h-11">{g.backToCenter}<ArrowRight size={18} /></button>
+        </div>
+      ) : state === "success" ? (
         <div className="pt-5 pb-4 text-center md:pt-8">
           <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-full bg-warm text-ink"><Check size={24} weight="bold" /></span>
           <p className="eyebrow text-mist">{t.readyEyebrow}</p>
@@ -263,8 +285,8 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
         <div>
           <div className="flex items-center justify-between gap-4 border-b border-line pt-3 pb-5 md:pt-6">
             <span className="min-w-0 text-base font-medium">
-              <TypeName name={`${type} · ${name}`} />
-              <small className="mt-1 block text-xs font-normal text-mist">{t.productLabel}</small>
+              {gift ? g.product : <TypeName name={`${type} · ${name}`} />}
+              <small className="mt-1 block text-xs font-normal text-mist">{gift ? pairingMessages[locale].title : t.productLabel}</small>
             </span>
             <strong className="shrink-0 text-4xl font-medium tracking-tight md:text-5xl">
               <small className="mr-1 text-xl">{messages.currency}</small>
@@ -273,7 +295,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
           </div>
           {/* What the reader gets comes first; the purchase terms follow as one quiet paragraph. */}
           <ul className="mt-5 list-none space-y-2.5 p-0">
-            {unlockBulletsFor(locale).map((l) => (
+            {(gift ? g.bullets : unlockBulletsFor(locale)).map((l) => (
               <li key={l} className="flex items-start gap-3 text-base">
                 <Check size={17} className="mt-1 shrink-0 text-warm-ink" />
                 {l}
@@ -281,10 +303,10 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
             ))}
           </ul>
           {/* Said once: no subscription, each person unlocks their own report, the guide waits for consent. */}
-          <p className="mt-5 text-xs text-mist">{t.terms} {pairingMessages[locale].feeRule} {pairingMessages[locale].delayedGeneration}</p>
+          <p className="mt-5 text-xs text-mist">{gift ? g.terms : `${t.terms} ${pairingMessages[locale].feeRule} ${pairingMessages[locale].delayedGeneration}`}</p>
           {mode === "crypto" ? (
             <CryptoPayment
-              resultId={resultId}
+              orderBody={orderBody}
               networks={networks}
               onPaid={(order) => {
                 setOrderId(order.id);

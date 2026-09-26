@@ -2,10 +2,11 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ComparisonReading } from "@/components/compare/comparison-reading";
-import { generateCompareContent } from "@/lib/compare-content";
+import { generateCompareContent, generateRelationshipContent } from "@/lib/compare-content";
 import {
   COMPARE_GUEST_CONSENT_VERSION,
   COMPARE_HOST_CONSENT_VERSION,
+  COMPARE_RELATIONSHIPS,
   type CompareOutputSnapshotV1,
   type CompareOutputSnapshotV2,
 } from "@/lib/compare-types";
@@ -15,7 +16,7 @@ import { getPairingExample } from "@/lib/pairing-example";
 
 describe("paid pairing content and shared example", () => {
   it("uses separate current consent versions for each participant", () => {
-    expect(COMPARE_HOST_CONSENT_VERSION).toBe("compare-host-v3");
+    expect(COMPARE_HOST_CONSENT_VERSION).toBe("compare-host-v4");
     expect(COMPARE_GUEST_CONSENT_VERSION).toBe("compare-guest-v2");
   });
 
@@ -138,5 +139,32 @@ describe("paid pairing content and shared example", () => {
       expect(message).toContain("only join after agreeing");
       expect(message).not.toMatch(/[\u3400-\u9fff]/u);
     }
+  });
+  it.each(COMPARE_RELATIONSHIPS)("opens the invitation text for the chosen relationship without purchase words (%s)", (relationship) => {
+    for (const locale of ["zh", "en"] as const) {
+      const tokenUrl = "https://example.test/t/fictional-public-token";
+      const message = `${pairingMessages[locale].invitationTexts[relationship](tokenUrl)} ${pairingMessages[locale].coveredLine}`;
+      expect(message).toContain(tokenUrl);
+      expect(message).not.toMatch(/付费|解锁|订阅|续费|配对|\bpaid\b|\bunlock|\bsubscription\b|[¥$]\s?\d/iu);
+      expect(message).toContain(locale === "zh" ? "你确认后才会加入" : "only join after agreeing");
+      if (locale === "en") expect(message).not.toMatch(/[\u3400-\u9fff]/u);
+    }
+  });
+
+  it.each(["zh", "en"] as const)("previews a relationship example with its topic named but not written out (%s)", (locale) => {
+    const { host, guest, content } = getPairingExample(locale, "partner");
+    expect(content).toEqual(generateRelationshipContent(host, guest, "partner", locale));
+    if (content.contentVersion !== "compare-v4") throw new Error("expected v4");
+    const html = renderToStaticMarkup(createElement(ComparisonReading, { content, locale, compact: true, animate: false }));
+    expect(html).toContain('data-compare-reading="compare-v4"');
+    expect(html).toContain('data-compare-topic="partner"');
+    expect(html).toContain(content.topic.title);
+    expect(html).not.toContain(content.topic.body);
+    expect(html).not.toContain(content.practice);
+    expect(html).toContain(compareMessages[locale].relationshipBetween.partner);
+    const full = renderToStaticMarkup(createElement(ComparisonReading, { content, locale, animate: false }));
+    expect(full).toContain(content.topic.body);
+    expect(full.match(/data-compare-card=/gu)).toHaveLength(4);
+    if (locale === "en") expect(full).not.toMatch(/[\u3400-\u9fff]/u);
   });
 });

@@ -40,6 +40,8 @@ export type CtaId =
   | "pairing_info"
   | "invite_pairing"
   | "my_pairing"
+  | "accept_covered"
+  | "buy_own_report"
   | "home";
 
 /** Where the CTA sits. Every event also carries `page_type`, so `dock` on the result page and on home stay apart. */
@@ -52,9 +54,12 @@ export type CtaLocation =
   | "page_cta"
   | "sample_cta"
   | "sample_notice"
+  | "sample_bar"
+  | "sample_preview"
   | "unlock_panel"
   | "result_panel"
-  | "result_bar"
+  | "result_nav"
+  | "result_chapter"
   | "home_sample"
   | "history_item"
   | "payment_sheet"
@@ -123,7 +128,7 @@ export type AnalyticsEvents = {
   result_view: Quiz & { is_sample: boolean; result_owner: boolean; result_even: boolean; result_uniform: boolean; result_unlocked: boolean };
   result_answers_review: { outcome: "loaded" | "failed" };
   report_view: Quiz & { is_sample: boolean };
-  report_chapter_view: { chapter_number: number; nav_method: "tab" | "sidebar" | "next" };
+  report_chapter_view: { chapter_number: number; nav_method: "tab" | "sidebar" | "next" | "contents" };
   report_tab_switch: { tab: "strengths" | "blindspots" };
   report_practice_check: { day_number: number; checked: boolean };
   report_image_open: Empty;

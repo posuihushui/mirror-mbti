@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { compareRelation, generateCompareContent } from "@/lib/compare-content";
+import { compareRelation, generateCompareContent, generateRelationshipContent } from "@/lib/compare-content";
 import { compareMessages } from "@/lib/i18n/messages/compare";
-import { COMPARE_DIMENSION_ORDER, type CompareCategories, type CompareSnapshot } from "@/lib/compare-types";
+import { COMPARE_DIMENSION_ORDER, COMPARE_RELATIONSHIPS, type CompareCategories, type CompareRelation, type CompareSnapshot } from "@/lib/compare-types";
 
 const snapshot = (categories: CompareCategories, questionnaireId: CompareSnapshot["questionnaireId"] = "legacy32-v1"): CompareSnapshot => ({
   categories, questionnaireId, createdAt: "2026-09-15T12:00:00.000Z",
@@ -138,6 +138,89 @@ describe("consented qualitative comparison", () => {
         copy.genericOpeningLine, copy.genericPractice,
       ];
       for (const value of strings) expect(locale === "zh" ? [...value].length : value.split(/\s+/u).length).toBeLessThanOrEqual(locale === "zh" ? 80 : 55);
+    }
+  });
+});
+
+const allSnapshots = () => {
+  const choices = [["E", "I", "balanced"], ["S", "N", "balanced"], ["T", "F", "balanced"], ["J", "P", "balanced"]] as const;
+  const samples: CompareSnapshot[] = [];
+  for (const EI of choices[0]) for (const SN of choices[1]) for (const TF of choices[2]) for (const JP of choices[3]) samples.push(snapshot({ EI, SN, TF, JP }));
+  return samples;
+};
+
+describe("relationship readings (compare-v4)", () => {
+  it.each(COMPARE_RELATIONSHIPS)("keeps v3's analysis and writes the rest for the relationship (%s)", (relationship) => {
+    for (const locale of ["zh", "en"] as const) {
+      const guest = snapshot({ EI: "E", SN: "N", TF: "balanced", JP: "P" });
+      const v3 = generateCompareContent(left, guest, locale);
+      const v4 = generateRelationshipContent(left, guest, relationship, locale);
+      const own = compareMessages[locale].byRelationship[relationship];
+      expect(v4.contentVersion).toBe("compare-v4");
+      expect(v4.relationship).toBe(relationship);
+      expect(v4.highlight.dimension).toBe(v3.highlight.dimension);
+      expect(v4.highlight.body).toBe(v3.highlight.body);
+      expect(v4.cards.map(({ dimension, relation, body }) => ({ dimension, relation, body }))).toEqual(v3.cards.map(({ dimension, relation, body }) => ({ dimension, relation, body })));
+      for (const entry of v4.cards) expect(entry.scene).toBe(own.scenes[entry.dimension][entry.relation]);
+      expect(v4.highlight.openingLine).toBe(own.openingLines.JP);
+      expect(v4.practice).toBe(own.practices.JP);
+      expect(v4.topic).toEqual({ title: own.topic.title, body: own.topic.bodies.JP });
+    }
+  });
+  it("uses each relationship's generic line, practice and topic when nothing is singled out", () => {
+    for (const relationship of COMPARE_RELATIONSHIPS) {
+      const own = compareMessages.zh.byRelationship[relationship];
+      for (const [host, guest] of [[left, left], [balanced, balanced]]) {
+        const output = generateRelationshipContent(host, guest, relationship);
+        expect(output.highlight.dimension).toBeUndefined();
+        expect(output.highlight.openingLine).toBe(own.genericOpeningLine);
+        expect(output.practice).toBe(own.genericPractice);
+        expect(output.topic.body).toBe(own.topic.generic);
+      }
+    }
+  });
+  it("copies no extra source information into output", () => {
+    const contaminated = { ...left, resultId: "private-result", profile: { type: "ESTJ", values: [88] }, orderNumber: "secret" };
+    const output = generateRelationshipContent(contaminated, right, "partner");
+    expect(Object.keys(output).sort()).toEqual(["cards", "contentVersion", "differentQuestionnaires", "highlight", "locale", "practice", "relationship", "topic"]);
+    expect(JSON.stringify(output)).not.toMatch(/private-result|ESTJ|secret|88|2026-09-15|legacy32/);
+  });
+  it.each(["zh", "en"] as const)("is deterministic, complete and role-symmetric over all 6,561 pairs in every relationship (%s)", (locale) => {
+    const samples = allSnapshots();
+    for (const relationship of COMPARE_RELATIONSHIPS) for (const host of samples) for (const guest of samples) {
+      const output = generateRelationshipContent(host, guest, relationship, locale);
+      expect(output).toEqual(generateRelationshipContent(guest, host, relationship, locale));
+      expect(output.cards.every(({ body, scene }) => body.length > 0 && scene.length > 0)).toBe(true);
+      expect(output.topic.title.length * output.topic.body.length * output.practice.length * output.highlight.openingLine.length).toBeGreaterThan(0);
+      const text = JSON.stringify(output);
+      if (locale === "en") expect(text).not.toMatch(/[㐀-鿿]/u);
+      expect(text).not.toMatch(/\d+%|匹配率|兼容度|配对|compatibility score|perfect partner|soulmate/iu);
+    }
+  });
+  it("varies with every dimension in every relationship: 81 readings each", () => {
+    const base = snapshot({ EI: "E", SN: "S", TF: "T", JP: "P" });
+    for (const relationship of COMPARE_RELATIONSHIPS) {
+      const readings = new Set(allSnapshots().map((guest) => JSON.stringify(generateRelationshipContent(base, guest, relationship).cards)));
+      expect(readings.size).toBe(81);
+    }
+  });
+  it("gives each relationship its own moment for every dimension and relation", () => {
+    for (const locale of ["zh", "en"] as const) {
+      const copy = compareMessages[locale].byRelationship;
+      for (const dimension of COMPARE_DIMENSION_ORDER) for (const relation of ["same-left", "same-right", "opposite", "includes-balanced"] as CompareRelation[]) {
+        expect(new Set(COMPARE_RELATIONSHIPS.map((r) => copy[r].scenes[dimension][relation])).size).toBe(4);
+      }
+      expect(new Set(COMPARE_RELATIONSHIPS.map((r) => copy[r].topic.title)).size).toBe(4);
+    }
+  });
+  it("keeps each relationship's copy within its language budget", () => {
+    for (const locale of ["zh", "en"] as const) for (const relationship of COMPARE_RELATIONSHIPS) {
+      const own = compareMessages[locale].byRelationship[relationship];
+      const lines = [...Object.values(own.scenes).flatMap((scenes) => Object.values(scenes)), ...Object.values(own.openingLines), ...Object.values(own.practices), own.genericOpeningLine, own.genericPractice, own.topic.title];
+      const topics = [...Object.values(own.topic.bodies), own.topic.generic];
+      const size = (value: string) => locale === "zh" ? [...value].length : value.split(/\s+/u).length;
+      for (const value of lines) expect(size(value)).toBeLessThanOrEqual(locale === "zh" ? 40 : 30);
+      for (const value of topics) expect(size(value)).toBeLessThanOrEqual(locale === "zh" ? 80 : 55);
     }
   });
 });

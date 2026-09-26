@@ -49,6 +49,12 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   const host = await share(page.request, en);
   await page.goto(`${prefix}/my/pairing`);
   await page.getByRole("button", { name: ui.invite, exact: true }).first().click();
+  // Who the invitation is for comes first; nothing is chosen for the host.
+  const picker = page.getByRole("radiogroup", { name: m.relationshipPick });
+  await expect(picker.getByRole("radio")).toHaveCount(4);
+  await expect(picker.getByRole("radio", { checked: true })).toHaveCount(0);
+  await expect(page.locator('[data-compare-consent="host"]')).toHaveCount(0);
+  await picker.getByText(m.relationshipLabels.partner, { exact: true }).click();
   const consent = page.locator('[data-compare-consent="host"]');
   await expect(consent).toBeVisible();
   await expect(consent.getByRole("button", { name: p.hostAgree, exact: true })).toBeDisabled();
@@ -76,10 +82,14 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await guestPage.goto(new URL(invite.url).pathname);
   await expect(guestPage.locator("[data-share-card]")).toContainText(ui.hostScope);
   await expect(guestPage.getByText(hostNote, { exact: true })).toBeVisible();
+  await expect(guestPage.getByText(m.relationshipBetween.partner, { exact: true })).toBeVisible();
+  await expect(guestPage.locator('[data-pairing-example="partner"]')).toBeVisible();
   expect(await guestPage.content()).not.toContain(host.result.id);
   // The note belongs to the page, never to what a third-party preview server fetches and caches.
   for (const selector of ['meta[name="description"]', 'meta[property="og:title"]', 'meta[property="og:description"]', 'meta[name="twitter:title"]', 'meta[name="twitter:description"]']) {
     expect(await guestPage.locator(selector).getAttribute("content")).not.toContain(hostNote);
+    // Nor does the relationship the host chose.
+    expect(await guestPage.locator(selector).getAttribute("content")).not.toContain(m.relationshipLabels.partner);
   }
   const card = await guestPage.request.get(`${new URL(invite.url).pathname}/opengraph-image`);
   expect(card.status()).toBe(200);
@@ -102,8 +112,9 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   await guestPage.waitForURL(/\/compare\/[a-f0-9-]+$/);
   const pairPath = new URL(guestPage.url()).pathname;
   const pairId = pairPath.split("/").at(-1)!;
-  await expect(guestPage.getByRole("heading", { name: m.title, exact: true })).toBeVisible();
-  await expect(guestPage.locator('[data-compare-motion="section"]')).toHaveCount(6);
+  await expect(guestPage.getByRole("heading", { name: m.titleFor(m.relationshipLabels.partner), exact: true })).toBeVisible();
+  await expect(guestPage.locator('[data-compare-motion="section"]')).toHaveCount(7);
+  await expect(guestPage.locator('[data-compare-topic="partner"]')).toContainText(m.byRelationship.partner.topic.title);
   await expect(guestPage.getByText(m.differentQuestionnaires, { exact: true })).toBeVisible();
   // The consent scope now follows the reading, so its reveal waits until it is scrolled to.
   await guestPage.locator('[data-compare-motion="host"]').scrollIntoViewIfNeeded();
@@ -138,7 +149,7 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   }
   const noJs = await browser.newContext({ baseURL: origin, javaScriptEnabled: false, storageState: await guest.storageState() });
   const plain = await noJs.newPage(); await plain.goto(pairPath);
-  await expect(plain.locator('[data-compare-motion="section"]')).toHaveCount(6);
+  await expect(plain.locator('[data-compare-motion="section"]')).toHaveCount(7);
   await expect(plain.locator("[data-compare-card]")).toHaveCount(4);
   await expect(plain.getByRole("heading", { name: m.cardsTitle, exact: true })).toBeVisible();
   for (const theme of Object.values(m.themes)) await expect(plain.getByRole("heading", { name: theme, exact: true })).toBeVisible();
@@ -150,13 +161,13 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
     expect(await element.evaluate(node => node.getAnimations().length)).toBe(0);
   }
   await guestPage.emulateMedia({ media: "print" });
-  await expect(guestPage.locator('[data-compare-motion="section"]')).toHaveCount(6);
+  await expect(guestPage.locator('[data-compare-motion="section"]')).toHaveCount(7);
   await guestPage.emulateMedia({ media: "screen" });
 
   await page.goto(`${prefix}/my/pairing`);
   await expect(page.locator(`[data-comparison-manager] a[href$="/compare/${pairId}"]`)).toBeVisible();
   await page.goto(pairPath);
-  await expect(page.locator('[data-compare-motion="section"]')).toHaveCount(6);
+  await expect(page.locator('[data-compare-motion="section"]')).toHaveCount(7);
   await guestPage.getByRole("button", { name: m.revoke, exact: true }).click();
   const modal = guestPage.getByRole("dialog");
   await expect(modal).toContainText(m.revokeConfirm);

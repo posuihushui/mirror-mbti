@@ -14,22 +14,25 @@ import { OG_FONT_FAMILY, ogFonts } from "@/lib/og/fonts";
  */
 function takeaway(content: CompareContent, locale: Locale) {
   const m = compareMessages[locale];
-  if (content.contentVersion === "compare-v3") {
+  if (content.contentVersion === "compare-v3" || content.contentVersion === "compare-v4") {
     return {
-      title: content.highlight.dimension ? m.themes[content.highlight.dimension] : m.title,
+      // The relationship is the pair's own choice, not either person's category, so it may travel.
+      eyebrow: content.contentVersion === "compare-v4" ? `${m.relationshipBetween[content.relationship]} · ${m.highlightLabel}` : m.highlightLabel,
+      title: content.highlight.dimension ? m.themes[content.highlight.dimension]
+        : content.contentVersion === "compare-v4" ? m.titleFor(m.relationshipLabels[content.relationship]) : m.title,
       body: content.highlight.body,
       quote: content.highlight.openingLine,
       practice: content.practice,
     };
   }
   const closing = content.sections[2];
-  return { title: closing.title, body: closing.body, quote: closing.openingLine, practice: closing.practice };
+  return { eyebrow: m.highlightLabel, title: closing.title, body: closing.body, quote: closing.openingLine, practice: closing.practice };
 }
 
 export async function renderCompareImage(content: CompareContent, locale: Locale, publicUrl: string) {
   const m = compareMessages[locale];
   const en = locale === "en";
-  const { title, body, quote, practice } = takeaway(content, locale);
+  const { eyebrow, title, body, quote, practice } = takeaway(content, locale);
   const [fonts, qr] = await Promise.all([
     ogFonts(),
     QRCode.toDataURL(publicUrl, { width: 160, margin: 4, errorCorrectionLevel: "M", color: { dark: "#171b1c", light: "#edf2f3" } }),
@@ -40,7 +43,7 @@ export async function renderCompareImage(content: CompareContent, locale: Locale
         <div style={{ display: "flex", position: "absolute", right: -155, bottom: -185, opacity: .1 }}>{BrandMark({ tone: "paper", monochrome: true, size: 560 })}</div>
         <div style={{ display: "flex", height: 44 }}>{BrandLogo({ locale, tone: "paper", width: brandLogoWidth(locale, 194) })}</div>
         <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", width: 760 }}>
-          <div style={{ display: "flex", fontSize: 19, letterSpacing: 2, color: "#c49473" }}>{m.highlightLabel}</div>
+          <div style={{ display: "flex", fontSize: 19, letterSpacing: 2, color: "#c49473" }}>{eyebrow}</div>
           <div style={{ display: "flex", marginTop: 20, fontSize: en ? 52 : 62, fontWeight: 500, lineHeight: 1.2 }}>{title}</div>
           <div style={{ display: "flex", marginTop: 24, fontSize: en ? 25 : 29, lineHeight: 1.65, color: "#cbd6d8" }}>{body}</div>
         </div>

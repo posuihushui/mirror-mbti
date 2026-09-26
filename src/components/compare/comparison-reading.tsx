@@ -1,4 +1,4 @@
-import type { CompareCategories, CompareContent, CompareDimensionCard, CompareOutputSnapshotV3 } from "@/lib/compare-types";
+import type { CompareCardReading, CompareCategories, CompareContent, CompareDimensionCard } from "@/lib/compare-types";
 import type { Locale } from "@/lib/i18n/locale";
 import { compareMessages } from "@/lib/i18n/messages/compare";
 import { CompareReveal } from "./compare-reveal";
@@ -72,15 +72,20 @@ function DimensionCard({ card, locale, sides }: { card: CompareDimensionCard; lo
   </li>;
 }
 
-/** One emphasis, four dimension cards, one shared practice. */
-function Reading({ content, locale, compact, sides }: ReadingProps & { content: CompareOutputSnapshotV3 }) {
+/**
+ * One emphasis, four dimension cards, one shared practice. A v4 reading is written for a relationship:
+ * it names it over the emphasis and adds the relationship's topic before the practice. A preview
+ * names the topic but keeps its body for the pair.
+ */
+function Reading({ content, locale, compact, sides }: ReadingProps & { content: CompareCardReading }) {
   const m = compareMessages[locale];
   const emphasised = content.cards.find(({ dimension }) => dimension === content.highlight.dimension) ?? content.cards[0];
   const cards = compact ? [emphasised] : content.cards;
+  const v4 = content.contentVersion === "compare-v4" ? content : null;
   return <>
     <section data-compare-motion="section" className="rounded-[4px] bg-night p-6 text-paper md:p-8">
       <div className="flex items-start justify-between gap-4">
-        <p className="eyebrow text-warm">{m.highlightLabel}</p>
+        <p className="eyebrow text-warm">{v4 ? `${m.relationshipBetween[v4.relationship]} · ${m.highlightLabel}` : m.highlightLabel}</p>
         {/* Two mirrors, one for each of you: the brand's own picture of a pair. */}
         {sides && <div aria-hidden className="-mt-1 flex shrink-0 gap-3">
           {([[sides.you, sides.youLabel], [sides.other, sides.otherLabel]] as const).map(([c, label]) => (
@@ -102,6 +107,13 @@ function Reading({ content, locale, compact, sides }: ReadingProps & { content: 
       <h2 className="eyebrow text-mist">{compact ? m.moreDimensions : m.cardsTitle}</h2>
       <ol className={`mt-4 grid gap-4 ${compact ? "" : "md:grid-cols-2"}`}>{cards.map((card) => <DimensionCard key={card.dimension} card={card} locale={locale} sides={sides} />)}</ol>
     </section>
+    {v4 && (compact
+      ? <p data-compare-topic={v4.relationship} className="border-l-2 border-warm pl-4 text-sm"><span className="eyebrow mr-2 inline-block text-warm-ink">{m.topicLabels[v4.relationship]}</span>{v4.topic.title}</p>
+      : <section data-compare-motion="section" data-compare-topic={v4.relationship} className="rounded-[4px] border border-line bg-card p-6 md:p-8">
+        <p className="eyebrow text-warm-ink">{m.topicLabels[v4.relationship]}</p>
+        <h2 className="mt-3 text-2xl leading-heading">{v4.topic.title}</h2>
+        <p className="mt-4 max-w-3xl text-base text-slate">{v4.topic.body}</p>
+      </section>)}
     {!compact && <section data-compare-motion="section" className="warm-panel p-6 md:p-8">
       <p className="eyebrow">{m.practiceLabel}</p>
       <p className="mt-3 text-lg">{content.practice}</p>
@@ -110,7 +122,7 @@ function Reading({ content, locale, compact, sides }: ReadingProps & { content: 
 }
 
 /** Render frozen content as supplied. v1 and v2 are never regenerated to look like v3. */
-function StoredSections({ content, locale, compact }: ReadingProps & { content: Exclude<CompareContent, CompareOutputSnapshotV3> }) {
+function StoredSections({ content, locale, compact }: ReadingProps & { content: Exclude<CompareContent, CompareCardReading> }) {
   const m = compareMessages[locale];
   return <>{content.sections.map((section, index) => {
     if (compact && index === 0) return null;
@@ -133,7 +145,8 @@ function StoredSections({ content, locale, compact }: ReadingProps & { content: 
 
 export function ComparisonReading({ content, locale, compact = false, animate = true, sides }: ReadingProps) {
   const m = compareMessages[locale];
-  const v3 = content.contentVersion === "compare-v3";
+  // v3 and v4 share the card reading; v4 only adds the relationship and its topic.
+  const v3 = content.contentVersion === "compare-v3" || content.contentVersion === "compare-v4";
   const blocks = v3
     ? <Reading content={content} locale={locale} compact={compact} sides={sides} />
     : <StoredSections content={content} locale={locale} compact={compact} />;

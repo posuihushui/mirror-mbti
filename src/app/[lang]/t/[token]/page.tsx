@@ -67,14 +67,17 @@ export default async function InvitationPage({ params }: Props) {
     <main data-share-static className="mx-auto max-w-[1060px] px-6 pt-8 pb-[120px] md:py-14">
       <div className="grid gap-9 md:grid-cols-2 md:gap-x-14 md:gap-y-10 md:[grid-template-rows:auto_1fr]">
         <section className="md:col-start-1 md:row-start-1">
-          <p className="eyebrow text-mist">{ui.introEyebrow}</p>
+          {/* The relationship the host chose names the invitation; the metadata and OG card never carry it. */}
+          <p className="eyebrow text-mist">{invitation.relationship ? m.relationshipBetween[invitation.relationship] : ui.introEyebrow}</p>
           {invitation.hostNote && <figure className="warm-panel mt-5 p-5">
             <blockquote className="text-lg">{invitation.hostNote}</blockquote>
             <figcaption className="mt-2 text-xs text-mist">{m.hostNoteFrom}</figcaption>
           </figure>}
           <h1 className="mt-5 text-3xl md:text-4xl">{m.invitationHeading}</h1>
           <p className="mt-5 text-sm">{p.summary}</p>
-          <ol className="mt-7 border-y border-line">{ui.outputs.map((text, index) => <li key={text} className={`flex gap-4 py-4 ${index ? "border-t border-line" : ""}`}>
+          {/* Before the test: no price and no purchase words, only that the report is taken care of. */}
+          {invitation.covered && <p data-gift="banner" className="mt-5 border-l-2 border-warm pl-4 text-base">{ui.gift.banner}</p>}
+          <ol className="mt-7 border-y border-line">{[...ui.outputs, ...(invitation.relationship ? [ui.relationshipOutput] : [])].map((text, index) => <li key={text} className={`flex gap-4 py-4 ${index ? "border-t border-line" : ""}`}>
             <span aria-hidden="true" className="eyebrow pt-1.5 text-warm-ink">{`0${index + 1}`}</span>
             <span className="text-base">{text}</span>
           </li>)}</ol>
@@ -83,7 +86,7 @@ export default async function InvitationPage({ params }: Props) {
         <section className="md:col-start-1 md:row-start-2">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-6"><span className="hidden md:contents">{primary(true)}</span>{secondary(false)}</div>
           <p className="mt-4 text-xs text-mist">{ui.noConsentYet}</p>
-          {hasResults && <p className="mt-2 text-xs text-mist">{p.feeRule}</p>}
+          {hasResults && !invitation.covered && <p className="mt-2 text-xs text-mist">{p.feeRule}</p>}
           <div className="mt-3 flex flex-wrap gap-x-6 text-xs">
             <TextLink href={href(locale === "zh" ? "en" : "zh", `/quiz?compare=${token}`)} prefetch={false} hrefLang={locale === "zh" ? "en" : "zh-CN"}>{locale === "zh" ? "English" : "中文"}</TextLink>
             <TextLink href={href(locale, "/pairing")}>{ui.learn}</TextLink>
@@ -92,7 +95,7 @@ export default async function InvitationPage({ params }: Props) {
         </section>
         {/* The preview and the host's agreed scope: the proof, after the decision on a phone. */}
         <div className="md:col-start-2 md:row-span-2 md:row-start-1">
-          <PairingExample locale={locale} />
+          <PairingExample locale={locale} relationship={invitation.relationship} />
           <div data-share-card className="mt-5"><PreferenceSummary snapshot={invitation.snapshot} locale={locale} title={ui.hostScope} /></div>
         </div>
       </div>

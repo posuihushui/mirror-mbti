@@ -1,4 +1,4 @@
-import type { OrderRow, PaymentChannel } from "@/db/schema";
+import type { OrderKind, OrderRow, PaymentChannel } from "@/db/schema";
 
 export type CryptoNetwork = "ethereum" | "solana";
 
@@ -45,7 +45,11 @@ export interface PaymentProvider {
 /** Client-facing order shape returned by the orders API. */
 export type OrderView = {
   id: string;
+  /** `report` unlocks `resultId`; `pair-gift` covers someone joining the host's invitation. */
+  kind: OrderKind;
   resultId: string;
+  /** `pair-gift` only: the host's invitation it was bought for. Owner-only, like the order. */
+  invitationId: string | null;
   status: OrderRow["status"];
   /** Minor units of `currency`: fen for CNY, cents for USD. */
   amountFen: number;

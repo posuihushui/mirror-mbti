@@ -49,14 +49,16 @@ export async function registerComparisonContinuation(visitorId: string, raw: z.i
   });
 }
 export async function listComparisonContinuations(visitorId: string, resultId?: string) {
-  const rows = await db().select({ id: C.id, resultId: C.resultId, token: I.token, expiresAt: C.expiresAt, questionnaireId: R.questionnaireId })
+  const rows = await db().select({ id: C.id, resultId: C.resultId, token: I.token, expiresAt: C.expiresAt, questionnaireId: R.questionnaireId,
+    // The host covered a participant's report on this invitation: joining would open this result.
+    covered: sql<boolean>`exists (select 1 from pair_gifts g where g.invitation_id = ${I.id} and g.claimed_at is null)` })
     .from(C).innerJoin(I, eq(I.id, C.invitationId)).leftJoin(S, eq(S.id, I.shareId)).innerJoin(R, and(eq(R.id, C.resultId), eq(R.visitorId, visitorId)))
     .where(and(eq(C.visitorId, visitorId), resultId ? eq(C.resultId, resultId) : undefined, isNull(C.completedAt), gt(C.expiresAt, new Date()),
       eq(I.accessPolicy, "paid-pair-v2"), isNull(I.revokedAt), gt(I.expiresAt, new Date()), invitationParentOpen,
       sql`not exists (select 1 from comparisons p where p.invitation_id = ${I.id} and p.guest_visitor_id = ${visitorId})`,
       sql`exists (select 1 from results h where h.id = ${I.resultId} and h.visitor_id = ${I.visitorId} and h.unlocked_at is not null)`))
     .orderBy(desc(C.createdAt), desc(C.id)).limit(100);
-  return rows.map(row => ({ id: row.id, invitationToken: row.token, resultId: row.resultId, locale: questionnaireLocale(row.questionnaireId),
+  return rows.map(row => ({ id: row.id, invitationToken: row.token, resultId: row.resultId, locale: questionnaireLocale(row.questionnaireId), covered: row.covered,
     continueUrl: continueUrl(questionnaireLocale(row.questionnaireId), row.token, row.resultId), expiresAt: row.expiresAt.toISOString() }));
 }
 export async function deleteComparisonContinuation(id: string, visitorId: string) {

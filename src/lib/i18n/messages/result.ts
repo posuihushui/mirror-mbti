@@ -30,16 +30,35 @@ const zh = {
   unlock: {
     eyebrow: "你不止于此",
     heading: "读懂自己，\n也把理解带进关系。",
-    sub: "完整报告按你这次的四个维度写成。下面是四章的开头：",
-    previewLabel: "完整报告目录",
+    sub: "上面四章都按你这次的四个维度写成，解锁后全部展开。",
     sampleLink: "先阅读完整示例",
     priceNote: "单次解锁 · 无订阅",
     after: "购买后可在“我的报告”回访；保存订单号，也能在换设备后找回。报告为基于作答的情境建议，不是诊断或准确性保证。",
     help: "订单与找回帮助",
   },
-  unlockBar: {
-    title: "继续读完整报告",
-    sub: "四章完整报告、七天小练习和双人指南，一次解锁。",
+  /** A real result's sticky section nav: the free sections, the report's chapters, and the report itself as its own action. */
+  nav: {
+    label: "结果导航",
+    type: "你的类型",
+    dimensions: "四个维度",
+    /** The report's chapters, short enough for one row beside the report action. */
+    chapters: ["性格总览", "优势与盲点", "关系与沟通", "工作与成长"],
+    locked: "（解锁后阅读）",
+  },
+  /** The report's four chapters on a real result: each opening, and the rest masked until the report is unlocked. */
+  chapters: {
+    eyebrow: "完整报告",
+    heading: "你的完整报告，共四章。",
+    lockedSub: "每章的开头先给你读，其余内容解锁后展开。",
+    openSub: "每一章都按这次的四个维度写成。",
+    say: "可以这样开口",
+    extra: {
+      blindspots: (n: number) => `另有 ${n} 个容易忽略的地方`,
+      week: (n: number) => `附 ${n} 天小练习`,
+    },
+    masked: "这部分内容解锁后可读",
+    unlock: "解锁阅读",
+    read: "阅读这一章",
   },
   sampleCta: {
     meta: [["32/64", "题可选"], ["5–10", "分钟"], ["16", "种人格倾向"]] as [string, string][],
@@ -49,9 +68,27 @@ const zh = {
     start: "开始认识自己",
     footnote: "免费测试与性格概览",
   },
+  /** Desktop, under the sample's first screen, where a real result offers its report. */
+  sampleBar: {
+    title: "这组分数，也写成了一份完整报告",
+    sub: "四章：优势与盲点、四句开口的话、七天小练习。先读示例，或开始你自己的测试。",
+    read: "阅读示例报告",
+  },
+  /** The sample result's look inside the sample report: one passage quoted from each chapter. */
+  samplePreview: {
+    eyebrow: "示例报告",
+    heading: "从四个字母，\n到用得上的话。",
+    sub: "完整报告按上面这组分数写成，共四章。每章摘一段：",
+    say: "可以这样开口",
+    week: "七天小练习",
+  },
+  sampleDock: { label: "示例报告", read: "阅读全文" },
   sampleNotice: {
     eyebrow: "示例报告",
-    body: "这是一份示例，用一次 INFJ 的作答生成，展示完整报告的样子。完成测试后，你会读到属于自己的那一份。",
+    body: "这是一份示例，按一次 INFJ 作答的四个分数写成。报告里的每一段都从分数出发，换一组分数，读到的内容就不同。",
+    contentsLabel: "这份报告里有",
+    /** Each breaks at its comma on a phone tile. */
+    contents: ["四个维度的长处，和可以试试的一步", "四组优势，和容易忽略的地方", "四句开口的话，拿来就能用", "工作节奏，和七天小练习"],
     start: "开始认识自己",
   },
   actions: {
@@ -92,16 +129,32 @@ const en: typeof zh = {
   unlock: {
     eyebrow: "THERE IS MORE TO YOU",
     heading: "Understand yourself,\nand bring it into your relationships.",
-    sub: "The full report is written from your four dimensions this time. Here is how each chapter opens:",
-    previewLabel: "Full report contents",
+    sub: "All four chapters above are written from your four dimensions this time. Unlocking opens every one of them in full.",
     sampleLink: "Read the full sample first",
     priceNote: "One-time unlock · No subscription",
     after: "After purchase, revisit it in “My reports”; keep your order number to recover it on another device. The report offers situational suggestions based on your answers — not a diagnosis or a guarantee of accuracy.",
     help: "Order & recovery help",
   },
-  unlockBar: {
-    title: "Keep reading: the full report",
-    sub: "The full report, seven days of small practices and the guide for two, unlocked once.",
+  nav: {
+    label: "Result sections",
+    type: "Your type",
+    dimensions: "Dimensions",
+    chapters: ["Overview", "Strengths", "Relationships", "Work & growth"],
+    locked: " (locked)",
+  },
+  chapters: {
+    eyebrow: "FULL REPORT",
+    heading: "Your full report, in four chapters.",
+    lockedSub: "Read how each chapter opens; the rest opens when you unlock the report.",
+    openSub: "Each chapter is written from these four dimensions.",
+    say: "Try saying",
+    extra: {
+      blindspots: (n: number) => `Plus ${n} things that are easy to miss`,
+      week: (n: number) => `Plus ${n} days of practice`,
+    },
+    masked: "Unlock the report to read this",
+    unlock: "Unlock to read",
+    read: "Read this chapter",
   },
   sampleCta: {
     meta: [["32/64", "items"], ["5–10", "minutes"], ["16", "types"]],
@@ -111,9 +164,24 @@ const en: typeof zh = {
     start: "Start exploring",
     footnote: "Free test and overview",
   },
+  sampleBar: {
+    title: "These scores also make a full report",
+    sub: "Four chapters: strengths and blind spots, four things to try saying, seven days of practice. Read the sample, or start your own test.",
+    read: "Read the sample report",
+  },
+  samplePreview: {
+    eyebrow: "SAMPLE REPORT",
+    heading: "From four letters\nto words you can use.",
+    sub: "The full report is written from the scores above, in four chapters. One passage from each:",
+    say: "Try saying",
+    week: "Seven days of practice",
+  },
+  sampleDock: { label: "Sample report", read: "Read it" },
   sampleNotice: {
     eyebrow: "SAMPLE REPORT",
-    body: "This is a sample, generated from one set of INFJ answers, to show what the full report looks like. After the test, you’ll read one of your own.",
+    body: "This is a sample, written from the four scores of one set of INFJ answers. Every passage starts from the scores, so a different set of scores reads differently.",
+    contentsLabel: "In this report",
+    contents: ["A strength and a step, per dimension", "Strengths and what’s easy to miss", "Four things to say out loud", "Work rhythm and seven days of practice"],
     start: "Start exploring",
   },
   actions: {

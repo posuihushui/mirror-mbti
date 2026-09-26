@@ -4,7 +4,7 @@ import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
 
-/** The result page's frame: version line, the dark type block and the chart card. */
+/** The result page's frame: version line, the dark type block, the chart card and the section nav. */
 export default async function ResultLoading() {
   const locale = await getLocale();
   return (
@@ -30,6 +30,9 @@ export default async function ResultLoading() {
               {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}
             </div>
           </div>
+        </div>
+        <div className="mt-4 flex h-12 items-center gap-6 border-b border-line px-6 md:mt-6 md:h-14 md:px-0">
+          {[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-3 w-14 shrink-0" />)}
         </div>
       </main>
     </>

@@ -5,7 +5,7 @@ import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { shareMessages } from "@/lib/i18n/messages/share";
 import { emitPairingResume } from "@/lib/pairing-tracking";
 import { ArrowRight } from "@phosphor-icons/react";
-export type ContinuationItem = { id: string; invitationToken: string; resultId: string; locale: Locale; continueUrl: string; expiresAt: string };
+export type ContinuationItem = { id: string; invitationToken: string; resultId: string; locale: Locale; continueUrl: string; expiresAt: string; covered?: boolean };
 export function ContinuationList({ items, locale, surface = "result" }: { items: ContinuationItem[]; locale: Locale; surface?: "result" | "report" | "my_pairing" | "payment_sheet" | "pay_status" }) {
   const [cancelled, setCancelled] = useState<string[]>([]); const [pending, setPending] = useState<string | null>(null); const [error, setError] = useState("");
   const rows = items.filter(i => !cancelled.includes(i.id)); const m = pairingUiMessages[locale]; const s = shareMessages[locale];

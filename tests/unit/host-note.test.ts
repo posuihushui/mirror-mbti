@@ -9,12 +9,12 @@ const RTL_OVERRIDE = String.fromCharCode(0x202e);
 
 describe("host note on an invitation", () => {
   it("rides only on the consent version whose copy says it is published", () => {
-    expect(COMPARE_HOST_CONSENT_VERSION).toBe("compare-host-v3");
+    expect(COMPARE_HOST_CONSENT_VERSION).toBe("compare-host-v4");
     const base = { resultId: "abcdefghijkl", requestId: randomUUID() };
-    expect(invitationInputSchema.safeParse({ ...base, consentVersion: "compare-host-v3", hostNote: "一起看看" }).success).toBe(true);
-    expect(invitationInputSchema.safeParse({ ...base, consentVersion: "compare-host-v3" }).success).toBe(true);
-    // Earlier consent copy never mentioned a note, so it cannot carry one.
-    for (const stale of ["compare-host-v1", "compare-host-v2"]) {
+    expect(invitationInputSchema.safeParse({ ...base, relationship: "partner", consentVersion: "compare-host-v4", hostNote: "一起看看" }).success).toBe(true);
+    expect(invitationInputSchema.safeParse({ ...base, relationship: "partner", consentVersion: "compare-host-v4" }).success).toBe(true);
+    // Only the current copy says the note (and the relationship) is published.
+    for (const stale of ["compare-host-v1", "compare-host-v2", "compare-host-v3"]) {
       expect(invitationInputSchema.safeParse({ ...base, consentVersion: stale, hostNote: "一起看看" }).success).toBe(false);
       expect(invitationInputSchema.safeParse({ ...base, consentVersion: stale, hostNote: "   " }).success).toBe(true);
     }
@@ -37,7 +37,14 @@ describe("host note on an invitation", () => {
     expect(parse("<b>hi</b>").data).toBe("<b>hi</b>");
   });
   it("rejects a note on a request that does not otherwise validate", () => {
-    expect(invitationInputSchema.safeParse({ requestId: randomUUID(), consentVersion: "compare-host-v3", hostNote: "hi" }).success).toBe(false);
-    expect(invitationInputSchema.safeParse({ resultId: "abcdefghijkl", requestId: randomUUID(), consentVersion: "compare-host-v3", hostNote: "x".repeat(200) }).success).toBe(false);
+    expect(invitationInputSchema.safeParse({ requestId: randomUUID(), relationship: "partner", consentVersion: "compare-host-v4", hostNote: "hi" }).success).toBe(false);
+    expect(invitationInputSchema.safeParse({ resultId: "abcdefghijkl", requestId: randomUUID(), relationship: "partner", consentVersion: "compare-host-v4", hostNote: "x".repeat(200) }).success).toBe(false);
+  });
+  it("requires the relationship on the current consent, and only there", () => {
+    const base = { resultId: "abcdefghijkl", requestId: randomUUID() };
+    expect(invitationInputSchema.safeParse({ ...base, consentVersion: "compare-host-v4" }).success).toBe(false);
+    expect(invitationInputSchema.safeParse({ ...base, consentVersion: "compare-host-v4", relationship: "rival" }).success).toBe(false);
+    expect(invitationInputSchema.safeParse({ ...base, consentVersion: "compare-host-v3", relationship: "partner" }).success).toBe(false);
+    for (const relationship of ["partner", "friend", "family", "colleague"]) expect(invitationInputSchema.safeParse({ ...base, consentVersion: "compare-host-v4", relationship }).success).toBe(true);
   });
 });

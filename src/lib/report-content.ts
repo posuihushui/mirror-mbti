@@ -157,25 +157,88 @@ export function buildReportData(profile: Profile, options: { sample: boolean; de
 }
 
 /** Cut to a teaser on the server, so the result page carries each chapter's opening and nothing more. */
-function teaser(text: string, locale: Locale) {
+function teaser(text: string, locale: Locale, size: "body" | "say" = "body") {
   if (locale === "en") {
+    const limit = size === "say" ? 7 : 14;
     const words = text.split(/\s+/);
-    return words.length > 14 ? `${words.slice(0, 14).join(" ")}…` : text;
+    return words.length > limit ? `${words.slice(0, limit).join(" ")}…` : text;
   }
+  const limit = size === "say" ? 14 : 30;
   const chars = Array.from(text);
-  return chars.length > 30 ? `${chars.slice(0, 30).join("")}…` : text;
+  return chars.length > limit ? `${chars.slice(0, limit).join("")}…` : text;
 }
 
-/** How each of the four chapters opens, for the unlock panel's table of contents. */
-export function reportPreview(profile: Profile, locale: Locale) {
-  const data = buildReportData(profile, { sample: false, demo: false, locale });
-  const sep = locale === "en" ? ": " : "：";
-  const first = data.needs[0];
-  const openings = [
-    `${first.label}${sep}${first.balanced ? first.both.map((b) => b.strength).join(locale === "en" ? " " : "") : first.strength}`,
-    `${data.strengths[0].title}${sep}${data.strengths[0].body}`,
-    `${data.relationships[0].title}${sep}${data.relationships[0].body}`,
-    `${data.work[0].title}${sep}${data.work[0].body}`,
+/** One passage quoted from a chapter: a title over either body text or a line to say out loud. `both` marks a near-even dimension read from both ends. */
+export type Highlight = { chapter: number; title: string; body?: string; say?: string; both?: boolean };
+
+/**
+ * One concrete passage from each chapter, quoted verbatim, for the sample result's preview of the
+ * sample report. It quotes the first dimension with a clear lean, whose scene the report writes out;
+ * a near-even one only has the both-ends reading, which is used when every dimension is near even.
+ */
+export function reportHighlights(profile: Profile, locale: Locale): Highlight[] {
+  const data = buildReportData(profile, { sample: true, demo: false, locale });
+  const clear = profile.balanced.findIndex((balanced) => !balanced);
+  const i = Math.max(clear, 0);
+  const need = data.needs[i];
+  // Both ends, one per line, as chapter 01 lists them.
+  const both = need.both.map((b) => `${b.label}${locale === "en" ? ": " : "："}${b.strength}`).join("\n");
+  const watch = clear < 0 ? data.blindspots[i].body : (locale === "en" ? enScenes : scenes)[profile.type[i] as Letter].watch;
+  const day = data.actionPlan[i + 1];
+  return [
+    { chapter: 0, title: `${need.label} ${need.letter}`, body: need.balanced ? both : need.growth, both: need.balanced },
+    { chapter: 1, title: data.blindspots[i].title, body: watch },
+    { chapter: 2, title: data.relationships[i].title, say: data.relationships[i].say },
+    { chapter: 3, title: day.title, body: day.body },
   ];
-  return chapterLabelsFor(locale).map((label, i) => ({ label, opening: teaser(openings[i], locale) }));
+}
+
+/**
+ * One report chapter as the result page shows it: the first passage's title and a teaser of its
+ * opening, then only the titles of the passages after it. `extra` names what else the chapter holds.
+ */
+export type ChapterOutline = {
+  label: string;
+  first: { title: string; opening: string; say: boolean };
+  rest: string[];
+  extra?: { kind: "blindspots" | "week"; count: number };
+};
+
+/**
+ * The report's four chapters for the result page. A locked result masks everything after each
+ * opening, so this is all the page receives: titles are the report's fixed headings, and each
+ * opening is cut here, on the server, so the full reading never reaches the HTML.
+ * Openings skip the report's "this lean is clear / slight" qualifier and start at the scene itself.
+ */
+export function reportOutline(profile: Profile, locale: Locale): ChapterOutline[] {
+  const data = buildReportData(profile, { sample: false, demo: false, locale });
+  const scene = (locale === "en" ? enScenes : scenes)[profile.type[0] as Letter];
+  const balanced = profile.balanced[0];
+  const need = data.needs[0];
+  const [one, two, three, four] = chapterLabelsFor(locale);
+  const titles = (items: { title: string }[]) => items.slice(1).map((item) => item.title);
+  return [
+    {
+      label: one,
+      first: { title: `${need.label} ${need.letter}`, opening: teaser(balanced ? need.both.map((b) => b.strength).join(locale === "en" ? " " : "") : need.strength, locale), say: false },
+      rest: data.needs.slice(1).map((n) => `${n.label} ${n.letter}`),
+    },
+    {
+      label: two,
+      first: { title: data.strengths[0].title, opening: teaser(balanced ? data.strengths[0].body : scene.scene, locale), say: false },
+      rest: titles(data.strengths),
+      extra: { kind: "blindspots", count: data.blindspots.length },
+    },
+    {
+      label: three,
+      first: { title: data.relationships[0].title, opening: teaser(data.relationships[0].say ?? "", locale, "say"), say: true },
+      rest: titles(data.relationships),
+    },
+    {
+      label: four,
+      first: { title: data.work[0].title, opening: teaser(balanced ? data.work[0].body : scene.work, locale), say: false },
+      rest: titles(data.work),
+      extra: { kind: "week", count: data.actionPlan.length },
+    },
+  ];
 }
