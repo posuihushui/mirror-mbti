@@ -1,6 +1,6 @@
 import "server-only";
 import { randomBytes, randomUUID } from "node:crypto";
-import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
+import { and, count, desc, eq, isNull, lt, ne, or } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { appUrl } from "@/lib/env";
 import { href, type Locale } from "@/lib/i18n/locale";
@@ -54,16 +54,23 @@ export async function getPublicShare(token: string) {
     .where(and(eq(schema.resultShares.token, token), isNull(schema.resultShares.revokedAt))).limit(1);
   return row ? { snapshot: row.snapshot, locale: row.locale as Locale } : null;
 }
-export async function listOwnedShares(visitorId: string, cursor?: string | null) {
+/** The visitor's shares made in `locale`: a card's text and link are in the language its result was taken in. */
+export async function listOwnedShares(visitorId: string, locale: Locale, cursor?: string | null) {
   let before: { at: string; id: string } | null = null;
   if (cursor) {
     try { before = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")); } catch { throw new ShareError(400, "INVALID_SHARE_INPUT"); }
     if (!before || !Number.isFinite(Date.parse(before.at)) || !/^[0-9a-f-]{36}$/.test(before.id)) throw new ShareError(400, "INVALID_SHARE_INPUT");
   }
   const t = schema.resultShares;
-  const rows = await db().query.resultShares.findMany({ where: and(eq(t.visitorId, visitorId), before ? or(lt(t.createdAt, new Date(before.at)), and(eq(t.createdAt, new Date(before.at)), lt(t.id, before.id))) : undefined), orderBy: [desc(t.createdAt), desc(t.id)], limit: 21 });
+  const rows = await db().query.resultShares.findMany({ where: and(eq(t.visitorId, visitorId), eq(t.locale, locale), before ? or(lt(t.createdAt, new Date(before.at)), and(eq(t.createdAt, new Date(before.at)), lt(t.id, before.id))) : undefined), orderBy: [desc(t.createdAt), desc(t.id)], limit: 21 });
   const items = rows.slice(0, 20); const last = items.at(-1);
   return { items: items.map(ownedShareView), nextCursor: rows.length > 20 && last ? Buffer.from(JSON.stringify({ at: last.createdAt.toISOString(), id: last.id })).toString("base64url") : null };
+}
+/** How many of the visitor's shares were made in another language than `locale`. */
+export async function countSharesElsewhere(visitorId: string, locale: Locale) {
+  const t = schema.resultShares;
+  const [row] = await db().select({ n: count() }).from(t).where(and(eq(t.visitorId, visitorId), ne(t.locale, locale)));
+  return row?.n ?? 0;
 }
 export async function revokeShare(id: string, visitorId: string) {
   await db().transaction(async (tx) => {

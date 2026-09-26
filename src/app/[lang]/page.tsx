@@ -139,13 +139,13 @@ export default async function HomePage() {
 }
 
 /**
- * The visitor's newest result, read once per request. The sample entries are only for someone who has
- * none yet: with a result, each of them leads to 我的报告 and shows that result instead. The static
- * shell keeps the sample, and a missing database leaves it in place.
+ * The visitor's newest result in this language, read once per request. The sample entries are only for
+ * someone who has none yet: with a result, each of them leads to 我的报告 and shows that result instead.
+ * The static shell keeps the sample, and a missing database leaves it in place.
  */
-const newestOwnResult = cache(async () => {
+const newestOwnResult = cache(async (locale: Locale) => {
   const visitorId = await getVisitorId();
-  return visitorId ? latestResultForVisitor(visitorId).catch(() => null) : null;
+  return visitorId ? latestResultForVisitor(visitorId, locale).catch(() => null) : null;
 });
 
 type Entry = { profile: Profile; label: string; to: string; track: TrackAttrs };
@@ -172,18 +172,18 @@ function mineEntry(locale: Locale, profile: Profile) {
 const cardSide = (locale: Locale) => (locale === "en" ? "right-6" : "left-6");
 
 async function HomeCard({ locale }: { locale: Locale }) {
-  const own = await newestOwnResult();
+  const own = await newestOwnResult(locale);
   const entry = own ? mineEntry(locale, own.profile) : sampleEntry(locale);
   return <ResultCard locale={locale} {...entry.card} className={cardSide(locale)} />;
 }
 
 async function HomeChip({ locale }: { locale: Locale }) {
-  const own = await newestOwnResult();
+  const own = await newestOwnResult(locale);
   return <ResultChip locale={locale} {...(own ? mineEntry(locale, own.profile) : sampleEntry(locale)).chip} />;
 }
 
 async function HomeHeroLink({ locale }: { locale: Locale }) {
-  return <HeroLink locale={locale} mine={Boolean(await newestOwnResult())} />;
+  return <HeroLink locale={locale} mine={Boolean(await newestOwnResult(locale))} />;
 }
 
 function HeroLink({ locale, mine }: { locale: Locale; mine: boolean }) {

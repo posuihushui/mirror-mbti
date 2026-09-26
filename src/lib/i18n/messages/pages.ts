@@ -182,6 +182,12 @@ const zh = {
     dateLocale: "zh-CN",
     timeZone: "Asia/Shanghai",
   },
+  /** Owner lists show one language; records made in the other are one link away, never mixed in. */
+  elsewhere: {
+    results: (count: number) => `你在英文版还有 ${count} 份测试记录`,
+    pairing: (count: number) => `你在英文版还有 ${count} 份双人指南或邀请`,
+    shares: (count: number) => `你在英文版还有 ${count} 份分享`,
+  },
 };
 
 const en: typeof zh = {
@@ -362,6 +368,11 @@ const en: typeof zh = {
     orderAccordion: "Order & recovery",
     dateLocale: "en-US",
     timeZone: "UTC",
+  },
+  elsewhere: {
+    results: (count: number) => `You have ${count} more ${count === 1 ? "test" : "tests"} on the Chinese site`,
+    pairing: (count: number) => `You have ${count} more ${count === 1 ? "guide or invitation" : "guides and invitations"} on the Chinese site`,
+    shares: (count: number) => `You have ${count} more ${count === 1 ? "share" : "shares"} on the Chinese site`,
   },
 };
 

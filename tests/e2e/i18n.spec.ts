@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { EN_QUICK_QUESTIONNAIRE_ID, getQuestionnaire } from "../../src/lib/questionnaires";
+import { EN_QUICK_QUESTIONNAIRE_ID, getQuestionnaire, LEGACY_QUESTIONNAIRE_ID } from "../../src/lib/questionnaires";
 import { answerQuestion } from "./quiz-helpers";
 
 const enQuick = getQuestionnaire(EN_QUICK_QUESTIONNAIRE_ID)!;
@@ -98,6 +98,46 @@ test.describe("English site", () => {
     // The Chinese URL of an English result lands on its English page.
     await page.goto(`/zh/result/${id}`);
     await page.waitForURL(new RegExp(`/result/${id}`));
+  });
+
+  test("a visitor who tested in both languages sees each language's own records, and one link to the other's", async ({ page }) => {
+    await page.goto("/zh");
+    const save = async (questionnaireId: string, opposite: boolean) => {
+      const questionnaire = getQuestionnaire(questionnaireId)!;
+      const answers = questionnaire.questions.map((q) => ({ questionId: q.id, value: Boolean(q.reverse) !== opposite ? -2 : 2 }));
+      const res = await page.request.post("/api/results", { data: { questionnaireId, answers } });
+      expect(res.status()).toBe(201);
+      return (await res.json()).data as { id: string; type: string };
+    };
+    const zh = await save(LEGACY_QUESTIONNAIRE_ID, false);
+    // Taken last, so it is the visitor's newest result overall.
+    const en = await save(EN_QUICK_QUESTIONNAIRE_ID, true);
+    expect(zh.type).not.toBe(en.type);
+
+    // The Chinese home's 我的报告 entries carry the newest Chinese result, not the newer English one.
+    await page.goto("/zh");
+    await expect(page.locator('a[href="/zh/my/report"]', { hasText: zh.type }).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.locator('a[href="/zh/my/report"]', { hasText: en.type })).toHaveCount(0);
+
+    // 我的报告 lists only Chinese records; the English one is a single labelled link, the only link that leaves /zh.
+    await page.goto("/zh/my/report");
+    await expect(page.getByRole("article")).toHaveCount(1);
+    await expect(page.locator(`main a[href="/zh/result/${zh.id}"]`).first()).toBeVisible();
+    await expect(page.locator(`main a[href*="${en.id}"]`)).toHaveCount(0);
+    const toEnglish = page.locator("main [data-elsewhere]");
+    await expect(toEnglish).toHaveText("你在英文版还有 1 份测试记录");
+    await expect(toEnglish).toHaveAttribute("href", "/my/report");
+    await expect(page.locator("main a[href^='/']:not([href^='/zh']):not([data-elsewhere])")).toHaveCount(0);
+    await toEnglish.click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    expect(new URL(page.url()).pathname).toBe("/my/report");
+
+    // And the mirror image on the English page.
+    await expect(page.getByRole("article")).toHaveCount(1);
+    await expect(page.locator(`main a[href="/result/${en.id}"]`).first()).toBeVisible();
+    await expect(page.locator(`main a[href*="${zh.id}"]`)).toHaveCount(0);
+    await expect(page.locator("main [data-elsewhere]")).toHaveText("You have 1 more test on the Chinese site");
+    await expect(page.locator("main [data-elsewhere]")).toHaveAttribute("href", "/zh/my/report");
   });
 
   /** Public English pages, plus the private ones a signed visitor reaches without any data. */

@@ -56,6 +56,13 @@ describe("locale routing helpers", () => {
     expect(requestLocale(req("not a url"))).toBe("en");
     expect(requestLocale(req())).toBe("en");
   });
+
+  it("prefers the page's declared language, since sharing pages send no referer", () => {
+    const req = (headers: Record<string, string>) => new Request("https://mirror.example/api/shares", { headers });
+    expect(requestLocale(req({ "x-mirror-locale": "zh" }))).toBe("zh");
+    expect(requestLocale(req({ "x-mirror-locale": "en", referer: "https://mirror.example/zh/t/abc" }))).toBe("en");
+    expect(requestLocale(req({ "x-mirror-locale": "fr", referer: "https://mirror.example/zh/t/abc" }))).toBe("zh");
+  });
 });
 
 describe("English content", () => {

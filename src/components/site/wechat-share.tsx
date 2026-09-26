@@ -22,7 +22,7 @@ export function WeChatShare({ title, desc, imgUrl, link }: Props) {
   useEffect(() => {
     if (!isWeChat(navigator.userAgent)) return;
     const target = new URL(link);
-    if (target.origin !== window.location.origin || target.search || target.hash || !/^\/(?:en\/)?(?:s|t)\/[A-Za-z0-9_-]{32}$/.test(target.pathname)) return;
+    if (target.origin !== window.location.origin || target.search || target.hash || !/^\/(?:zh\/)?(?:s|t)\/[A-Za-z0-9_-]{32}$/.test(target.pathname)) return;
     let cancelled = false;
     const setup = async () => {
       const res = await fetch(`/api/wechat/jsconfig?url=${encodeURIComponent(window.location.href.split("#")[0])}`);

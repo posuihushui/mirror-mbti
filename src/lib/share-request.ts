@@ -51,7 +51,7 @@ export async function shareRequest(request: Request, action: (visitorId: string)
     const visitorId = await getVisitorId(); if (!visitorId) throw new ShareError(401, "NO_SESSION");
     if (options.limit) await consumeShareRate(rateBucket(options.namespace ?? "write", visitorId, sessionSecret()), options.limit, options.window ?? 3600);
     return await action(visitorId);
-  } catch (error) { return shareFailure(error, request.headers.get("x-mirror-locale") === "en" ? "en" : requestLocale(request)); }
+  } catch (error) { return shareFailure(error, requestLocale(request)); }
 }
 export async function ensureShareVisitor(visitorId: string) {
   await db().insert(schema.visitors).values({ id: visitorId }).onConflictDoNothing({ target: schema.visitors.id });

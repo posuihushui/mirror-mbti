@@ -1,11 +1,12 @@
 import "server-only";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { claimFirstReferral } from "@/lib/share-analytics";
 import { lockVisitor } from "@/lib/share-request";
 import { newResultId } from "@/lib/ids";
 import { calculate, sampleProfile, uniformAnswers, type Profile } from "@/lib/personality";
-import { getQuestionnaire, LEGACY_QUESTIONNAIRE_ID, REPORT_VERSION, SCORING_VERSION, type QuestionnaireId } from "@/lib/questionnaires";
+import { locales, type Locale } from "@/lib/i18n/locale";
+import { getQuestionnaire, LEGACY_QUESTIONNAIRE_ID, questionnairesFor, REPORT_VERSION, SCORING_VERSION, type QuestionnaireId } from "@/lib/questionnaires";
 
 export const SAMPLE_RESULT_ID = "sample";
 
@@ -86,9 +87,17 @@ export async function getResult(id: string, visitorId: string | null): Promise<R
   return row ? toView(row, visitorId) : null;
 }
 
-export async function latestResultForVisitor(visitorId: string): Promise<ResultView | null> {
+/** Results taken in `locale`, read as `questionnaireLocale` reads them: an unknown questionnaire is Chinese. */
+function takenIn(locale: Locale) {
+  const column = schema.results.questionnaireId;
+  if (locale !== "zh") return inArray(column, questionnairesFor(locale).map((q) => q.id));
+  return notInArray(column, locales.filter((other) => other !== "zh").flatMap((other) => questionnairesFor(other).map((q) => q.id)));
+}
+
+/** The visitor's newest result in this language; a result opens only in the language it was taken in. */
+export async function latestResultForVisitor(visitorId: string, locale: Locale): Promise<ResultView | null> {
   const row = await db().query.results.findFirst({
-    where: eq(schema.results.visitorId, visitorId),
+    where: and(eq(schema.results.visitorId, visitorId), takenIn(locale)),
     orderBy: [desc(schema.results.createdAt)],
   });
   return row ? toView(row, visitorId) : null;

@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { RecoverReports } from "@/components/report/recover-reports";
+import { ElsewhereLink } from "@/components/site/elsewhere-link";
 import { trackAttrs } from "@/lib/analytics/events";
-import { href, type Locale } from "@/lib/i18n/locale";
+import { href, otherLocale, type Locale } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
 import { polesFor, profileMeta, type Letter } from "@/lib/personality";
@@ -32,7 +33,13 @@ export default async function MyReportPage({ searchParams }: { searchParams: Pro
   const locale = await getLocale();
   const t = pageMessages[locale].history;
   const visitorId = await getVisitorId();
-  const results = visitorId ? await resultsForVisitor(visitorId) : [];
+  const all = visitorId ? await resultsForVisitor(visitorId) : [];
+  // One language per page: a record opens in the language it was taken in, so the other's are one link away.
+  const results = all.filter((result) => questionnaireLocale(result.questionnaireId) === locale);
+  const elsewhere = all.length - results.length;
+  const elsewhereLink = elsewhere > 0 && (
+    <ElsewhereLink to={otherLocale(locale)} path="/my/report" {...trackAttrs("my_report", "page_cta")}>{pageMessages[locale].elsewhere.results(elsewhere)}</ElsewhereLink>
+  );
   const hasHistory = results.length > 0;
   // `/help` links here with `?recover=1`, so someone who came to recover lands with the form open.
   const recoverOpen = (await searchParams).recover === "1";
@@ -64,6 +71,7 @@ export default async function MyReportPage({ searchParams }: { searchParams: Pro
             <section className="mt-8 flex flex-col gap-6 md:mt-10" aria-label={t.listLabel}>
               {results.map((result) => <HistoryItem key={result.id} result={result} locale={locale} />)}
             </section>
+            {elsewhereLink && <p className="mt-6">{elsewhereLink}</p>}
             <p className="mt-7 max-w-2xl text-xs text-mist">
               {t.keepOrders}
             </p>
@@ -79,6 +87,7 @@ export default async function MyReportPage({ searchParams }: { searchParams: Pro
           </>
         ) : (
           <section className="mt-6 max-w-[560px]">
+            {elsewhereLink && <p className="mb-3">{elsewhereLink}</p>}
             <TextLink href={href(locale, "/result/sample")} {...trackAttrs("view_sample_result", "page_cta")}>{t.sample}</TextLink>
             {/* Most people arriving here simply haven't taken a test yet; recovery is for the few who switched devices. */}
             <Accordion type="single" collapsible className="mt-6" defaultValue={recoverOpen ? "recover" : undefined}>
@@ -98,13 +107,12 @@ export default async function MyReportPage({ searchParams }: { searchParams: Pro
   );
 }
 
-/** A record is described in the page's language but links to the language it was taken in. */
+/** A record taken in this page's language; the page lists no other. */
 function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Locale }) {
   const t = pageMessages[locale].history;
   const { profile, order, unlocked, createdAt } = result;
   const { name, summary, typeLabel } = profileMeta(profile, locale);
   const poles = polesFor(locale);
-  const own = questionnaireLocale(result.questionnaireId);
   const dateFormat = new Intl.DateTimeFormat(t.dateLocale, {
     timeZone: t.timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
   });
@@ -135,13 +143,13 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
         ))}
       </dl>
       <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
-        <PrimaryButton href={href(own, unlocked ? `/report/${result.id}` : `/result/${result.id}`)} prefetch={false} className="md:w-[240px]" {...trackAttrs(unlocked ? "read_report" : "view_result", "history_item")}>
+        <PrimaryButton href={href(locale, unlocked ? `/report/${result.id}` : `/result/${result.id}`)} prefetch={false} className="md:w-[240px]" {...trackAttrs(unlocked ? "read_report" : "view_result", "history_item")}>
           {unlocked ? t.readDetailed : t.viewBrief}
         </PrimaryButton>
-        <TextLink href={href(own, unlocked ? `/result/${result.id}` : `/result/${result.id}?unlock=1`)} prefetch={false} {...trackAttrs(unlocked ? "view_result" : "unlock_report", "history_item")}>
+        <TextLink href={href(locale, unlocked ? `/result/${result.id}` : `/result/${result.id}?unlock=1`)} prefetch={false} {...trackAttrs(unlocked ? "view_result" : "unlock_report", "history_item")}>
           {unlocked ? t.viewBrief : t.unlock}
         </TextLink>
-        {unlocked && <PairingTracker resultId={result.id} surface="my_pairing"><TextLink href={href(own, `/my/pairing?result=${result.id}`)} prefetch={false}>{pairingUiMessages[locale].invite}</TextLink></PairingTracker>}
+        {unlocked && <PairingTracker resultId={result.id} surface="my_pairing"><TextLink href={href(locale, `/my/pairing?result=${result.id}`)} prefetch={false}>{pairingUiMessages[locale].invite}</TextLink></PairingTracker>}
       </div>
       {order && (
         <Accordion type="single" collapsible className="mt-5">

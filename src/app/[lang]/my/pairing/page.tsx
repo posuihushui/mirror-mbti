@@ -11,7 +11,9 @@ import { listOwnedComparisons, listComparisonResults } from "@/lib/comparisons";
 import { listComparisonContinuations } from "@/lib/comparison-continuations";
 import { getVisitorId } from "@/lib/session";
 import { getLocale } from "@/lib/i18n/server";
-import { href } from "@/lib/i18n/locale";
+import { href, otherLocale } from "@/lib/i18n/locale";
+import { pageMessages } from "@/lib/i18n/messages/pages";
+import { ElsewhereLink } from "@/components/site/elsewhere-link";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { questionnaireName } from "@/lib/questionnaires";
 import { giftCheckout } from "@/lib/pair-gifts";
@@ -19,7 +21,12 @@ import { giftCheckout } from "@/lib/pair-gifts";
 export async function generateMetadata(): Promise<Metadata> { const locale = await getLocale(); return { title: pairingUiMessages[locale].center, robots: { index: false, follow: false }, referrer: "no-referrer" }; }
 export default async function PairingCenter({ searchParams }: { searchParams: Promise<{ result?: string; share?: string; gift?: string }> }) {
   const locale = await getLocale(); const m = pairingUiMessages[locale]; const visitor = await getVisitorId(); const query = await searchParams;
-  const [results, comparisons, continuations] = visitor ? await Promise.all([listComparisonResults(visitor), listOwnedComparisons(visitor), listComparisonContinuations(visitor)]) : [[], { items: [], invitations: [] }, []];
+  const [allResults, owned, allContinuations] = visitor ? await Promise.all([listComparisonResults(visitor), listOwnedComparisons(visitor), listComparisonContinuations(visitor)]) : [[], { items: [], invitations: [], availableGifts: { zh: 0, en: 0 } }, []];
+  // One language per page, like 我的报告: guides, invitations and results open in their own language, so the other's are one link away.
+  const here = <T extends { locale: string }>(list: T[]) => list.filter(item => item.locale === locale);
+  const results = here(allResults), continuations = here(allContinuations);
+  const comparisons = { items: here(owned.items), invitations: here(owned.invitations), availableGifts: { zh: 0, en: 0, [locale]: owned.availableGifts[locale] } };
+  const elsewhere = owned.items.length + owned.invitations.length + allContinuations.length - comparisons.items.length - comparisons.invitations.length - continuations.length;
   const selected = typeof query.result === "string" && /^[A-Za-z0-9_-]{12}$/.test(query.result) ? query.result : null;
   const shareId = typeof query.share === "string" && /^[0-9a-f-]{36}$/.test(query.share) ? query.share : undefined;
   const openGift = typeof query.gift === "string" && /^[0-9a-f-]{36}$/.test(query.gift) ? query.gift : undefined;
@@ -30,6 +37,7 @@ export default async function PairingCenter({ searchParams }: { searchParams: Pr
     <h1 className="text-3xl leading-heading md:text-4xl">{m.center}</h1>
     <p className="mt-3 max-w-2xl text-base text-slate">{m.centerIntro}</p>
     <a href={href(locale, "/my/pairing")} className="text-link mt-2 text-mist hover:text-ink"><ArrowClockwise size={15} aria-hidden />{m.refresh}</a>
+    {elsewhere > 0 && <p className="mt-2"><ElsewhereLink to={otherLocale(locale)} path="/my/pairing">{pageMessages[locale].elsewhere.pairing(elsewhere)}</ElsewhereLink></p>}
     <ContinuationList items={continuations} locale={locale} surface="my_pairing" />
     {/* What already exists comes first: guides, then open invitations, then starting another. */}
     <ComparisonManager {...comparisons} locale={locale} checkouts={checkouts} openGift={openGift} />

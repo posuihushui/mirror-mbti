@@ -24,6 +24,11 @@ export function href(locale: Locale, path: string): string {
   return clean === "/" ? `/${locale}` : `/${locale}${clean}`;
 }
 
+/** The other language, where the owner lists send records that were made in it. */
+export function otherLocale(locale: Locale): Locale {
+  return locale === "zh" ? "en" : "zh";
+}
+
 export const htmlLang: Record<Locale, string> = { zh: "zh-CN", en: "en" };
 
 /** Each language named in itself for the language menu; `short` fits the phone header. */
