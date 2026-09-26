@@ -185,7 +185,7 @@
 | `pairing_info` / `invite_pairing` / `my_pairing` / `read_guide` | 双人指南介绍 / 邀请入口 / 我的双人指南（报告页上即「查看邀请进度」）/ 阅读已生成的双人指南；仅通用名称，不附带结果、邀请或指南编号 |
 | `home` | 回到首页（报告结尾、404） |
 
-`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`sample_bar`（桌面示例结果首屏下方的示例报告入口）、`sample_preview`（示例结果里按章节摘录的示例报告）、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`result_nav`（结果页吸顶章节导航右端的解锁按钮，桌面）、`result_chapter`（结果页遮盖章节底部的解锁或阅读入口）、`home_sample`（桌面首页照片上的示例结果卡）、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`、`pairing_benefit`、`pairing_center`、`report_aside`（桌面报告侧栏的邀请卡）、`report_invite`（报告第三章与第四章末尾的邀请卡）。
+`cta_location`：`header_nav`（桌面导航及其「更多信息」菜单）、`header_mobile`（手机顶栏及其「更多」菜单）、`hero`（首页首屏）、`dock`（手机底部固定栏）、`steps_bar`、`page_cta`（页面主体按钮）、`sample_cta`、`sample_notice`、`unlock_panel`、`result_panel`（桌面解锁区按钮）、`result_nav`（结果页吸顶章节导航右端的解锁按钮，桌面；示例结果页为开始测试）、`result_chapter`（结果页遮盖章节底部的解锁或阅读入口；示例结果页为开始测试）、`home_sample`（桌面首页照片上的示例结果卡；已有测试结果的访客看到的是自己的「我的报告」卡，`cta_id` 为 `my_report`）、`history_item`、`payment_sheet`、`payment_success`、`pay_status`、`report_closing`、`about_overlay`、`empty_overlay`、`type_grid`、`type_context`、`pairing_benefit`、`pairing_center`、`report_aside`（桌面报告侧栏的邀请卡）、`report_invite`（报告第三章与第四章末尾的邀请卡）。
 
 ## 新增埋点
 

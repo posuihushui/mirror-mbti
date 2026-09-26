@@ -168,31 +168,6 @@ function teaser(text: string, locale: Locale, size: "body" | "say" = "body") {
   return chars.length > limit ? `${chars.slice(0, limit).join("")}…` : text;
 }
 
-/** One passage quoted from a chapter: a title over either body text or a line to say out loud. `both` marks a near-even dimension read from both ends. */
-export type Highlight = { chapter: number; title: string; body?: string; say?: string; both?: boolean };
-
-/**
- * One concrete passage from each chapter, quoted verbatim, for the sample result's preview of the
- * sample report. It quotes the first dimension with a clear lean, whose scene the report writes out;
- * a near-even one only has the both-ends reading, which is used when every dimension is near even.
- */
-export function reportHighlights(profile: Profile, locale: Locale): Highlight[] {
-  const data = buildReportData(profile, { sample: true, demo: false, locale });
-  const clear = profile.balanced.findIndex((balanced) => !balanced);
-  const i = Math.max(clear, 0);
-  const need = data.needs[i];
-  // Both ends, one per line, as chapter 01 lists them.
-  const both = need.both.map((b) => `${b.label}${locale === "en" ? ": " : "："}${b.strength}`).join("\n");
-  const watch = clear < 0 ? data.blindspots[i].body : (locale === "en" ? enScenes : scenes)[profile.type[i] as Letter].watch;
-  const day = data.actionPlan[i + 1];
-  return [
-    { chapter: 0, title: `${need.label} ${need.letter}`, body: need.balanced ? both : need.growth, both: need.balanced },
-    { chapter: 1, title: data.blindspots[i].title, body: watch },
-    { chapter: 2, title: data.relationships[i].title, say: data.relationships[i].say },
-    { chapter: 3, title: day.title, body: day.body },
-  ];
-}
-
 /**
  * One report chapter as the result page shows it: the first passage's title and a teaser of its
  * opening, then only the titles of the passages after it. `extra` names what else the chapter holds.

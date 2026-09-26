@@ -16,7 +16,6 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { ResultActions } from "@/components/result/result-actions";
 import { ResultChart } from "@/components/result/result-chart";
 import { SampleCta } from "@/components/result/sample-cta";
-import { SampleDock, SampleReportBar, SampleReportPreview } from "@/components/result/sample-report-preview";
 import { TypeIntro } from "@/components/result/type-intro";
 import { UnlockPanel } from "@/components/result/unlock-panel";
 import { ReportChapters, type ChapterAction } from "@/components/result/report-chapters";
@@ -24,9 +23,11 @@ import { ResultNav } from "@/components/result/result-nav";
 import { PreferenceReading } from "@/components/result/preference-reading";
 import { ReviewAnswers } from "@/components/result/review-answers";
 import { RecoverReports } from "@/components/report/recover-reports";
+import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { TrackView } from "@/components/analytics/track-view";
 import { currencyFor, reportCommerce } from "@/lib/analytics/commerce";
+import { trackAttrs } from "@/lib/analytics/events";
 import { paymentModeFor, priceLabelFor, priceMinorFor } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
@@ -108,12 +109,13 @@ export default async function ResultPage({ params, searchParams }: Params) {
     covered: covered?.href,
   } as const;
 
-  // Real results list the report's chapters, masked until the report is unlocked, under a sticky nav
-  // (16personalities-style). The sample has its own chrome there: nothing on it is locked or for sale.
+  // The report's chapters, masked until the report is unlocked, under a sticky nav (16personalities-style).
+  // The sample shows them the same way, still masked (owner request, 2026-09-26): its key is the test.
   const r = resultMessages[locale];
-  const readable = result.owner && result.unlocked;
-  const outline = sample ? [] : reportOutline(profile, locale);
-  const chapterAction: ChapterAction | undefined = eligibility === "syncing" ? undefined
+  const readable = !sample && result.owner && result.unlocked;
+  const outline = reportOutline(profile, locale);
+  const chapterAction: ChapterAction | undefined = sample ? { href: href(locale, "/quiz"), label: r.actions.startMine, cta: "start_quiz" }
+    : eligibility === "syncing" ? undefined
     : covered ? { href: covered.href, label: ui.gift.accept, cta: "accept_covered" }
     : result.owner ? { href: href(locale, `/result/${id}?${compare ? `compare=${compare}&` : ""}unlock=1`), label: r.chapters.unlock, cta: "unlock_report", replace: true }
     : { href: href(locale, "/quiz"), label: r.actions.startMine, cta: "start_quiz" };
@@ -143,37 +145,34 @@ export default async function ResultPage({ params, searchParams }: Params) {
           <TypeIntro profile={profile} sample={sample} />
           <ResultChart profile={profile} />
         </section>
-        {/* Desktop has no dock, so the report rides at the nav's right end, in reach at every scroll depth. */}
-        {!sample && (
-          <ResultNav label={r.nav.label} lockedLabel={r.nav.locked} items={navItems}>
+        {/* Desktop has no dock, so the report rides at the nav's right end, in reach at every scroll depth. The sample offers the test there. */}
+        <ResultNav label={r.nav.label} lockedLabel={sample ? r.nav.sampleLocked : r.nav.locked} items={navItems}>
+          {sample ? (
+            <PrimaryButton href={href(locale, "/quiz")} className="min-h-11 w-auto gap-3 px-5 text-sm" {...trackAttrs("start_quiz", "result_nav")}>{t.start}</PrimaryButton>
+          ) : (
             <Suspense fallback={null}>
               <ResultActions {...actionProps} slot="nav" />
             </Suspense>
-          </ResultNav>
-        )}
-        {/* The sample puts its own report there instead: nothing on it is for sale, so it opens the sample report and the test. */}
-        {sample && <SampleReportBar />}
+          )}
+        </ResultNav>
         {!sample && result.owner && result.uniform && (
           <section className="mx-[27px] mb-7 border border-line px-5 py-6 md:mx-0">
             <p className="mb-4 text-sm">{t.uniformNotice}</p>
             <ReviewAnswers resultId={id} />
           </section>
         )}
-        <div id="dimensions" className="scroll-mt-16 md:scroll-mt-20"><PreferenceReading profile={profile} divider={sample} /></div>
+        <div id="dimensions" className="scroll-mt-16 md:scroll-mt-20"><PreferenceReading profile={profile} /></div>
         {!sample && result.owner && <>
           <ContinuationList items={continuations} locale={locale} />
           {/* When the invitation covers this report, the panel's accept action already continues it. */}
           {compare && !covered && !continuations.some(item => item.invitationToken === compare) && <section className="mx-6 my-7 border-t border-line pt-5 md:mx-0"><h2 className="text-xl">{ui.continue}</h2><p className="my-4 text-sm">{invitation ? ui.continuationNote : ui.continuationExpired}</p>{invitation && <ContinuationAction invitationToken={compare} resultId={id} resultLocale={locale} locale={locale} />}</section>}
           {eligibility === "syncing" && <section className="mx-6 md:mx-0"><AccessActions resultId={id} locale={locale} surface="result" /></section>}
         </>}
-        {!sample && <ReportChapters outline={outline} readHref={readable ? href(locale, `/report/${id}`) : undefined} action={chapterAction} />}
+        <ReportChapters outline={outline} readHref={readable ? href(locale, `/report/${id}`) : undefined} action={chapterAction} sample={sample} />
         {/* The report is the offer; the guide for two comes with it, so it follows rather than leads. */}
         {sample ? (
-          /* Nothing is locked on the sample: it shows what its report says, then closes by inviting the test, not by quoting a price. */
-          <>
-            <SampleReportPreview profile={profile} />
-            <SampleCta />
-          </>
+          /* Nothing on the sample is for sale: it closes by inviting the test, not by quoting a price. */
+          <SampleCta />
         ) : result.owner && result.unlocked ? <div className="mx-6 mb-8 md:mx-0"><PrimaryButton href={href(locale, `/report/${id}`)} className="md:max-w-xs">{t.readPurchased}</PrimaryButton></div> : eligibility === "syncing" ? null : (
           <UnlockPanel
             covered={covered}
@@ -201,7 +200,9 @@ export default async function ResultPage({ params, searchParams }: Params) {
         </p>
       </main>
       {sample ? (
-        <SampleDock />
+        <Dock>
+          <PrimaryButton href={href(locale, "/quiz")} {...trackAttrs("start_quiz", "dock")}>{t.start}</PrimaryButton>
+        </Dock>
       ) : (
         <Suspense fallback={null}>
           <ResultActions {...actionProps} slot="dock" />

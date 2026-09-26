@@ -20,6 +20,10 @@ const zh = {
     aboutLink: "关于这次探索",
     dockFree: "免费测试",
     dockSample: "示例结果",
+    /** A visitor who already has a result: the three sample entries lead to 我的报告 instead. */
+    mineCard: "我的报告",
+    mineLink: "查看我的报告",
+    dockMine: "我的报告",
     freeOffer: "免费测试与性格概览",
   },
   about: {
@@ -200,6 +204,9 @@ const en: typeof zh = {
     aboutLink: "About this exploration",
     dockFree: "Free test",
     dockSample: "Sample result",
+    mineCard: "MY REPORTS",
+    mineLink: "See my reports",
+    dockMine: "My reports",
     freeOffer: "Free test and overview",
   },
   about: {

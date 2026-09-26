@@ -55,8 +55,6 @@ export type CtaLocation =
   | "page_cta"
   | "sample_cta"
   | "sample_notice"
-  | "sample_bar"
-  | "sample_preview"
   | "unlock_panel"
   | "result_panel"
   | "result_nav"

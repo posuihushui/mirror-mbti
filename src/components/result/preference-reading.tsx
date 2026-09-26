@@ -32,15 +32,14 @@ function PolarityBar({ dimension, firstPercent, degree, balanced }: { dimension:
   );
 }
 
-/** `divider={false}` where the result's section nav already rules the section off above it. */
-export async function PreferenceReading({ profile, divider = true }: { profile: Profile; divider?: boolean }) {
+export async function PreferenceReading({ profile }: { profile: Profile }) {
   const locale = await getLocale();
   const t = resultMessages[locale].reading;
   const readings = dimensions.map((_, i) => dimensionReading(profile, i, locale));
   const focus = profile.balanced.findIndex(Boolean);
   const practice = focus >= 0 ? readings[focus].question : polesFor(locale)[profile.type[0] as Letter].growth;
   return (
-    <section className={divider ? "mx-6 mb-10 border-t border-line pt-8 md:mx-0 md:pt-10" : "mx-6 mb-10 md:mx-0"} aria-labelledby="preference-reading">
+    <section className="mx-6 mb-10 md:mx-0" aria-labelledby="preference-reading">
       <h2 id="preference-reading" className="text-2xl leading-heading">{t.heading}</h2>
       <p className="mt-3 max-w-2xl text-sm text-mist">{t.lede}</p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">

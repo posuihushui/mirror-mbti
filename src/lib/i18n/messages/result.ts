@@ -44,6 +44,8 @@ const zh = {
     /** The report's chapters, short enough for one row beside the report action. */
     chapters: ["性格总览", "优势与盲点", "关系与沟通", "工作与成长"],
     locked: "（解锁后阅读）",
+    /** The sample shows the same locks, without naming a purchase before the test. */
+    sampleLocked: "（完整报告内容）",
   },
   /** The report's four chapters on a real result: each opening, and the rest masked until the report is unlocked. */
   chapters: {
@@ -57,6 +59,10 @@ const zh = {
       week: (n: number) => `附 ${n} 天小练习`,
     },
     masked: "这部分内容解锁后可读",
+    /** The sample's chapters are masked like a locked result's; their key is the test, so nothing names a purchase. */
+    sampleHeading: "完整报告，共四章。",
+    sampleSub: "每章的开头先给你读。做完测试，你的报告会按你自己的四个分数写成。",
+    sampleMasked: "完整内容在完整报告里",
     unlock: "解锁阅读",
     read: "阅读这一章",
   },
@@ -68,21 +74,6 @@ const zh = {
     start: "开始认识自己",
     footnote: "免费测试与性格概览",
   },
-  /** Desktop, under the sample's first screen, where a real result offers its report. */
-  sampleBar: {
-    title: "这组分数，也写成了一份完整报告",
-    sub: "四章：优势与盲点、四句开口的话、七天小练习。先读示例，或开始你自己的测试。",
-    read: "阅读示例报告",
-  },
-  /** The sample result's look inside the sample report: one passage quoted from each chapter. */
-  samplePreview: {
-    eyebrow: "示例报告",
-    heading: "从四个字母，\n到用得上的话。",
-    sub: "完整报告按上面这组分数写成，共四章。每章摘一段：",
-    say: "可以这样开口",
-    week: "七天小练习",
-  },
-  sampleDock: { label: "示例报告", read: "阅读全文" },
   sampleNotice: {
     eyebrow: "示例报告",
     body: "这是一份示例，按一次 INFJ 作答的四个分数写成。报告里的每一段都从分数出发，换一组分数，读到的内容就不同。",
@@ -141,6 +132,7 @@ const en: typeof zh = {
     dimensions: "Dimensions",
     chapters: ["Overview", "Strengths", "Relationships", "Work & growth"],
     locked: " (locked)",
+    sampleLocked: " (in the full report)",
   },
   chapters: {
     eyebrow: "FULL REPORT",
@@ -153,6 +145,9 @@ const en: typeof zh = {
       week: (n: number) => `Plus ${n} days of practice`,
     },
     masked: "Unlock the report to read this",
+    sampleHeading: "The full report, in four chapters.",
+    sampleSub: "Read how each chapter opens. Take the test, and your report is written from your own four scores.",
+    sampleMasked: "The rest is in the full report",
     unlock: "Unlock to read",
     read: "Read this chapter",
   },
@@ -164,19 +159,6 @@ const en: typeof zh = {
     start: "Start exploring",
     footnote: "Free test and overview",
   },
-  sampleBar: {
-    title: "These scores also make a full report",
-    sub: "Four chapters: strengths and blind spots, four things to try saying, seven days of practice. Read the sample, or start your own test.",
-    read: "Read the sample report",
-  },
-  samplePreview: {
-    eyebrow: "SAMPLE REPORT",
-    heading: "From four letters\nto words you can use.",
-    sub: "The full report is written from the scores above, in four chapters. One passage from each:",
-    say: "Try saying",
-    week: "Seven days of practice",
-  },
-  sampleDock: { label: "Sample report", read: "Read it" },
   sampleNotice: {
     eyebrow: "SAMPLE REPORT",
     body: "This is a sample, written from the four scores of one set of INFJ answers. Every passage starts from the scores, so a different set of scores reads differently.",

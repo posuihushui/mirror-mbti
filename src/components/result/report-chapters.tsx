@@ -15,6 +15,8 @@ type Props = {
   readHref?: string;
   /** Locked chapters only. A result being reconciled has none; its access actions sit above. */
   action?: ChapterAction;
+  /** The public sample: the same masks, with copy that names the test rather than a purchase. */
+  sample?: boolean;
 };
 
 /**
@@ -23,15 +25,16 @@ type Props = {
  * made from its own title: `reportOutline` hands this component titles and cut openings only, so the
  * page's HTML never carries the reading a buyer pays for.
  */
-export async function ReportChapters({ outline, readHref, action }: Props) {
+export async function ReportChapters({ outline, readHref, action, sample = false }: Props) {
   const locale = await getLocale();
   const t = resultMessages[locale].chapters;
   const locked = !readHref;
+  const masked = sample ? t.sampleMasked : t.masked;
   return (
     <section id="report" aria-labelledby="report-chapters-heading" className="mx-6 mb-10 border-t border-line pt-8 md:mx-0 md:mb-12 md:pt-10">
       <p className="eyebrow text-warm-ink">{t.eyebrow}</p>
-      <h2 id="report-chapters-heading" className="mt-3 text-2xl">{t.heading}</h2>
-      <p className="mt-3 max-w-2xl text-sm text-mist">{locked ? t.lockedSub : t.openSub}</p>
+      <h2 id="report-chapters-heading" className="mt-3 text-2xl">{sample ? t.sampleHeading : t.heading}</h2>
+      <p className="mt-3 max-w-2xl text-sm text-mist">{sample ? t.sampleSub : locked ? t.lockedSub : t.openSub}</p>
       <ol className="mt-6 space-y-4">
         {outline.map((chapter, i) => (
           <li
@@ -73,14 +76,14 @@ export async function ReportChapters({ outline, readHref, action }: Props) {
                   {t.extra[chapter.extra.kind](chapter.extra.count)}
                 </p>
               )}
-              {locked && <p className="sr-only">{t.masked}</p>}
+              {locked && <p className="sr-only">{masked}</p>}
             </div>
             <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 border-t border-line pt-1 md:col-span-3 md:mt-6">
               {locked ? (
                 <>
                   <span aria-hidden className="flex min-h-11 items-center gap-2 text-xs text-mist">
                     <LockSimple size={14} className="shrink-0" />
-                    {t.masked}
+                    {masked}
                   </span>
                   {action && (
                     <TextLink href={action.href} replace={action.replace} scroll={false} prefetch={false} className="font-medium" {...trackAttrs(action.cta, "result_chapter")}>

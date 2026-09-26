@@ -22,6 +22,29 @@ test.describe("core flow", () => {
     expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
   });
 
+  test("home sends a visitor who has a result to 我的报告, not to the sample", async ({ page }, testInfo) => {
+    const mobile = testInfo.project.name === "mobile";
+    const entries = () => mobile
+      ? page.locator(".fixed").getByRole("link", { name: /示例结果|我的报告/ })
+      : page.getByRole("main").getByRole("link", { name: /先看看报告|查看我的报告|示例结果|我的报告/ });
+    await page.goto("/zh");
+    for (const link of await entries().all()) await expect(link).toHaveAttribute("href", "/zh/result/sample");
+
+    await page.goto("/zh/quiz");
+    await answerAll(page);
+    await page.waitForURL(/\/result\/[A-Za-z0-9_-]{12}$/);
+    await page.goto("/zh");
+    // Every sample entry now opens the visitor's reports, carrying their own type.
+    await expect(entries().first()).toHaveAttribute("href", "/zh/my/report");
+    for (const link of await entries().all()) await expect(link).toHaveAttribute("href", "/zh/my/report");
+    if (mobile) await expect(entries()).toContainText("ESTJ");
+    else {
+      await expect(page.getByRole("link", { name: "查看我的报告" })).toBeVisible();
+      await expect(page.getByRole("link", { name: /我的报告.*ESTJ/ })).toBeVisible();
+    }
+    await expect(page.getByRole("link", { name: /示例结果|先看看报告/ })).toHaveCount(0);
+  });
+
   test("sample result and sample report are reachable", async ({ page }) => {
     await page.goto("/zh/result/sample");
     await expect(page.getByText("示例结果", { exact: true }).first()).toBeVisible();
@@ -101,7 +124,7 @@ test.describe("core flow", () => {
     await page.goto("/zh/result/sample");
     await expect(page.getByText("轮到你了", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: /属于你的故事/ })).toBeVisible();
-    // nothing is locked here, so no paywall block and no unlock action
+    // the chapters are masked like a locked result's, but there is no paywall block and no unlock action
     await expect(page.getByText("你不止于此")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /解锁报告与/ })).toHaveCount(0);
     // no price and no hint that anything is sold, and both CTAs lead to the test
@@ -110,7 +133,6 @@ test.describe("core flow", () => {
     for (const cta of await page.getByRole("link", { name: /开始认识自己/ }).all()) {
       await expect(cta).toHaveAttribute("href", "/zh/quiz");
     }
-    await expect(page.getByRole("link", { name: "阅读完整示例报告" })).toHaveAttribute("href", "/zh/report/sample");
     await page.getByRole("heading", { name: /属于你的故事/ }).scrollIntoViewIfNeeded();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("sample-invitation.png"), animations: "disabled" });
@@ -118,35 +140,29 @@ test.describe("core flow", () => {
     await expect(page).toHaveURL(/\/quiz$/);
   });
 
-  test("the sample result shows what its report says and opens each chapter", async ({ page }, testInfo) => {
+  test("the sample result has a locked result's layout, and the test is its key", async ({ page }, testInfo) => {
     await page.goto("/zh/result/sample");
-    const preview = page.locator("section", { has: page.getByRole("heading", { name: /从四个字母/ }) });
-    await expect(preview.getByText("示例报告", { exact: true })).toBeVisible();
-    // one passage per chapter, each opening that chapter of the sample report
-    const chapters = preview.getByRole("listitem").getByRole("link");
-    await expect(chapters).toHaveCount(4);
-    for (const [i, path] of ["/zh/report/sample", "/zh/report/sample?chapter=2", "/zh/report/sample?chapter=3", "/zh/report/sample?chapter=4"].entries()) {
-      await expect(chapters.nth(i)).toHaveAttribute("href", path);
+    // the same sticky nav and four masked chapters a locked result shows
+    const nav = page.getByRole("navigation", { name: "结果导航" });
+    await expect(nav.locator('a[href^="#"]')).toHaveCount(6);
+    await expect(nav.getByRole("link", { name: /（完整报告内容）$/ })).toHaveCount(4);
+    await expect(page.locator('[data-report-chapter="locked"]')).toHaveCount(4);
+    await expect(page.getByRole("heading", { name: "完整报告，共四章。" })).toBeVisible();
+    // each chapter's opening is readable; what is masked is filler, not the sample report's reading
+    await expect(page.locator("#chapter-1")).toContainText("为思考保留深度");
+    const html = await (await page.request.get("/zh/result/sample")).text();
+    for (const hidden of ["等待想法完全成熟再表达", "我在认真考虑这件事，想先整理一下", "在一次讨论前预留十五分钟写提纲"]) {
+      expect(html.includes(hidden), hidden).toBe(false);
     }
-    await expect(preview.getByText("精力的边界")).toBeVisible();
-    await expect(preview.getByText(/我在认真考虑这件事/)).toBeVisible();
-    // the report is always one tap away: the phone dock beside the test, the bar under the first screen on desktop
-    if (testInfo.project.name === "mobile") {
-      await expect(page.getByRole("link", { name: /示例报告\s*阅读全文/ })).toHaveAttribute("href", "/zh/report/sample");
-    } else {
-      await expect(page.getByRole("link", { name: "阅读示例报告" })).toHaveAttribute("href", "/zh/report/sample");
+    // every lock leads to the test, and nothing names a purchase
+    for (const link of await page.locator('[data-report-chapter="locked"]').getByRole("link", { name: "开始我的测试" }).all()) {
+      await expect(link).toHaveAttribute("href", "/zh/quiz");
     }
-    // still nothing for sale
+    if (testInfo.project.name === "mobile") await expect(nav.getByRole("link", { name: /开始认识自己/ })).toHaveCount(0);
+    else await expect(nav.getByRole("link", { name: /开始认识自己/ })).toHaveAttribute("href", "/zh/quiz");
     expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
-
-    // every quoted passage is in the sample report itself
-    const html = await (await page.request.get("/zh/report/sample")).text();
-    for (const quote of ["把“我需要独处”说成具体安排", "等待想法完全成熟再表达", "我在认真考虑这件事", "在一次讨论前预留十五分钟写提纲"]) {
-      expect(html.includes(quote), quote).toBe(true);
-    }
-    await chapters.nth(2).click();
-    await expect(page).toHaveURL(/\/report\/sample\?chapter=3$/);
-    await expect(page.getByRole("heading", { name: /好的关系/ })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath("sample-locked-chapters.png"), fullPage: true, animations: "disabled" });
   });
 
   test("the sample report lists what each chapter holds and jumps to it", async ({ page }) => {
