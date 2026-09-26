@@ -5,7 +5,7 @@ const zh = {
   versions: {
     eyebrow: "MBTI 测试体验 · 选择版本",
     heading: "按你的节奏，开始探索。",
-    intro: "回想最近一段时间的日常状态，而非理想中的自己。原创自我探索问卷，非官方 MBTI 量表。",
+    intro: "回想最近一段时间的日常状态，而非理想中的自己。每道题都是一个日常情境，没有标准答案。",
     sectionLabel: (count: number, name: string) => `${count} 题${name}`,
     title: (count: number, name: string) => `${count} 题 · ${name}`,
     badgeMore: "更多场景",
@@ -63,7 +63,7 @@ const en: typeof zh = {
   versions: {
     eyebrow: "MBTI®-STYLE TEST · CHOOSE A VERSION",
     heading: "Explore at your own pace.",
-    intro: "Think about your everyday life lately, not your ideal self. An original self-exploration questionnaire — not the official MBTI® instrument.",
+    intro: "Think about your everyday life lately, not your ideal self. Each item is an everyday situation, and there are no right answers.",
     sectionLabel: (count: number, name: string) => `${count}-item ${name}`,
     title: (count: number, name: string) => `${count} items · ${name}`,
     badgeMore: "More situations",

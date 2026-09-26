@@ -15,8 +15,8 @@ import { typeContext } from "@/lib/type-context";
 export type LlmsContext = { baseUrl: string };
 
 const overview = {
-  zh: "mirror（观己）是一份适合手机作答的 MBTI 风格自我探索测试。英文版位于 /，中文版位于 /zh。题目基于原创日常情境；它不是官方 MBTI® 量表，未经过心理测量学验证，结果用于自我探索，不用于诊断、招聘筛选或给他人贴标签。",
-  en: "mirror is a mobile-first MBTI®-style self-exploration quiz in English (at /) and Chinese (at /zh). It uses original everyday-situation items, is not the official MBTI® instrument, has not been psychometrically validated, and is meant for self-reflection — not diagnosis, hiring or labelling people.",
+  zh: "mirror（观己）是一份适合手机作答的 MBTI 风格自我探索测试。英文版位于 /，中文版位于 /zh。题目都是原创的日常情境；每次作答给出四个字母和每个维度的偏向程度，接近均衡的维度同时解读两端。",
+  en: "mirror is a mobile-first MBTI®-style self-exploration quiz in English (at /) and Chinese (at /zh). Its original items are everyday situations; every test gives four letters and how far you lean on each dimension, and near-even dimensions are read from both ends.",
 };
 
 const copy = {

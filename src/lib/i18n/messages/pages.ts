@@ -10,7 +10,7 @@ const zh = {
     titleLine2: "真实的自己",
     titleStop: "。",
     descLine1: "通过日常情境题，了解你的四维人格偏好。",
-    descLine2: "原创自我探索问卷，非官方 MBTI 量表。",
+    descLine2: "不只四个字母，也看清每个维度偏向多少。",
     stats: [["32/64", "题可选"], ["5–10", "分钟左右"], ["16", "种人格倾向"]] as [string, string][],
     sampleLink: "先看看报告",
     bottomLine: "没有标准答案，只有更真实的你。",
@@ -89,7 +89,7 @@ const zh = {
     headerTitle: "四维偏好",
     eyebrow: "理解你的偏好",
     heading: "四对偏好，没有哪一端更好。",
-    intro: "这里使用四维偏好作为自我观察的语言。问卷为原创体验，并非官方 MBTI 量表；类型称呼不代表能力、职业适配或心理诊断。",
+    intro: "这里使用四维偏好作为自我观察的语言。类型称呼描述的是习惯，不代表能力、职业适配或心理诊断。",
     question: (question: string) => `观察问题：${question}`,
     start: "选择版本，开始探索",
     types: "浏览 16 型人格",
@@ -114,7 +114,7 @@ const zh = {
   },
   quiz: {
     metaTitle: "免费 MBTI 测试 · 32 / 64 题可选",
-    metaDescription: "选择 32 题轻量版或 64 题标准版，通过原创日常情境题了解四维人格偏好，免费查看概览，可暂停续答。非官方 MBTI 量表。",
+    metaDescription: "选择 32 题轻量版或 64 题标准版，通过原创日常情境题了解四维人格偏好，免费查看概览，可暂停续答。",
     headerTitle: "认识自己",
   },
   result: {
@@ -193,7 +193,7 @@ const en: typeof zh = {
     titleLine2: "see your true self",
     titleStop: ".",
     descLine1: "Explore your four personality preferences through everyday situations.",
-    descLine2: "An original self-exploration questionnaire — not the official MBTI® instrument.",
+    descLine2: "Not just four letters — see how far you lean on each dimension.",
     stats: [["32/64", "items"], ["5–10", "minutes"], ["16", "types"]],
     sampleLink: "See a sample report",
     bottomLine: "No right answers — only a truer you.",
@@ -270,7 +270,7 @@ const en: typeof zh = {
     headerTitle: "Four preferences",
     eyebrow: "UNDERSTAND YOUR PREFERENCES",
     heading: "Four pairs of preferences — neither side is better.",
-    intro: "Here the four preferences are a language for observing yourself. The questionnaire is original, not the official MBTI® instrument; type names don’t indicate ability, career fit or a psychological diagnosis.",
+    intro: "Here the four preferences are a language for observing yourself. Type names describe habits — not ability, career fit or a psychological diagnosis.",
     question: (question: string) => `Question to notice: ${question}`,
     start: "Choose a version and start",
     types: "Browse the 16 types",
@@ -295,7 +295,7 @@ const en: typeof zh = {
   },
   quiz: {
     metaTitle: "Free MBTI®-style test · 32 or 64 items",
-    metaDescription: "Choose the 32-item Quick or 64-item Standard version and explore your four preferences through original everyday situations. Free overview, pause any time. Not the official MBTI® instrument.",
+    metaDescription: "Choose the 32-item Quick or 64-item Standard version and explore your four preferences through original everyday situations. Free overview, pause any time.",
     headerTitle: "Know yourself",
   },
   result: {
