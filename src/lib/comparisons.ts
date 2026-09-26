@@ -183,6 +183,25 @@ export async function findOwnedComparisonForInvitation(token: string, visitorId:
     .where(and(eq(I.token, token), eq(P.guestVisitorId, visitorId), isNull(P.revokedAt), isNull(I.revokedAt), invitationParentOpen, paidPairReadable)).limit(1);
   return row ? pairView(row.pair, visitorId) : null;
 }
+/**
+ * How far one result's guide for two has come, for its report: invitations still open for joining,
+ * and the readable guides it is part of (as host or as guest), newest first. Counts and a link only.
+ */
+export async function resultPairingStatus(resultId: string, visitorId: string) {
+  if (!resultIdFormat.test(resultId)) return { open: 0, guides: 0, guide: null };
+  const [[open], guides] = await Promise.all([
+    db().select({ count: sql<number>`count(*)::int` }).from(I).leftJoin(S, eq(I.shareId, S.id))
+      .where(and(eq(I.resultId, resultId), eq(I.visitorId, visitorId), isNull(I.revokedAt), gt(I.expiresAt, new Date()), invitationParentOpen)),
+    db().select({ id: P.id, locale: P.locale }).from(P).innerJoin(I, eq(P.invitationId, I.id)).leftJoin(S, eq(I.shareId, S.id))
+      .where(and(
+        or(and(eq(I.resultId, resultId), eq(P.hostVisitorId, visitorId)), and(eq(P.guestResultId, resultId), eq(P.guestVisitorId, visitorId))),
+        isNull(P.revokedAt), isNull(I.revokedAt), invitationParentOpen, paidPairReadable,
+      )).orderBy(desc(P.createdAt), desc(P.id)).limit(20),
+  ]);
+  const [latest] = guides;
+  return { open: open?.count ?? 0, guides: guides.length, guide: latest ? href(latest.locale as Locale, `/compare/${latest.id}`) : null };
+}
+
 export async function listOwnedComparisons(visitorId: string) {
   // Metadata only: a revoked guide's private frozen content never reaches management HTML/RSC.
   const rows = await db().select({ id: P.id, invitationId: P.invitationId, locale: P.locale, relationship: P.relationship, createdAt: P.createdAt, revokedAt: P.revokedAt, invitationRevokedAt: I.revokedAt, shareRevokedAt: S.revokedAt, accessPolicy: P.accessPolicy }).from(P).innerJoin(I, eq(P.invitationId, I.id)).leftJoin(S, eq(I.shareId, S.id))

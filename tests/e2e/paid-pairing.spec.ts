@@ -146,3 +146,44 @@ test('empty center, report entry and recovered order retain separate invitations
   await guest.close();
  }
 });
+
+test('the paid report invites someone to take the test and follows the guide for two to the end', async ({ page, browser }, info) => {
+ const m=pairingUiMessages.zh.reportInvite;
+ const host=await seed(page.request);await pay(page.request,host);
+ const center=`/zh/my/pairing?result=${host}`;
+ // Before any invitation, each place invites: the desktop sidebar, and the ends of chapters 03 and 04.
+ await page.goto(`/zh/report/${host}`);
+ const aside=page.locator('[data-report-invite="aside"]');
+ if(info.project.name==='mobile')await expect(aside).toBeHidden();
+ else await expect(aside.getByRole('link',{name:m.invite})).toHaveAttribute('href',center);
+ await page.goto(`/zh/report/${host}?chapter=3`);
+ await expect(page.locator('[data-report-invite="relationship"]').getByRole('link',{name:m.invite})).toHaveAttribute('href',center);
+ await page.goto(`/zh/report/${host}?chapter=4`);
+ const closing=page.locator('[data-report-invite="closing"]');
+ await expect(closing.getByRole('link',{name:m.invite})).toHaveAttribute('href',center);
+ await expect(closing.locator('ol > li')).toHaveCount(3);
+ // Once the invitation is out, the first step is done and the action is its progress.
+ const created=await page.request.post('/api/comparison-invitations',{headers:{origin},data:{resultId:host,requestId:randomUUID(),relationship:'partner',consentVersion:'compare-host-v4'}});
+ expect(created.status()).toBe(201);const invite=(await created.json()).data;
+ await page.reload();
+ await expect(closing).toContainText(m.waiting(1));
+ await expect(closing.getByText(`· ${m.done}`)).toHaveCount(1);
+ await expect(closing.getByRole('link',{name:m.progress})).toHaveAttribute('href',center);
+ // Once they have tested, unlocked and joined, both reports lead to the guide.
+ const guest=await browser.newContext({baseURL:origin});
+ const own=await seed(guest.request);await pay(guest.request,own);
+ const joined=await guest.request.post('/api/comparisons',{headers:{origin},data:{invitationToken:invite.token,resultId:own,consentVersion:'compare-guest-v2'}});
+ expect(joined.status()).toBe(201);const guide=(await joined.json()).data;
+ await page.reload();
+ await expect(closing).toContainText(m.ready(1));
+ await expect(closing.getByText(`· ${m.done}`)).toHaveCount(3);
+ await expect(closing.getByRole('link',{name:m.readGuide})).toHaveAttribute('href',guide.url);
+ await expect(closing.getByRole('link',{name:m.another})).toHaveAttribute('href',center);
+ await shot(page,`report-invite-ready-zh-${info.project.name}`);
+ const g=await guest.newPage();await g.goto(`/zh/report/${own}?chapter=4`);
+ await expect(g.locator('[data-report-invite="closing"]').getByRole('link',{name:m.readGuide})).toHaveAttribute('href',guide.url);
+ await guest.close();
+ // The sample report has nothing to invite from.
+ await page.goto('/zh/report/sample');
+ await expect(page.locator('[data-report-invite]')).toHaveCount(0);
+});

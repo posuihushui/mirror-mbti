@@ -41,7 +41,11 @@ export type ReportData = {
  * Each chapter opens on a dark cover (label, heading, lead) that continues the tabs above it,
  * then the reading itself sits on paper, where long text is easiest to read.
  */
-export async function ReportBody({ data, reportKey, banner, footer, relationshipAction }: { data: ReportData; reportKey: string; banner?: ReactNode; footer?: ReactNode; relationshipAction?: ReactNode }) {
+/**
+ * `aside` sits in the desktop sidebar under the chapter list; `relationshipAction` and `closingAction`
+ * follow chapter 03 and chapter 04, outside their animated content.
+ */
+export async function ReportBody({ data, reportKey, banner, footer, aside, relationshipAction, closingAction }: { data: ReportData; reportKey: string; banner?: ReactNode; footer?: ReactNode; aside?: ReactNode; relationshipAction?: ReactNode; closingAction?: ReactNode }) {
   const locale = await getLocale();
   const t = reportMessages[locale].aside;
   const { name, sample, demo, typeLabel, profile } = data;
@@ -74,6 +78,7 @@ export async function ReportBody({ data, reportKey, banner, footer, relationship
             </Badge>
           )}
           <ChapterSidebarNav />
+          {aside}
           <ReportImage src={image} className="mt-8 text-sm text-mist hover:text-ink" />
         </div>
       </aside>
@@ -110,7 +115,7 @@ export async function ReportBody({ data, reportKey, banner, footer, relationship
           <Cover index={2} type={typeLabel} locale={locale} heading={reportMessages[locale].three.heading} lead={reportMessages[locale].three.lead} />
           <Reading><ChapterThree data={data} locale={locale} /></Reading>
         </ChapterPanel>
-        <ChapterPanel index={3}>
+        <ChapterPanel index={3} after={closingAction ? <div className="px-6 md:px-0">{closingAction}</div> : undefined}>
           <Cover index={3} type={typeLabel} locale={locale} heading={reportMessages[locale].four.heading} lead={reportMessages[locale].four.lead} />
           <Reading><ChapterFour data={data} locale={locale} reportKey={reportKey} /></Reading>
         </ChapterPanel>

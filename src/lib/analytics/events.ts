@@ -21,6 +21,7 @@ export type CtaId =
   | "read_sample_report"
   | "unlock_report"
   | "read_report"
+  | "read_guide"
   | "view_result"
   | "review_answers"
   | "retry_payment"
@@ -71,7 +72,9 @@ export type CtaLocation =
   | "type_grid"
   | "type_context"
   | "pairing_benefit"
-  | "pairing_center";
+  | "pairing_center"
+  | "report_aside"
+  | "report_invite";
 
 export type TrackAttrs = { "data-track": CtaId; "data-track-location": CtaLocation };
 
