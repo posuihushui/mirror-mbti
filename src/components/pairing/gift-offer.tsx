@@ -27,6 +27,8 @@ type Props = {
    * sheet never opens on top of the invitation sheet — nested drawers misbehave on phones.
    */
   checkoutHref?: string;
+  /** The parent owns the payment sheet (the report opens one per island): buying calls this instead. */
+  onCheckout?: () => void;
 };
 
 /**
@@ -34,7 +36,7 @@ type Props = {
  * (no second payment), then a purchase through the shared payment sheet. It is a post-test,
  * owner-only surface, so it may show the price.
  */
-export function GiftOffer({ invitationId, resultId, locale, covered: initiallyCovered, checkout, autoOpen = false, checkoutHref }: Props) {
+export function GiftOffer({ invitationId, resultId, locale, covered: initiallyCovered, checkout, autoOpen = false, checkoutHref, onCheckout }: Props) {
   const g = pairingUiMessages[locale].gift;
   const currency = paymentMessages[locale].currency;
   const router = useRouter();
@@ -78,9 +80,9 @@ export function GiftOffer({ invitationId, resultId, locale, covered: initiallyCo
       <p className="mt-2 text-xs text-mist">{g.available(checkout.available)}</p>
       <button type="button" className="text-link font-medium" disabled={pending} onClick={attach}>{pending ? g.attaching : g.attach}<ArrowRight size={15} aria-hidden /></button>
     </> : checkoutHref ? <a href={checkoutHref} className="text-link font-medium">{`${g.cta} · ${currency}${checkout.priceLabel}`}<ArrowRight size={15} aria-hidden /></a>
-      : <button type="button" className="text-link font-medium" onClick={() => change(true)}>{`${g.cta} · ${currency}${checkout.priceLabel}`}<ArrowRight size={15} aria-hidden /></button>}
+      : <button type="button" className="text-link font-medium" onClick={onCheckout ?? (() => change(true))}>{`${g.cta} · ${currency}${checkout.priceLabel}`}<ArrowRight size={15} aria-hidden /></button>}
     <p role="status" className="text-sm">{error}</p>
-    {checkout.available === 0 && !checkoutHref && <PaymentSheet open={open} onOpenChange={change} gift={{ invitationId }} resultId={resultId} type="" name=""
+    {checkout.available === 0 && !checkoutHref && !onCheckout && <PaymentSheet open={open} onOpenChange={change} gift={{ invitationId }} resultId={resultId} type="" name=""
       priceLabel={checkout.priceLabel} mode={checkout.mode} networks={checkout.networks ? [...checkout.networks] : undefined}
       onUnlocked={() => { paid.current = true; }} />}
   </div>;

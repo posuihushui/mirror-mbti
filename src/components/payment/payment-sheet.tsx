@@ -47,7 +47,7 @@ type Props = {
    * 请 TA: sell a gift for one of the host's invitations instead of the report for `resultId`
    * (the host's own result, which the invitation was made from).
    */
-  gift?: { invitationId: string };
+  gift?: { invitationId: string; /** The success button, when the sheet was opened somewhere other than the pairing center. */ backLabel?: string };
 };
 
 type PayState = "ready" | "processing" | "success" | "cancelled";
@@ -269,7 +269,7 @@ function PaymentFlow({ onOpenChange, resultId, type, name, priceLabel, mode, net
           <p className="text-sm text-mist">{g.readyBody}</p>
           {mode === "mock" && <p className="mt-2 text-xs text-mist">{g.demoPaid}</p>}
           {orderId && <div className="mt-6 border-t border-line pt-5 text-left"><OrderReceipt orderId={orderId} /></div>}
-          <button type="button" onClick={() => onOpenChange(false)} className="pill mt-6 min-h-11">{g.backToCenter}<ArrowRight size={18} /></button>
+          <button type="button" onClick={() => onOpenChange(false)} className="pill mt-6 min-h-11">{gift.backLabel ?? g.backToCenter}<ArrowRight size={18} /></button>
         </div>
       ) : state === "success" ? (
         <div className="pt-5 pb-4 text-center md:pt-8">

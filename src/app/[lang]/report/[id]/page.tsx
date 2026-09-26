@@ -4,6 +4,7 @@ import { ContinuationList } from "@/components/pairing/continuation-list";
 import { listComparisonContinuations } from "@/lib/comparison-continuations";
 import { resultPairingStatus } from "@/lib/comparisons";
 import { ReportInvite } from "@/components/report/report-invite";
+import { giftCheckout } from "@/lib/pair-gifts";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { TrackView } from "@/components/analytics/track-view";
@@ -62,8 +63,9 @@ export default async function ReportPage({ params }: Params) {
 
   const data: ReportData = buildReportData(result.profile, { sample: result.sample, demo: paymentModeFor(locale) === "mock", locale });
   const [continuations, pairing] = !data.sample && visitorId
-    ? await Promise.all([listComparisonContinuations(visitorId, id), resultPairingStatus(id, visitorId)])
+    ? await Promise.all([listComparisonContinuations(visitorId, id), resultPairingStatus(id, visitorId, locale)])
     : [[], null];
+  const checkout = giftCheckout(locale);
 
   return (
     <>
@@ -72,9 +74,9 @@ export default async function ReportPage({ params }: Params) {
         data={data}
         reportKey={data.sample ? "sample" : id}
         banner={<>{data.sample && <SampleNotice />}<p className="mx-6 my-4 text-xs text-mist md:mx-0 md:mt-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>{!data.sample && <div className="mx-6 md:mx-0 md:mb-6"><PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker></div>}</>}
-        aside={pairing && <ReportInvite locale={locale} resultId={id} status={pairing} variant="aside" />}
-        relationshipAction={data.sample ? <SamplePairing /> : pairing && <ReportInvite locale={locale} resultId={id} status={pairing} variant="relationship" />}
-        closingAction={pairing && <ReportInvite locale={locale} resultId={id} status={pairing} variant="closing" />}
+        aside={pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="aside" />}
+        relationshipAction={data.sample ? <SamplePairing /> : pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="relationship" />}
+        closingAction={pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="closing" />}
         footer={data.sample ? <SampleCta /> : <div className="mx-6 md:mx-0"><ContinuationList items={continuations} locale={locale} surface="report" /></div>}
       />
       {data.sample && (

@@ -14,15 +14,8 @@ import { getLocale } from "@/lib/i18n/server";
 import { href } from "@/lib/i18n/locale";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { questionnaireName } from "@/lib/questionnaires";
-import { paymentModeFor, priceLabelFor } from "@/lib/env";
-import { cryptoNetworks } from "@/lib/payments/crypto/config";
-import type { Locale } from "@/lib/i18n/locale";
+import { giftCheckout } from "@/lib/pair-gifts";
 
-/** 请 TA is bought in the invitation's language, at that language's price and provider. */
-function giftCheckout(locale: Locale) {
-  const mode = paymentModeFor(locale);
-  return { priceLabel: priceLabelFor(locale), mode, networks: mode === "crypto" ? cryptoNetworks() : [] };
-}
 export async function generateMetadata(): Promise<Metadata> { const locale = await getLocale(); return { title: pairingUiMessages[locale].center, robots: { index: false, follow: false }, referrer: "no-referrer" }; }
 export default async function PairingCenter({ searchParams }: { searchParams: Promise<{ result?: string; share?: string; gift?: string }> }) {
   const locale = await getLocale(); const m = pairingUiMessages[locale]; const visitor = await getVisitorId(); const query = await searchParams;

@@ -1,13 +1,13 @@
 import "server-only";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { and, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { appUrl } from "@/lib/env";
 import { href, type Locale } from "@/lib/i18n/locale";
 import { getQuestionnaire, questionnaireLocale } from "@/lib/questionnaires";
 import { generateCompareContent, generateRelationshipContent } from "@/lib/compare-content";
-import { COMPARE_CONTENT_VERSION, COMPARE_V3_CONTENT_VERSION, COMPARE_HOST_CONSENT_VERSION, COMPARE_GUEST_CONSENT_VERSION, type CompareSnapshot } from "@/lib/compare-types";
+import { COMPARE_CONTENT_VERSION, COMPARE_V3_CONTENT_VERSION, COMPARE_HOST_CONSENT_VERSION, COMPARE_GUEST_CONSENT_VERSION, type CompareSnapshot, type CompareRelationship } from "@/lib/compare-types";
 import { getPairingEligibility, requirePairingEligibility, type PairingTx as Tx } from "@/lib/pairing-eligibility";
 import { attachAvailableGift, claimGift, hostGiftState } from "@/lib/pair-gifts";
 import { ShareError, invitationInputSchema, comparisonInputSchema, shareTokenSchema } from "@/lib/share-policy";
@@ -183,23 +183,43 @@ export async function findOwnedComparisonForInvitation(token: string, visitorId:
     .where(and(eq(I.token, token), eq(P.guestVisitorId, visitorId), isNull(P.revokedAt), isNull(I.revokedAt), invitationParentOpen, paidPairReadable)).limit(1);
   return row ? pairView(row.pair, visitorId) : null;
 }
+/** One invitation still open for joining, as its result's report lists it. */
+export type OpenInvitation = { id: string; url: string; relationship: CompareRelationship | null; covered: boolean; expiresAt: string; joined: number };
+
 /**
- * How far one result's guide for two has come, for its report: invitations still open for joining,
- * and the readable guides it is part of (as host or as guest), newest first. Counts and a link only.
+ * How far one result's guide for two has come, for its report: the invitations still open for
+ * joining (with whether 请 TA covers them and how many joined), the readable guides the result is
+ * part of as host or guest, the other person's categories in the newest one, and unused gifts.
  */
-export async function resultPairingStatus(resultId: string, visitorId: string) {
-  if (!resultIdFormat.test(resultId)) return { open: 0, guides: 0, guide: null };
-  const [[open], guides] = await Promise.all([
-    db().select({ count: sql<number>`count(*)::int` }).from(I).leftJoin(S, eq(I.shareId, S.id))
-      .where(and(eq(I.resultId, resultId), eq(I.visitorId, visitorId), isNull(I.revokedAt), gt(I.expiresAt, new Date()), invitationParentOpen)),
-    db().select({ id: P.id, locale: P.locale }).from(P).innerJoin(I, eq(P.invitationId, I.id)).leftJoin(S, eq(I.shareId, S.id))
+export async function resultPairingStatus(resultId: string, visitorId: string, locale: Locale) {
+  const empty = { invitations: [] as OpenInvitation[], guides: 0, guide: null as string | null, partner: null as CompareSnapshot["categories"] | null, availableGifts: 0 };
+  if (!resultIdFormat.test(resultId)) return empty;
+  const [open, guides, gifts] = await Promise.all([
+    db().select({ invitation: I }).from(I).leftJoin(S, eq(I.shareId, S.id))
+      .where(and(eq(I.resultId, resultId), eq(I.visitorId, visitorId), eq(I.accessPolicy, "paid-pair-v2"), isNull(I.revokedAt), gt(I.expiresAt, new Date()), invitationParentOpen))
+      .orderBy(desc(I.createdAt), desc(I.id)).limit(20),
+    db().select({ id: P.id, locale: P.locale, hostVisitorId: P.hostVisitorId, hostSnapshot: P.hostSnapshot, guestSnapshot: P.guestSnapshot }).from(P).innerJoin(I, eq(P.invitationId, I.id)).leftJoin(S, eq(I.shareId, S.id))
       .where(and(
         or(and(eq(I.resultId, resultId), eq(P.hostVisitorId, visitorId)), and(eq(P.guestResultId, resultId), eq(P.guestVisitorId, visitorId))),
         isNull(P.revokedAt), isNull(I.revokedAt), invitationParentOpen, paidPairReadable,
       )).orderBy(desc(P.createdAt), desc(P.id)).limit(20),
+    hostGiftState(visitorId),
   ]);
+  const ids = open.map(({ invitation }) => invitation.id);
+  const joined = ids.length
+    ? await db().select({ invitationId: P.invitationId, count: sql<number>`count(*)::int` }).from(P).where(and(inArray(P.invitationId, ids), isNull(P.revokedAt))).groupBy(P.invitationId)
+    : [];
   const [latest] = guides;
-  return { open: open?.count ?? 0, guides: guides.length, guide: latest ? href(latest.locale as Locale, `/compare/${latest.id}`) : null };
+  return {
+    invitations: open.map(({ invitation }) => {
+      const view = invitationView(invitation);
+      return { id: view.id, url: view.url, relationship: view.relationship, covered: gifts.covered.includes(view.id), expiresAt: view.expiresAt, joined: joined.find((row) => row.invitationId === view.id)?.count ?? 0 };
+    }),
+    guides: guides.length,
+    guide: latest ? href(latest.locale as Locale, `/compare/${latest.id}`) : null,
+    partner: latest ? (latest.hostVisitorId === visitorId ? latest.guestSnapshot : latest.hostSnapshot).categories : null,
+    availableGifts: gifts.available[locale],
+  };
 }
 
 export async function listOwnedComparisons(visitorId: string) {

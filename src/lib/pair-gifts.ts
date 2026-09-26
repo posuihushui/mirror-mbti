@@ -4,6 +4,8 @@ import { and, asc, eq, gt, inArray, isNotNull, isNull, lte, or } from "drizzle-o
 import { db, schema, type Db } from "@/db";
 import type { OrderRow } from "@/db/schema";
 import type { Locale } from "@/lib/i18n/locale";
+import { paymentModeFor, priceLabelFor } from "@/lib/env";
+import { cryptoNetworks } from "@/lib/payments/crypto/config";
 import type { PairingTx as Tx } from "@/lib/pairing-eligibility";
 import { ShareError } from "@/lib/share-policy";
 
@@ -135,4 +137,10 @@ export async function hostGiftState(visitorId: string) {
     else available[row.locale as Locale] += 1;
   }
   return { covered, available };
+}
+
+/** 请 TA is bought in the invitation's language, at that language's price and provider. */
+export function giftCheckout(locale: Locale) {
+  const mode = paymentModeFor(locale);
+  return { priceLabel: priceLabelFor(locale), mode, networks: mode === "crypto" ? cryptoNetworks() : [] };
 }

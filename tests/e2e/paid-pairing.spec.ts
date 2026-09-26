@@ -4,6 +4,8 @@ import { test, expect, type APIRequestContext, type Page } from "@playwright/tes
 import { getQuestionnaire } from "../../src/lib/questionnaires";
 import { pairingUiMessages } from "../../src/lib/i18n/messages/pairing-ui";
 import { pairingMessages } from "../../src/lib/i18n/messages/pairing";
+import { compareMessages } from "../../src/lib/i18n/messages/compare";
+import { paymentMessages } from "../../src/lib/i18n/messages/payment";
 const origin=process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 const evidence='docs/verification/paid-pairing';
 async function seed(request:APIRequestContext,en=false){
@@ -147,41 +149,58 @@ test('empty center, report entry and recovered order retain separate invitations
  }
 });
 
-test('the paid report invites someone to take the test and follows the guide for two to the end', async ({ page, browser }, info) => {
- const m=pairingUiMessages.zh.reportInvite;
+test('the paid report invites someone, covers their report and follows the guide for two to the end', async ({ page, browser }, info) => {
+ test.setTimeout(150000);
+ const m=pairingUiMessages.zh.reportInvite, c=compareMessages.zh, p=pairingMessages.zh, g=pairingUiMessages.zh.gift, pay$=paymentMessages.zh;
  const host=await seed(page.request);await pay(page.request,host);
- const center=`/zh/my/pairing?result=${host}`;
- // Before any invitation, each place invites: the desktop sidebar, and the ends of chapters 03 and 04.
+ // The desktop sidebar keeps an invitation beside every chapter; phones meet it at the ends of chapters 03 and 04.
  await page.goto(`/zh/report/${host}`);
  const aside=page.locator('[data-report-invite="aside"]');
  if(info.project.name==='mobile')await expect(aside).toBeHidden();
- else await expect(aside.getByRole('link',{name:m.invite})).toHaveAttribute('href',center);
+ else await expect(aside.getByRole('button',{name:m.invite})).toBeVisible();
  await page.goto(`/zh/report/${host}?chapter=3`);
- await expect(page.locator('[data-report-invite="relationship"]').getByRole('link',{name:m.invite})).toHaveAttribute('href',center);
+ await expect(page.locator('[data-report-invite="relationship"] [data-relationship-cards] button')).toHaveCount(4);
+ // Choosing a relationship on the card opens the invitation with it chosen, on the report itself.
  await page.goto(`/zh/report/${host}?chapter=4`);
  const closing=page.locator('[data-report-invite="closing"]');
- await expect(closing.getByRole('link',{name:m.invite})).toHaveAttribute('href',center);
- await expect(closing.locator('ol > li')).toHaveCount(3);
- // Once the invitation is out, the first step is done and the action is its progress.
- const created=await page.request.post('/api/comparison-invitations',{headers:{origin},data:{resultId:host,requestId:randomUUID(),relationship:'partner',consentVersion:'compare-host-v4'}});
- expect(created.status()).toBe(201);const invite=(await created.json()).data;
- await page.reload();
- await expect(closing).toContainText(m.waiting(1));
+ await expect(closing).toHaveAttribute('data-report-invite-state','start');
+ await expect(closing).toContainText(m.giftTitle('¥6.9'));
+ await closing.getByRole('button',{name:new RegExp(c.relationshipLabels.partner)}).click();
+ const sheet=page.getByRole('dialog');
+ await expect(sheet.getByRole('radio',{name:c.relationshipLabels.partner})).toBeChecked();
+ const consent=sheet.locator('[data-compare-consent="host"]');
+ await consent.getByRole('checkbox').check();
+ const created=page.waitForResponse(r=>r.url().endsWith('/api/comparison-invitations')&&r.request().method()==='POST');
+ await consent.getByRole('button',{name:p.hostAgree,exact:true}).click();
+ const invitation=(await (await created).json()).data;
+ await expect(sheet.getByRole('textbox')).toHaveValue(p.invitationTexts.partner(invitation.url));
+ // 请 TA without leaving the report: the invitation sheet gives way to one payment sheet.
+ await sheet.getByRole('button',{name:new RegExp(`^${g.cta}`)}).click();
+ await expect(page.getByRole('dialog')).toContainText(g.product);
+ await expect(page.getByRole('dialog')).toHaveCount(1);
+ const orderResponse=page.waitForResponse(r=>r.url().endsWith('/api/orders')&&r.request().method()==='POST');
+ await page.getByRole('dialog').getByRole('button',{name:pay$.sheet.demoPay('6.9')}).click();
+ expect((await (await orderResponse).json()).data).toMatchObject({kind:'pair-gift',invitationId:invitation.id,resultId:host});
+ await page.getByRole('dialog').getByRole('button',{name:m.giftBack}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page).toHaveURL(new RegExp(`/zh/report/${host}`));
+ await expect(closing).toHaveAttribute('data-report-invite-state','waiting');
+ await expect(closing.locator('[data-report-invitations] [data-gift="covered"]')).toBeVisible();
+ await expect(closing).toContainText(m.bodies.covered);
  await expect(closing.getByText(`· ${m.done}`)).toHaveCount(1);
- await expect(closing.getByRole('link',{name:m.progress})).toHaveAttribute('href',center);
- // Once they have tested, unlocked and joined, both reports lead to the guide.
+ await shot(page,`report-invite-covered-zh-${info.project.name}`);
+ // They take the test and join: the cover opens their report, and both reports lead to the guide.
  const guest=await browser.newContext({baseURL:origin});
- const own=await seed(guest.request);await pay(guest.request,own);
- const joined=await guest.request.post('/api/comparisons',{headers:{origin},data:{invitationToken:invite.token,resultId:own,consentVersion:'compare-guest-v2'}});
+ const own=await seed(guest.request);
+ const joined=await guest.request.post('/api/comparisons',{headers:{origin},data:{invitationToken:invitation.token,resultId:own,consentVersion:'compare-guest-v2'}});
  expect(joined.status()).toBe(201);const guide=(await joined.json()).data;
  await page.reload();
- await expect(closing).toContainText(m.ready(1));
+ await expect(closing).toHaveAttribute('data-report-invite-state','ready');
  await expect(closing.getByText(`· ${m.done}`)).toHaveCount(3);
  await expect(closing.getByRole('link',{name:m.readGuide})).toHaveAttribute('href',guide.url);
- await expect(closing.getByRole('link',{name:m.another})).toHaveAttribute('href',center);
  await shot(page,`report-invite-ready-zh-${info.project.name}`);
- const g=await guest.newPage();await g.goto(`/zh/report/${own}?chapter=4`);
- await expect(g.locator('[data-report-invite="closing"]').getByRole('link',{name:m.readGuide})).toHaveAttribute('href',guide.url);
+ const g2=await guest.newPage();await g2.goto(`/zh/report/${own}?chapter=4`);
+ await expect(g2.locator('[data-report-invite="closing"]').getByRole('link',{name:m.readGuide})).toHaveAttribute('href',guide.url);
  await guest.close();
  // The sample report has nothing to invite from.
  await page.goto('/zh/report/sample');
