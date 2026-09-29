@@ -74,7 +74,7 @@ export default async function MyReportPage({ searchParams }: { searchParams: Pro
         </section>
         {hasHistory ? (
           <>
-            <section className="mt-6 flex flex-col md:mt-10 md:gap-6" aria-label={t.listLabel}>
+            <section className="mt-6 flex flex-col md:mt-10 md:gap-10" aria-label={t.listLabel}>
               {results.map((result) => <HistoryItem key={result.id} result={result} locale={locale} />)}
             </section>
             <PrimaryButton href={href(locale, "/quiz")} className="mt-8 max-w-xl md:hidden" {...trackAttrs("start_quiz", "page_cta")}>{t.continue}</PrimaryButton>
@@ -130,7 +130,7 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
   });
   return (
     // Phones list the records flat between rules, so the covers take the full width; boxed cards from 721px.
-    <article aria-label={t.recordLabel(typeLabel)} className="border-t border-line pt-7 last:border-b md:border md:bg-card md:px-10 md:pt-9">
+    <article aria-label={t.recordLabel(typeLabel)} className="border-t border-line pt-10 last:border-b md:border md:bg-card md:px-10 md:pt-9">
       <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:grid-rows-[auto_1fr] xl:gap-x-12">
         <div className="xl:col-start-1 xl:row-start-1">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -155,7 +155,7 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
         </dl>
       </div>
       {/* Phones: a compact pill (a full-width bar per record stacked up), its links on the line below at every width. From 721px one row, the card's foot. */}
-      <div className="mt-6 flex flex-col items-start gap-2 pb-6 md:mt-9 md:flex-row md:items-center md:gap-8 md:border-t md:border-line md:py-6">
+      <div className={cn("mt-6 flex flex-col items-start gap-2 md:mt-9 md:flex-row md:items-center md:gap-8 md:border-t md:border-line md:py-6", order ? "pb-6" : "pb-10")}>
         <PrimaryButton href={href(locale, unlocked ? `/report/${result.id}` : `/result/${result.id}`)} prefetch={false} className="max-md:min-h-11 max-md:w-auto max-md:gap-5 max-md:px-5 md:w-[240px]" {...trackAttrs(unlocked ? "read_report" : "view_result", "history_item")}>
           {unlocked ? t.readDetailed : t.viewBrief}
         </PrimaryButton>
@@ -166,8 +166,9 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
           {unlocked && <PairingTracker resultId={result.id} surface="my_pairing"><TextLink href={href(locale, `/my/pairing?result=${result.id}`)} prefetch={false}>{pairingUiMessages[locale].invite}</TextLink></PairingTracker>}
         </div>
       </div>
+      {/* The record's space below it comes after its order fold, so the fold stays with its record. */}
       {order && (
-        <Accordion type="single" collapsible className="pb-2">
+        <Accordion type="single" collapsible className="pb-8 md:pb-2">
           <AccordionItem value="order">
             <AccordionTrigger {...trackAttrs("order_receipt", "history_item")}>{t.orderAccordion}</AccordionTrigger>
             <AccordionContent><OrderReceipt orderId={order.id} /></AccordionContent>
