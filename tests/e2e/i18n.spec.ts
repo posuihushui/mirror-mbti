@@ -73,7 +73,8 @@ test.describe("English site", () => {
 
   test("the English sample report ships all four chapters in the server HTML", async ({ request }) => {
     const html = await (await request.get("/report/sample")).text();
-    expect(html.match(/role="tabpanel"/g)?.length).toBe(4);
+    // Four chapters and the guide for two.
+    expect(html.match(/role="tabpanel"/g)?.length).toBe(5);
     expect(html).toContain("Sample report");
     expect(html).not.toMatch(/示例报告/);
   });

@@ -135,7 +135,8 @@ test('empty center, report entry and recovered order retain separate invitations
   await shot(g,`payment-multiple-${locale}-${info.project.name}`);
   await g.getByRole('link',{name:m.readReport,exact:true}).click();
   await expect(g).toHaveURL(new RegExp(`/report/${own}$`));
-  await expect(g.locator('[data-pairing-benefit="unlocked"]').filter({visible:true}).first()).toBeVisible();
+  // The guide for two is the report's own tab: a phone tab, a sidebar entry on desktop.
+  await expect(g.locator('[role="tab"], nav[aria-label] button').filter({hasText:en?'Guide for two':'双人指南'}).filter({visible:true}).first()).toBeVisible();
   const heading=await g.getByRole('heading',{level:1}).boundingBox();
   expect(heading!.y+heading!.height).toBeLessThan(g.viewportSize()!.height);
   if(info.project.name==='mobile') {
@@ -157,23 +158,22 @@ test('the paid report invites someone, covers their report and follows the guide
  test.setTimeout(150000);
  const m=pairingUiMessages.zh.reportInvite, c=compareMessages.zh, p=pairingMessages.zh, g=pairingUiMessages.zh.gift, pay$=paymentMessages.zh;
  const host=await seed(page.request);await pay(page.request,host);
- // The desktop sidebar keeps an invitation beside every chapter; phones meet it at the ends of chapters 03 and 04.
+ // The guide for two is a tab of its own; the sidebar and the chapters only lead to it.
  await page.goto(`/zh/report/${host}`);
- const aside=page.locator('[data-report-invite="aside"]');
- if(info.project.name==='mobile')await expect(aside).toBeHidden();
- else await expect(aside.getByRole('button',{name:m.invite})).toBeVisible();
+ await expect(page.locator('[data-report-invite]')).toHaveCount(1);
+ await expect(page.locator('#chapter-panel-5 [data-report-invite="tab"]')).toHaveCount(1);
  await page.goto(`/zh/report/${host}?chapter=3`);
- const relationship=page.locator('[data-report-invite="relationship"]');
- await expect(relationship.locator('[data-relationship-cards] button')).toHaveCount(4);
- // Chapter 03 carries each moment between two people; the card explains the guide from the reader's side before it asks.
+ // Chapter 03 carries each moment between two people, then one line that opens the guide's tab.
  await expect(page.locator('#chapter-panel-3 [data-pair-scene]')).toHaveCount(4);
- await expect(relationship.locator('[data-pair-lines]')).toBeVisible();
- for(const copy of [m.headings.relationship.split('\n')[0],m.gainsTitle,m.assureTitle,m.assures[0].title])await expect(relationship).toContainText(copy);
- // Choosing a relationship on the card opens the invitation with it chosen, on the report itself.
- await page.goto(`/zh/report/${host}?chapter=4`);
- const closing=page.locator('[data-report-invite="closing"]');
+ await page.locator('#chapter-panel-3 [data-guide-pointer]').getByRole('button').click();
+ await expect(page).toHaveURL(/chapter=5$/);
+ const closing=page.locator('[data-report-invite="tab"]');
  await expect(closing).toHaveAttribute('data-report-invite-state','start');
- await expect(closing).toContainText(m.giftTitle('¥4.9'));
+ await expect(page.locator('#chapter-panel-5')).toContainText(m.headings.relationship.split('\n')[0]);
+ await expect(closing.locator('[data-relationship-cards] button')).toHaveCount(4);
+ await expect(closing.locator('[data-pair-lines]')).toBeVisible();
+ for(const copy of [m.halvesTitle,m.gainsTitle,m.assureTitle,m.assures[0].title,m.giftTitle('¥4.9')])await expect(closing).toContainText(copy);
+ // Choosing a relationship opens the invitation with it chosen, on the report itself.
  await closing.getByRole('button',{name:new RegExp(c.relationshipLabels.partner)}).click();
  const sheet=page.getByRole('dialog');
  await expect(sheet.getByRole('radio',{name:c.relationshipLabels.partner})).toBeChecked();
@@ -195,7 +195,7 @@ test('the paid report invites someone, covers their report and follows the guide
  await expect(page).toHaveURL(new RegExp(`/zh/report/${host}`));
  await expect(closing).toHaveAttribute('data-report-invite-state','waiting');
  await expect(closing.locator('[data-report-invitations] [data-gift="covered"]')).toBeVisible();
- await expect(closing).toContainText(m.bodies.covered);
+ await expect(page.locator('#chapter-panel-5')).toContainText(m.bodies.covered);
  await expect(closing.getByText(`· ${m.done}`)).toHaveCount(1);
  await shot(page,`report-invite-covered-zh-${info.project.name}`);
  // They take the test and join: the cover opens their report, and both reports lead to the guide.
@@ -208,8 +208,8 @@ test('the paid report invites someone, covers their report and follows the guide
  await expect(closing.getByText(`· ${m.done}`)).toHaveCount(3);
  await expect(closing.getByRole('link',{name:m.readGuide})).toHaveAttribute('href',guide.url);
  await shot(page,`report-invite-ready-zh-${info.project.name}`);
- const g2=await guest.newPage();await g2.goto(`/zh/report/${own}?chapter=4`);
- await expect(g2.locator('[data-report-invite="closing"]').getByRole('link',{name:m.readGuide})).toHaveAttribute('href',guide.url);
+ const g2=await guest.newPage();await g2.goto(`/zh/report/${own}?chapter=5`);
+ await expect(g2.locator('[data-report-invite="tab"]').getByRole('link',{name:m.readGuide})).toHaveAttribute('href',guide.url);
  await guest.close();
  // The sample report has nothing to invite from.
  await page.goto('/zh/report/sample');

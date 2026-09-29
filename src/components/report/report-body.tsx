@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { CaretDown, Check } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, CaretDown, Check } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { MirrorMark } from "@/components/brand/mirror-mark";
 import { Illustration, type Scene } from "@/components/illustrations/scene";
@@ -15,7 +15,11 @@ import { reportMessages } from "@/lib/i18n/messages/report";
 import { getLocale } from "@/lib/i18n/server";
 import { isPersonalityType, type Letter, type Profile } from "@/lib/personality";
 import type { Insight, Need } from "@/lib/report-content";
-import { ChapterFooterNav, ChapterPanel, ChapterSidebarNav, ChapterTabs, StrengthSwitch } from "./chapter-ui";
+import { ChapterFooterNav, ChapterJump, ChapterPanel, ChapterSidebarNav, ChapterTabs, StrengthSwitch } from "./chapter-ui";
+import type { GuideState } from "./chapter-ui";
+import { GUIDE_TAB, reportTabLabelsFor } from "@/lib/site";
+import { pairingMessages } from "@/lib/i18n/messages/pairing";
+import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { PracticeCheck, PracticeProgress, WeekStrip } from "./practice-check";
 import { ClarityMeter, LeanBands, LeanBandsLegend, PairDots, StrengthBlindspotChart } from "./report-charts";
 import { ContinueReading } from "./continue-reading";
@@ -46,10 +50,13 @@ export type ReportData = {
  * then the reading itself sits on paper, where long text is easiest to read.
  */
 /**
- * `aside` sits in the desktop sidebar under the chapter list; `relationshipAction` and `closingAction`
- * follow chapter 03 and chapter 04, outside their animated content.
+ * The guide for two is the report's fifth tab (`GUIDE_TAB`): its own cover and `content` (the paid
+ * report's invitations, or the sample's value-only preview). The sidebar only navigates to it, and
+ * chapter 03, where relationships are read, ends with one line that opens it.
  */
-export async function ReportBody({ data, reportKey, banner, footer, aside, relationshipAction, closingAction }: { data: ReportData; reportKey: string; banner?: ReactNode; footer?: ReactNode; aside?: ReactNode; relationshipAction?: ReactNode; closingAction?: ReactNode }) {
+export type ReportGuide = { state: GuideState; heading: string; lead: string; content: ReactNode };
+
+export async function ReportBody({ data, reportKey, banner, footer, guide }: { data: ReportData; reportKey: string; banner?: ReactNode; footer?: ReactNode; guide: ReportGuide }) {
   const locale = await getLocale();
   const t = reportMessages[locale].aside;
   const { name, sample, typeLabel, profile } = data;
@@ -81,8 +88,7 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
               {t.unlocked}
             </Badge>
           )}
-          <ChapterSidebarNav />
-          {aside}
+          <ChapterSidebarNav guide={guide.state} />
           <ReportImage src={image} className="mt-8" />
         </div>
       </aside>
@@ -100,7 +106,7 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
             </span>
             <span className="shrink-0 text-xs text-night-body">{t.mobileLabel(sample)}</span>
           </div>
-          <ChapterTabs />
+          <ChapterTabs guide={guide.state} />
         </div>
 
         <ChapterPanel index={0}>
@@ -115,13 +121,17 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
           <Cover index={1} type={typeLabel} locale={locale} heading={reportMessages[locale].two.heading} scene={poleScenes[clearestLetter(profile)]} />
           <Reading><ChapterTwo data={data} locale={locale} /></Reading>
         </ChapterPanel>
-        <ChapterPanel index={2} after={relationshipAction ? <div className="px-6 md:px-0">{relationshipAction}</div> : undefined}>
+        <ChapterPanel index={2} after={<div className="px-6 md:px-0"><GuidePointer state={guide.state} locale={locale} /></div>}>
           <Cover index={2} type={typeLabel} locale={locale} heading={reportMessages[locale].three.heading} lead={reportMessages[locale].three.lead} scene={pairScene} />
           <Reading><ChapterThree data={data} locale={locale} /></Reading>
         </ChapterPanel>
-        <ChapterPanel index={3} after={closingAction ? <div className="px-6 md:px-0">{closingAction}</div> : undefined}>
+        <ChapterPanel index={3}>
           <Cover index={3} type={typeLabel} locale={locale} heading={reportMessages[locale].four.heading} lead={reportMessages[locale].four.lead} scene={relationshipScenes.colleague} />
           <Reading><ChapterFour data={data} locale={locale} reportKey={reportKey} /></Reading>
+        </ChapterPanel>
+        <ChapterPanel index={GUIDE_TAB}>
+          <Cover index={GUIDE_TAB} label={reportTabLabelsFor(locale)[GUIDE_TAB]} type={typeLabel} locale={locale} heading={guide.heading} lead={guide.lead} scene={pairScene} />
+          <div data-report-guide={guide.state} className="px-6 pt-8 pb-4 md:px-0 md:pt-10">{guide.content}</div>
         </ChapterPanel>
 
         <div className="px-6 md:px-0">
@@ -141,13 +151,37 @@ function clearestLetter(profile: Profile) {
   return profile.type[index] as Letter;
 }
 
+/**
+ * Chapter 03's last word: the guide for two, in one line that opens its tab. It names where the
+ * reader's guide stands; the sample's names what a guide is, with no price and nothing to buy.
+ */
+function GuidePointer({ state, locale }: { state: GuideState; locale: Locale }) {
+  const t = pairingUiMessages[locale].reportInvite;
+  const line = state === "sample" ? pairingMessages[locale].summary : (state === "start" ? t.headings.relationship : t.headings[state]).replace("\n", "");
+  return (
+    <section data-guide-pointer className="my-10 flex flex-col gap-4 bg-card p-5 md:flex-row md:items-center md:justify-between md:gap-8 md:p-6">
+      <div className="flex min-w-0 items-center gap-4">
+        <Illustration scene={pairScene} className="w-16 shrink-0" />
+        <p className="min-w-0 text-base">
+          <span className="block text-xs text-warm-ink">{reportTabLabelsFor(locale)[GUIDE_TAB]}</span>
+          <span className="mt-1 block font-medium">{line}</span>
+        </p>
+      </div>
+      <ChapterJump index={GUIDE_TAB} className="pill min-h-11 shrink-0 px-5 text-sm md:w-auto">
+        {reportMessages[locale].nav.openGuide}
+        <ArrowRight size={17} weight="light" aria-hidden />
+      </ChapterJump>
+    </section>
+  );
+}
+
 /** The chapter's dark cover: label, heading beside the chapter's picture, and an optional lead. Chapter 01 owns the page's `h1`. */
-function Cover({ index, type, locale, heading, lead, scene, as = "h2" }: { index: number; type: string; locale: Locale; heading: string; lead?: string; scene?: Scene; as?: "h1" | "h2" }) {
+function Cover({ index, label, type, locale, heading, lead, scene, as = "h2" }: { index: number; label?: string; type: string; locale: Locale; heading: string; lead?: string; scene?: Scene; as?: "h1" | "h2" }) {
   const Tag = as;
   return (
     <header className="bg-night px-6 pt-2 pb-9 text-paper md:px-10 md:pt-9 md:pb-11 xl:px-12">
       <div className="mb-6 flex justify-between text-xs tracking-widest text-night-mist md:mb-8">
-        <span>{reportMessages[locale].nav.chapter(index)}</span>
+        <span>{label ?? reportMessages[locale].nav.chapter(index)}</span>
         <span>{type}</span>
       </div>
       <div className="flex items-end justify-between gap-4">

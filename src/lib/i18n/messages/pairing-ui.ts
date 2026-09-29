@@ -42,6 +42,9 @@ const zh = {
       relationship: "这一章的每句话都从你的偏好出发，写不出 TA。两个人卡住的地方，往往在偏好相遇的那一处。TA 做完测试并同意后，就不用再猜。",
       closing: "报告里的练习是你一个人做的。TA 做完测试并同意后，双人指南会按你们两个人的偏好，写一件这周就能一起试的小事，和开口的第一句话。",
     },
+    /** The guide tab's cover, before anyone is invited. */
+    tabLead: "你的报告写不出 TA。TA 做完免费测试并同意后，双人指南会按你们两个人的偏好来写：先说哪一件、怎么开口、这周一起试什么。",
+    halvesTitle: "你的一半，TA 的一半",
     lines: {
       legend: "TA 答完，这一行就会填上：哪一维相近、哪一维不同，每一维各配一幕你们关系里常见的场景。",
       legendKnown: "TA 那一行已经填上。每一维相近还是不同、常见的是哪一幕，都写在你们的指南里。",
@@ -203,6 +206,8 @@ const en: typeof zh = {
       relationship: "Every line in this chapter starts from your preferences; it can’t speak for them. Two people get stuck where their preferences meet. Once they take the test and agree, you no longer have to guess.",
       closing: "The practice in your report is for you alone. Once they take the test and agree, a guide for two is written from both your preferences: one small thing to try together this week, and the first line to say.",
     },
+    tabLead: "Your report can’t speak for them. Once they take the free test and agree, the guide for two is written from both your preferences: what to say first, how to open, and what to try together this week.",
+    halvesTitle: "Your half, their half",
     lines: {
       legend: "Once they answer, their row fills in: where you’re alike, where you differ, and for each dimension a scene that’s common in your kind of relationship.",
       legendKnown: "Their row is filled in. Where you’re alike or differ, and the scene that goes with each, is in your guide.",

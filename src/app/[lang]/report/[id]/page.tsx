@@ -1,20 +1,19 @@
-import { PairingBenefit } from "@/components/pairing/pairing-benefit";
-import { PairingTracker } from "@/components/pairing/pairing-tracker";
 import { ContinuationList } from "@/components/pairing/continuation-list";
 import { listComparisonContinuations } from "@/lib/comparison-continuations";
 import { resultPairingStatus } from "@/lib/comparisons";
-import { ReportInvite } from "@/components/report/report-invite";
+import { guideCover, ReportGuideContent } from "@/components/report/report-invite";
 import { giftCheckout } from "@/lib/pair-gifts";
 import { ensureInviteCode, inviteLinkFor } from "@/lib/invite-codes";
 import { invitePriceMinorFor } from "@/lib/env";
 import { paymentMessages } from "@/lib/i18n/messages/payment";
+import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { formatPriceFen } from "@/lib/site";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { TrackView } from "@/components/analytics/track-view";
 import { AppHeader } from "@/components/site/app-header";
-import { ReportBody, type ReportData } from "@/components/report/report-body";
-import { SampleNotice, SamplePairing } from "@/components/report/sample-notice";
+import { ReportBody, type ReportData, type ReportGuide } from "@/components/report/report-body";
+import { SampleGuide, SampleNotice } from "@/components/report/sample-notice";
 import { SampleCta } from "@/components/result/sample-cta";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
@@ -73,6 +72,10 @@ export default async function ReportPage({ params }: Params) {
   const code = pairing && visitorId ? await ensureInviteCode(id, visitorId) : null;
   const invite = code ? { code, url: inviteLinkFor(locale, code) } : null;
   const invitePrice = `${paymentMessages[locale].currency}${formatPriceFen(invitePriceMinorFor(locale))}`;
+  // The guide for two is the report's fifth tab: the paid report invites from it; the sample only shows what it is.
+  const guide: ReportGuide = pairing
+    ? { ...guideCover(locale, pairing), content: <ReportGuideContent locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} invitePrice={invitePrice} invite={invite} /> }
+    : { state: "sample", heading: pairingMessages[locale].heading, lead: pairingMessages[locale].summary, content: <SampleGuide profile={result.profile} /> };
 
   return (
     <>
@@ -80,10 +83,8 @@ export default async function ReportPage({ params }: Params) {
       <ReportBody
         data={data}
         reportKey={data.sample ? "sample" : id}
-        banner={<>{data.sample && <SampleNotice />}<p className="mx-6 my-4 text-xs text-mist md:mx-0 md:mt-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>{!data.sample && <div className="mx-6 md:mx-0 md:mb-6"><PairingTracker resultId={id} surface="report"><PairingBenefit locale={locale} resultId={id} unlocked compact /></PairingTracker></div>}</>}
-        aside={pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="aside" invitePrice={invitePrice} />}
-        relationshipAction={data.sample ? <SamplePairing /> : pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="relationship" invitePrice={invitePrice} invite={invite} />}
-        closingAction={pairing && <ReportInvite locale={locale} resultId={id} profile={result.profile} checkout={checkout} status={pairing} variant="closing" invitePrice={invitePrice} invite={invite} />}
+        banner={<>{data.sample && <SampleNotice />}<p className="mx-6 my-4 text-xs text-mist md:mx-0 md:mt-0">{t.banner(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p></>}
+        guide={guide}
         footer={data.sample ? <SampleCta /> : <div className="mx-6 md:mx-0"><ContinuationList items={continuations} locale={locale} surface="report" /></div>}
       />
       {data.sample && (

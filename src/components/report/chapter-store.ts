@@ -8,7 +8,8 @@ import { useSyncExternalStore } from "react";
  * hydration mismatch) while back/forward and shared links still work.
  */
 const CHAPTER_PARAM = "chapter";
-const CHAPTER_COUNT = 4;
+/** Four chapters, then the guide for two (`?chapter=5`, `GUIDE_TAB`). */
+const CHAPTER_COUNT = 5;
 
 const listeners = new Set<() => void>();
 
@@ -38,7 +39,9 @@ export function setChapter(index: number) {
   const url = new URL(window.location.href);
   if (index === 0) url.searchParams.delete(CHAPTER_PARAM);
   else url.searchParams.set(CHAPTER_PARAM, String(index + 1));
-  window.history.replaceState(window.history.state, "", url);
+  // `null`, not the current state: Next treats a call carrying its own history state as internal and
+  // skips syncing, so a later `router.refresh()` (after a 请 TA payment, say) would restore the old chapter.
+  window.history.replaceState(null, "", url);
   for (const listener of listeners) listener();
   window.scrollTo({ top: 0 });
 }

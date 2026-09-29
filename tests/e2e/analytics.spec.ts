@@ -110,6 +110,9 @@ test.describe("analytics", () => {
       await page.getByRole("button", { name: /下一章/ }).click();
       await expectEvent(page, "report_chapter_view", { chapter_number: chapter, nav_method: "next" });
     }
+    // Chapter 04 leads on to the guide for two's tab, which closes the report.
+    await page.getByRole("button", { name: /下一步/ }).click();
+    await expectEvent(page, "report_chapter_view", { chapter_number: 5, nav_method: "next" });
     await page.locator('[data-track-location="report_closing"]').click();
     await page.waitForURL(/\/quiz$/);
     await expectEvent(page, "cta_click", { cta_id: "start_quiz", cta_location: "report_closing", page_type: "report_sample" });

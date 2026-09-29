@@ -1,4 +1,4 @@
-import { CaretDown, Check, Gift, LockSimple, Scales, Timer } from "@phosphor-icons/react/dist/ssr";
+import { BookOpenText, CaretDown, Check, Gift, LockSimple, PaperPlaneTilt, Scales, Timer, UserCircleCheck } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { categoryMirrorProfile, MirrorMark, type MirrorProfile } from "@/components/brand/mirror-mark";
 import { PairingTracker } from "@/components/pairing/pairing-tracker";
@@ -31,8 +31,6 @@ type Props = {
   profile: Profile;
   status: PairingStatus;
   checkout: Omit<GiftCheckout, "available">;
-  /** `aside`: the desktop sidebar under the chapter list; the others close chapter 03 and chapter 04. */
-  variant: "aside" | "relationship" | "closing";
   /** The invite price with its currency, as whoever the reader invites would pay it for a first report. */
   invitePrice: string;
   /** The reader's invite code and link. */
@@ -45,7 +43,7 @@ type Dimension = keyof CompareCategories;
 const unknown: MirrorProfile = { type: "ESTJ", values: [50, 50, 50, 50] };
 
 /** Two mirrors facing each other: the reader's, and theirs once a guide exists (a faint stand-in until then). */
-function PairMarks({ you, partner, labels, size, className }: { you: MirrorProfile; partner: MirrorProfile | null; labels: [string, string]; size: number; className?: string }) {
+export function PairMarks({ you, partner, labels, size, className }: { you: MirrorProfile; partner: MirrorProfile | null; labels: [string, string]; size: number; className?: string }) {
   return (
     <div aria-hidden className={cn("flex items-center gap-3", className)}>
       <span className="flex flex-col items-center gap-1.5">
@@ -64,7 +62,7 @@ function PairMarks({ you, partner, labels, size, className }: { you: MirrorProfi
 }
 
 /** The reader's category on each dimension, in the guide's terms: a side, or near-even. */
-function categoriesOf(profile: Profile) {
+export function categoriesOf(profile: Profile) {
   return Object.fromEntries(dimensions.map((dimension, i) => [dimension, profile.balanced[i] ? "balanced" : profile.type[i]])) as CompareCategories;
 }
 
@@ -78,7 +76,7 @@ function position(category: string, dimension: string) {
  * stays dashed with a question mark until a guide exists, so the card shows what the other person's
  * answers would add. Sides only, never strength, the same as the guide itself.
  */
-function PairLines({ locale, you, them }: { locale: Locale; you: CompareCategories; them: CompareCategories | null }) {
+export function PairLines({ locale, you, them }: { locale: Locale; you: CompareCategories; them: CompareCategories | null }) {
   const c = compareMessages[locale];
   const t = pairingUiMessages[locale].reportInvite;
   const names = (categories: CompareCategories) => dimensions.map((dimension) => c.categoryLabels[categories[dimension]]).join(locale === "en" ? ", " : "、");
@@ -127,40 +125,37 @@ function PairLines({ locale, you, them }: { locale: Locale; you: CompareCategori
 
 /**
  * What the guide adds, shown with the reader's own material rather than promised: the emphasis the
- * guide would lead with if the two of you differed on the reader's clearest dimension, and what it
- * would suggest between partners: the line to open with in chapter 03, the practice in chapter 04.
+ * guide would lead with if the two of you differed on the reader's clearest dimension, and the line a
+ * partner might open with. Two cards, each a promise and its example.
  */
-function Gains({ locale, profile, variant }: { locale: Locale; profile: Profile; variant: "relationship" | "closing" }) {
+function Gains({ locale, profile }: { locale: Locale; profile: Profile }) {
   const c = compareMessages[locale];
   const t = pairingUiMessages[locale].reportInvite;
   const clearest = dimensions.map((_, i) => i).filter((i) => !profile.balanced[i]).sort((a, b) => profile.values[b] - profile.values[a])[0] ?? 0;
   const dimension = dimensions[clearest];
   return (
-    <div>
-      <h3 className="text-xl">{t.gainsTitle}</h3>
-      <ol className="mt-5 border-t border-line">
+    <section aria-labelledby="guide-gains">
+      <h3 id="guide-gains" className="text-xl">{t.gainsTitle}</h3>
+      <ol className="mt-5 grid gap-3 md:grid-cols-2">
         {t.gains.map((gain, i) => (
-          <li key={gain.title} className="grid gap-x-8 gap-y-2 border-b border-line py-5 md:grid-cols-[13rem_minmax(0,1fr)]">
+          <li key={gain.title} className="flex flex-col bg-card p-5 md:p-6">
             <p className="flex gap-3 text-base font-medium">
               <span aria-hidden className="pt-0.5 text-xs text-warm-ink">0{i + 1}</span>
               {gain.title}
             </p>
-            <div className="min-w-0 pl-7 md:pl-0">
-              <p className="text-sm text-slate">{gain.body}</p>
-              {i === 0 && <p className="mt-3 border-l-2 border-warm pl-4 text-base text-ink"><span className="text-mist">{t.gainExample(c.themes[dimension])}</span>{c.highlights.opposite[dimension]}</p>}
-              {i === 1 && (
-                <div className="mt-3">
-                  <p className="text-xs text-mist">{variant === "closing" ? t.gainPracticeLabel(c.relationshipBetween.partner) : t.gainSayLabel(c.relationshipBetween.partner)}</p>
-                  {variant === "closing"
-                    ? <p className="mt-1.5 border-l-2 border-warm pl-4 text-base text-ink">{c.byRelationship.partner.practices[dimension]}</p>
-                    : <p className="mt-1.5 rounded-[16px] rounded-bl-[4px] border border-line bg-paper px-4 py-3 text-base text-ink">“{c.byRelationship.partner.openingLines[dimension]}”</p>}
+            <p className="mt-2 text-sm text-mist">{gain.body}</p>
+            {i === 0
+              ? <p className="mt-4 border-l-2 border-warm pl-4 text-base text-ink"><span className="text-mist">{t.gainExample(c.themes[dimension])}</span>{c.highlights.opposite[dimension]}</p>
+              : (
+                <div className="mt-4">
+                  <p className="text-xs text-mist">{t.gainSayLabel(c.relationshipBetween.partner)}</p>
+                  <p className="mt-1.5 rounded-[16px] rounded-bl-[4px] border border-line bg-paper px-4 py-3 text-base text-ink">“{c.byRelationship.partner.openingLines[dimension]}”</p>
                 </div>
               )}
-            </div>
           </li>
         ))}
       </ol>
-    </div>
+    </section>
   );
 }
 
@@ -173,11 +168,11 @@ function Assurances({ locale, price, invitePrice }: { locale: Locale; price: str
   const icons = [Timer, LockSimple, Scales];
   const items = [...t.assures.map((item, i) => ({ ...item, Icon: icons[i] })), { title: t.giftTitle(price), body: t.giftAssure(invitePrice), Icon: Gift }];
   return (
-    <div>
-      <h3 className="text-xl">{t.assureTitle}</h3>
-      <ul className="mt-5 grid grid-cols-2 gap-2 md:gap-3">
+    <section aria-labelledby="guide-assures">
+      <h3 id="guide-assures" className="text-xl">{t.assureTitle}</h3>
+      <ul className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
         {items.map(({ title, body, Icon }) => (
-          <li key={title} className="min-w-0 rounded-[4px] border border-line bg-paper">
+          <li key={title} className="min-w-0 rounded-[4px] border border-line bg-card">
             <details className="group">
               <summary className="flex min-h-11 cursor-pointer list-none flex-col gap-2 p-3 md:p-4 [&::-webkit-details-marker]:hidden">
                 <span className="flex items-start justify-between gap-2">
@@ -191,90 +186,105 @@ function Assurances({ locale, price, invitePrice }: { locale: Locale; price: str
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
 
 /**
- * The paid report's way to its guide for two. Before anyone is invited it explains itself from the
- * reader's side: their half is on the guide's four lines and the other half is blank, then what the
- * guide would say (with the reader's own material), then what inviting asks of the other person, and
- * only then who to invite. Once invited, the same card tracks the three steps; once a guide exists,
- * it fills the other row and leads there.
+ * The way to a guide in three stops on one line: invite them, they take the free test, the guide
+ * opens. `reached` stops are ticked and the next one is ringed warm. The sample shows the path
+ * with nothing reached.
  */
-export function ReportInvite({ locale, resultId, profile, status, checkout, variant, invitePrice, invite }: Props) {
+export function GuideSteps({ steps, reached, locale, kind = "report" }: { steps: readonly string[]; reached: number; locale: Locale; kind?: "report" | "public" }) {
   const t = pairingUiMessages[locale].reportInvite;
-  const location = variant === "aside" ? "report_aside" : "report_invite";
-  const reached = status.guides ? 3 : status.invitations.length ? 1 : 0;
-  const state = status.guides ? "ready" : reached ? "waiting" : "start";
-  const partner = status.partner ? categoryMirrorProfile([status.partner.EI, status.partner.SN, status.partner.TF, status.partner.JP]) : null;
-  const labels: [string, string] = [`${t.you} · ${profile.type}`, partner ? t.them : status.invitations.length ? t.waitingThem : t.them];
-  const price = `${paymentMessages[locale].currency}${checkout.priceLabel}`;
-  const island = (kind: "aside" | "panel") => (
-    <ReportPairing resultId={resultId} locale={locale} checkout={checkout} availableGifts={status.availableGifts} invitations={status.invitations} variant={kind} resume={variant === "closing"} />
-  );
-  const guide = status.guide && (
-    <PrimaryButton href={status.guide} prefetch={false} className={variant === "aside" ? "min-h-11 px-4 text-sm" : "md:w-auto md:min-w-64"} {...trackAttrs("read_guide", location)}>{t.readGuide}</PrimaryButton>
-  );
-
-  const steps = (
-    <ol className={cn(variant === "aside" ? "mt-4 space-y-2.5" : "mt-8 grid gap-3 md:grid-cols-3 md:gap-0")}>
-      {t.steps.map((step, i) => {
+  // The report's way starts by inviting; the public way (the sample's) starts by knowing yourself.
+  const icons = kind === "report" ? [PaperPlaneTilt, UserCircleCheck, BookOpenText] : [UserCircleCheck, PaperPlaneTilt, BookOpenText];
+  return (
+    <ol className="relative grid grid-cols-3 gap-2">
+      <span aria-hidden className="absolute top-5 right-[16.7%] left-[16.7%] h-px bg-line" />
+      <span aria-hidden className="absolute top-5 left-[16.7%] h-px bg-warm transition-[width]" style={{ width: `${Math.min(reached, 2) * 33.3}%` }} />
+      {steps.map((step, i) => {
         const done = i < reached;
+        const current = i === reached;
+        const Icon = icons[i];
         return (
-          <li key={step} className={cn("flex items-center gap-3", variant !== "aside" && "md:relative md:pr-4")}>
-            <span aria-hidden className={cn("relative z-1 flex size-7 shrink-0 items-center justify-center rounded-full border text-xs", done ? "border-warm bg-warm text-paper" : "border-line bg-paper text-warm-ink")}>
-              {done ? <Check size={13} weight="bold" /> : i + 1}
+          <li key={step} className="relative flex flex-col items-center gap-2 text-center">
+            <span aria-hidden className={cn(
+              "flex size-10 items-center justify-center rounded-full border",
+              done ? "border-warm bg-warm text-paper" : current ? "border-warm bg-paper text-warm-ink ring-4 ring-warm/15" : "border-line bg-paper text-mist",
+            )}>
+              {done ? <Check size={16} weight="bold" /> : <Icon size={18} weight="light" />}
             </span>
-            <span className={cn("text-sm", done ? "text-mist" : "font-medium")}>{step}{done && <span className="sr-only"> · {t.done}</span>}</span>
+            <span className={cn("text-xs leading-snug text-balance", done ? "text-mist" : "font-medium text-ink")}>
+              {step}{done && <span className="sr-only"> · {t.done}</span>}
+            </span>
           </li>
         );
       })}
     </ol>
   );
+}
 
-  if (variant === "aside") {
-    return (
-      <PairingTracker resultId={resultId} surface="report">
-        <section data-report-invite="aside" aria-label={t.eyebrow} className="mt-10">
-          <PairMarks you={profile} partner={partner} labels={labels} size={36} />
-          <p className="eyebrow mt-5 text-warm-ink">{t.eyebrow}</p>
-          <p className="mt-2 text-base font-medium">{state === "ready" ? t.ready(status.guides) : state === "waiting" ? t.waiting(status.invitations.length) : t.asideHeading}</p>
-          {state === "start" ? <p className="mt-2 text-sm text-slate">{t.asideLine}</p> : steps}
-          <div className="mt-5 space-y-3">
-            {guide}
-            {island("aside")}
-          </div>
-        </section>
-      </PairingTracker>
-    );
-  }
+/** Where the reader's guide stands, and the tab cover's words for it. */
+export function guideCover(locale: Locale, status: PairingStatus) {
+  const t = pairingUiMessages[locale].reportInvite;
+  const state = status.guides ? "ready" as const : status.invitations.length ? "waiting" as const : "start" as const;
+  const lead = state === "start" ? t.tabLead
+    : state === "waiting" ? (status.invitations.every((item) => item.covered) ? t.bodies.covered : t.bodies.waiting)
+    : t.bodies.ready;
+  return { state, heading: t.headings[state === "start" ? "relationship" : state], lead };
+}
 
-  const heading = state === "start" ? t.headings[variant] : t.headings[state];
-  const lead = state === "start" ? t.leads[variant] : state === "waiting" && status.invitations.every((item) => item.covered) ? t.bodies.covered : t.bodies[state];
+/**
+ * The paid report's guide for two, as a tab of its own. Before anyone is invited it leads with the
+ * way (three stops) and the reader's half drawn on the guide's four lines, then shows what the guide
+ * would say with the reader's own material, answers what inviting asks of the other person, and only
+ * then asks who (four pictured relationships). Once invited, the way and the open invitations lead;
+ * once a guide exists, reading it leads and the other row is filled. The invite code closes the tab.
+ */
+export function ReportGuideContent({ locale, resultId, profile, status, checkout, invitePrice, invite }: Props) {
+  const t = pairingUiMessages[locale].reportInvite;
+  const { state } = guideCover(locale, status);
+  const reached = status.guides ? 3 : status.invitations.length ? 1 : 0;
+  const partner = status.partner ? categoryMirrorProfile([status.partner.EI, status.partner.SN, status.partner.TF, status.partner.JP]) : null;
+  const price = `${paymentMessages[locale].currency}${checkout.priceLabel}`;
+  const island = (variant: "quick" | "panel") => (
+    <ReportPairing resultId={resultId} locale={locale} checkout={checkout} availableGifts={status.availableGifts} invitations={status.invitations} variant={variant} resume={variant === "panel"} />
+  );
+  const halves = (
+    <section aria-labelledby="guide-halves" className="bg-card p-5 md:p-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <h3 id="guide-halves" className="text-xl">{t.halvesTitle}</h3>
+        <PairMarks you={profile} partner={partner} labels={[`${t.you} · ${profile.type}`, partner ? t.them : status.invitations.length ? t.waitingThem : t.them]} size={44} />
+      </div>
+      <div className="mt-6"><PairLines locale={locale} you={categoriesOf(profile)} them={status.partner} /></div>
+    </section>
+  );
+  const start = state === "start";
+  // Every block keeps its place in the tree whatever the state, and only its visual `order` moves:
+  // inviting refreshes the page into the waiting state, and a moved island would remount and lose
+  // the 请 TA sheet it is about to open.
   return (
     <PairingTracker resultId={resultId} surface="report">
-      <section data-report-invite={variant} data-report-invite-state={state} aria-labelledby={`report-invite-${variant}`} className="my-10 bg-card">
-        <div className="p-5 md:p-8">
-          <p className="eyebrow text-warm-ink">{t.eyebrow}</p>
-          <h2 id={`report-invite-${variant}`} className="mt-3 text-2xl whitespace-pre-line md:text-3xl">{heading}</h2>
-          <p className="mt-4 max-w-xl text-base text-slate">{lead}</p>
-          <div className="mt-8"><PairLines locale={locale} you={categoriesOf(profile)} them={status.partner} /></div>
-          {state !== "start" && steps}
-          {guide && <div className="mt-8">{guide}</div>}
-        </div>
-        {state === "start" && (
-          <>
-            <div className="border-t border-line p-5 md:p-8"><Gains locale={locale} profile={profile} variant={variant} /></div>
-            <div className="border-t border-line p-5 md:p-8"><Assurances locale={locale} price={price} invitePrice={invitePrice} /></div>
-          </>
-        )}
-        <div className="border-t border-line p-5 md:p-8">
+      <div data-report-invite="tab" data-report-invite-state={state} className="flex flex-col gap-10 md:gap-12">
+        {/* The way, and the one action that moves along it. */}
+        <section aria-label={t.eyebrow} className="order-1 border-y border-line py-6">
+          <GuideSteps steps={t.steps} reached={reached} locale={locale} />
+          <div className="mt-6 flex flex-col items-center gap-3">
+            {status.guide
+              ? <PrimaryButton href={status.guide} prefetch={false} className="md:w-auto md:min-w-72" {...trackAttrs("read_guide", "report_invite")}>{t.readGuide}</PrimaryButton>
+              : island("quick")}
+          </div>
+        </section>
+        <div className={start ? "order-2" : "order-4"}>{halves}</div>
+        {start && <div className="order-3"><Gains locale={locale} profile={profile} /></div>}
+        {start && <div className="order-4"><Assurances locale={locale} price={price} invitePrice={invitePrice} /></div>}
+        <section className={start ? "order-5" : "order-2"}>
           {island("panel")}
-          {state !== "start" && <p className="mt-6 text-xs text-mist">{pairingMessages[locale].feeRule}</p>}
-        </div>
-        {invite && <div className="border-t border-line p-5 md:p-8"><InviteLink locale={locale} code={invite.code} url={invite.url} invitePrice={invitePrice} /></div>}
-      </section>
+          {!start && <p className="mt-6 text-xs text-mist">{pairingMessages[locale].feeRule}</p>}
+        </section>
+        {invite && <div className="order-6 border-t border-line pt-8"><InviteLink locale={locale} code={invite.code} url={invite.url} invitePrice={invitePrice} /></div>}
+      </div>
     </PairingTracker>
   );
 }

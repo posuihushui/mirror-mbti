@@ -8,6 +8,8 @@ import { InvitationEntry, relationshipIcons, useOpenInvitation } from "@/compone
 import { GiftOffer, type GiftCheckout } from "@/components/pairing/gift-offer";
 import { PaymentSheet } from "@/components/payment/payment-sheet";
 import { trackAttrs } from "@/lib/analytics/events";
+import { Illustration } from "@/components/illustrations/scene";
+import { relationshipScenes } from "@/components/illustrations/moment-scenes";
 import { COMPARE_RELATIONSHIPS, type CompareRelationship } from "@/lib/compare-types";
 import type { Locale } from "@/lib/i18n/locale";
 import { compareMessages } from "@/lib/i18n/messages/compare";
@@ -23,8 +25,8 @@ type Props = {
   checkout: Omit<GiftCheckout, "available">;
   availableGifts: number;
   invitations: ReportInvitation[];
-  /** `aside`: one button in the desktop sidebar; `panel`: the cards and invitations that close a chapter. */
-  variant: "aside" | "panel";
+  /** `quick`: the guide tab's one button beside its steps; `panel`: the open invitations and the pictured relationships. */
+  variant: "quick" | "panel";
   /** The one island that reopens a gift checkout after WeChat authorisation returns with `?gift=`. */
   resume?: boolean;
 };
@@ -65,8 +67,8 @@ export function ReportPairing({ resultId, locale, checkout, availableGifts, invi
   return (
     <>
       <InvitationEntry resultId={resultId} locale={locale} gift={checkout} surface="report" onGift={(id) => openGift(id, true)}>
-        {variant === "aside"
-          ? <AsideActions locale={locale} invitations={invitations} checkout={giftCheckout} onGift={openGift} />
+        {variant === "quick"
+          ? <QuickActions locale={locale} invitations={invitations} checkout={giftCheckout} onGift={openGift} />
           : <PanelActions locale={locale} resultId={resultId} invitations={invitations} checkout={giftCheckout} onGift={openGift} />}
       </InvitationEntry>
       {current && (
@@ -90,14 +92,14 @@ export function ReportPairing({ resultId, locale, checkout, availableGifts, invi
 
 type ActionProps = { locale: Locale; invitations: ReportInvitation[]; checkout: GiftCheckout; onGift: (id: string) => void };
 
-/** The sidebar: one button that opens the sheet, and 请 TA for the newest invitation not yet covered. */
-function AsideActions({ locale, invitations, checkout, onGift }: ActionProps) {
+/** Beside the guide's steps: one button that opens the sheet, and 请 TA for the newest invitation not yet covered. */
+function QuickActions({ locale, invitations, checkout, onGift }: ActionProps) {
   const open = useOpenInvitation();
   const t = pairingUiMessages[locale].reportInvite;
   const uncovered = invitations.find((item) => !item.covered);
   return (
-    <div className="space-y-3">
-      <button type="button" className="pill min-h-11 px-4 text-sm" onClick={() => open()} {...trackAttrs("invite_pairing", "report_aside")}>
+    <div className="flex w-full flex-col items-center gap-2">
+      <button type="button" className="pill min-h-[52px] md:w-auto md:min-w-72" onClick={() => open()} {...trackAttrs("invite_pairing", "report_invite")}>
         {invitations.length ? t.pickAnother : t.invite}
         <ArrowRight size={17} weight="light" aria-hidden />
       </button>
@@ -146,10 +148,10 @@ function PanelActions({ locale, resultId, invitations, checkout, onGift }: Actio
           })}
         </ul>
       )}
-      <p id={pickId} className="text-base font-medium">{invitations.length ? t.pickAnother : t.pick}</p>
-      <ul aria-labelledby={pickId} data-relationship-cards className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+      <h3 id={pickId} className="text-xl">{invitations.length ? t.pickAnother : t.pick}</h3>
+      {/* Each relationship pictured by the moment its guide is about: the anniversary, the weekend, the trip home, the deadline. */}
+      <ul aria-labelledby={pickId} data-relationship-cards className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
         {COMPARE_RELATIONSHIPS.map((relationship) => {
-          const Glyph = relationshipIcons[relationship];
           const done = invited.has(relationship);
           return (
             <li key={relationship}>
@@ -157,18 +159,18 @@ function PanelActions({ locale, resultId, invitations, checkout, onGift }: Actio
                 type="button"
                 onClick={() => open(relationship)}
                 className={cn(
-                  "group flex h-full w-full flex-col items-start gap-2 rounded-[4px] border bg-paper p-4 text-left transition-colors duration-150 motion-reduce:transition-none",
+                  "group flex h-full w-full flex-col items-stretch gap-2 rounded-[4px] border bg-card p-3 text-left transition-colors duration-150 motion-reduce:transition-none md:p-4",
                   done ? "border-warm" : "border-line hover:border-ink",
                 )}
                 {...trackAttrs("invite_pairing", "report_invite")}
               >
+                <Illustration scene={relationshipScenes[relationship]} className="mx-auto w-full max-w-40" />
                 <span className="flex w-full items-center justify-between gap-2">
-                  <Glyph size={24} weight="light" aria-hidden className="text-warm-ink" />
+                  <span className="text-base font-medium">{m.relationshipLabels[relationship]}</span>
                   {done
                     ? <span className="flex items-center gap-1 text-xs text-warm-ink"><CheckCircle size={14} weight="fill" aria-hidden />{t.invited}</span>
                     : <ArrowRight size={15} aria-hidden className="text-mist transition-transform group-hover:translate-x-0.5 group-hover:text-ink motion-reduce:transition-none" />}
                 </span>
-                <span className="text-base font-medium">{m.relationshipLabels[relationship]}</span>
                 <span className="text-xs text-balance break-keep text-mist">{t.topic(m.byRelationship[relationship].topic.title)}</span>
               </button>
             </li>

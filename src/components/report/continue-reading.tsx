@@ -4,7 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { ArrowRight } from "@phosphor-icons/react";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { reportMessages } from "@/lib/i18n/messages/report";
-import { chapterLabelsFor } from "@/lib/site";
+import { GUIDE_TAB, reportTabLabelsFor } from "@/lib/site";
 import { setChapter, useChapter } from "./chapter-store";
 
 const KEY = "mirror.reading.v1";
@@ -35,7 +35,9 @@ export function ContinueReading({ reportKey }: { reportKey: string }) {
   }, [reportKey, chapter]);
 
   if (dismissed || initial <= 0 || chapter !== 0) return null;
-  const label = `${reportMessages[locale].nav.chapter(initial)} · ${chapterLabelsFor(locale)[initial]}`;
+  // The guide for two is a tab of its own, not a numbered chapter.
+  const name = reportTabLabelsFor(locale)[initial];
+  const label = initial === GUIDE_TAB ? name : `${reportMessages[locale].nav.chapter(initial)} · ${name}`;
   return (
     <button
       type="button"

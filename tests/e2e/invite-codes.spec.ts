@@ -52,8 +52,8 @@ test("an invited reader sees the invite price after the test and pays to pair in
   // The guide is readable by both, and the host's report now leads to it.
   await g.goto((await ready.getByRole("link", { name: sheet.readPair }).getAttribute("href"))!);
   await expect(g).toHaveURL(/\/zh\/compare\//);
-  await page.goto(`/zh/report/${host}?chapter=4`);
-  await expect(page.locator('[data-report-invite="closing"]')).toHaveAttribute("data-report-invite-state", "ready");
+  await page.goto(`/zh/report/${host}?chapter=5`);
+  await expect(page.locator('[data-report-invite="tab"]')).toHaveAttribute("data-report-invite-state", "ready");
   await guest.close();
 });
 
@@ -61,7 +61,7 @@ test("an invite link gives someone else the invite price on their first report, 
   const t = pairingUiMessages.zh.reportInvite;
   const host = await seed(page.request);
   await paid(page.request, host);
-  await page.goto(`/zh/report/${host}?chapter=3`);
+  await page.goto(`/zh/report/${host}?chapter=5`);
   const block = page.locator("[data-invite-code]").filter({ visible: true }).first();
   await expect(block).toContainText(t.codeTitle);
   const code = (await block.locator("span").first().innerText()).trim();

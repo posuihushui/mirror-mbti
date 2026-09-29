@@ -140,7 +140,7 @@ test.describe("first-round motion", () => {
           visiblePanels: panels.filter((panel) => !panel.hidden).map((panel) => panel.id),
           selectedTabs: tabs.flatMap((tab, i) => tab.getAttribute("aria-selected") === "true" ? [i] : []),
           selectedSidebar: sidebar.flatMap((button, i) => button.getAttribute("aria-current") === "true" ? [i] : []),
-          originalPanels: panels.length === 4 && panels.every((panel) => panel.isConnected && document.getElementById(panel.id) === panel),
+          originalPanels: panels.length === 5 && panels.every((panel) => panel.isConnected && document.getElementById(panel.id) === panel),
           motionRunning: panels[index].getAnimations().some((animation) => animation.playState === "running"),
         });
       }
@@ -154,7 +154,7 @@ test.describe("first-round motion", () => {
       expect(state.selectedSidebar).toEqual([state.index]);
     }
     expect(states.some((state) => state.motionRunning)).toBe(true);
-    await expect(page.locator('[role="tabpanel"]')).toHaveCount(4);
+    await expect(page.locator('[role="tabpanel"]')).toHaveCount(5);
     await expect(page.locator("#chapter-panel-4")).toBeVisible();
     await expect(page).toHaveURL(/chapter=4$/);
   });

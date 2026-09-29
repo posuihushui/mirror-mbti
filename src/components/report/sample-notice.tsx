@@ -5,8 +5,11 @@ import { pairingMessages } from "@/lib/i18n/messages/pairing";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { getLocale } from "@/lib/i18n/server";
+import type { Profile } from "@/lib/personality";
 import { chapterLabelsFor } from "@/lib/site";
+import { RelationshipCards } from "@/components/pairing/relationship-cards";
 import { ChapterJump } from "./chapter-ui";
+import { categoriesOf, GuideSteps, PairLines, PairMarks } from "./report-invite";
 
 /**
  * Marks the sample report as a sample, right above the reading: it says the report is written from
@@ -46,16 +49,36 @@ export async function SampleNotice() {
   );
 }
 
-/** Chapter 03's pointer to the guide for two, where a real report invites someone. Value only: no price, no invitation. */
-export async function SamplePairing() {
+/**
+ * The sample's guide-for-two tab: how a guide comes about, the sample reader's half on the guide's
+ * four lines, and the same difference in the four relationships. Value only: no price, no invitation
+ * and nothing to buy; the way in is the test.
+ */
+export async function SampleGuide({ profile }: { profile: Profile }) {
   const locale = await getLocale();
+  const ui = pairingUiMessages[locale];
+  const t = ui.reportInvite;
   const m = pairingMessages[locale];
   return (
-    <section className="my-4 flex flex-col gap-1 border-y border-line py-3 md:flex-row md:items-center md:justify-between md:gap-8">
-      <p className="text-sm"><span className="font-medium">{m.title}</span><span className="text-mist"> · {m.summary}</span></p>
-      <TextLink href={href(locale, "/pairing")} className="shrink-0 text-mist hover:text-ink" {...trackAttrs("pairing_info", "pairing_benefit")}>
-        {pairingUiMessages[locale].learn}
+    <div data-sample-guide className="space-y-10 md:space-y-12">
+      <section aria-label={t.eyebrow} className="border-y border-line py-6">
+        <GuideSteps steps={ui.publicSteps} reached={0} locale={locale} kind="public" />
+      </section>
+      <section aria-labelledby="sample-halves" className="bg-card p-5 md:p-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h3 id="sample-halves" className="text-xl">{t.halvesTitle}</h3>
+          <PairMarks you={profile} partner={null} labels={[`${t.you} · ${profile.type}`, t.them]} size={44} />
+        </div>
+        <div className="mt-6"><PairLines locale={locale} you={categoriesOf(profile)} them={null} /></div>
+      </section>
+      <section aria-labelledby="sample-relationships">
+        <h3 id="sample-relationships" className="text-xl">{m.relationshipsTitle}</h3>
+        <p className="mt-3 text-sm text-mist">{m.relationshipsIntro}</p>
+        <div className="mt-5"><RelationshipCards locale={locale} compact /></div>
+      </section>
+      <TextLink href={href(locale, "/pairing")} className="font-medium" {...trackAttrs("pairing_info", "pairing_benefit")}>
+        {ui.learn}
       </TextLink>
-    </section>
+    </div>
   );
 }

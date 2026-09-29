@@ -9,8 +9,29 @@ import { track } from "@/lib/analytics/track";
 import { href } from "@/lib/i18n/locale";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { reportMessages } from "@/lib/i18n/messages/report";
-import { chapterLabelsFor } from "@/lib/site";
+import { GUIDE_TAB, reportTabLabelsFor } from "@/lib/site";
 import { chapterPanelId, chapterTabId, setChapter, useChapter } from "./chapter-store";
+
+/**
+ * Where the reader's guide for two stands, for the tab's marker: something to do (`start`: invite;
+ * `ready`: read) is a warm dot, `waiting` a ring. The sample's tab has no marker.
+ */
+export type GuideState = "start" | "waiting" | "ready" | "sample";
+
+/** The guide's legend as a glyph: you a filled dot, the other a warm ring. */
+function PairGlyph({ className }: { className?: string }) {
+  return (
+    <span aria-hidden className={cn("flex shrink-0 items-center gap-[3px]", className)}>
+      <span className="size-[7px] rounded-full bg-current" />
+      <span className="size-[7px] rounded-full border border-warm" />
+    </span>
+  );
+}
+
+function GuideMarker({ state }: { state: GuideState }) {
+  if (state === "sample") return null;
+  return <span aria-hidden className={cn("block size-1.5 shrink-0 rounded-full", state === "waiting" ? "border border-warm" : "bg-warm")} />;
+}
 
 /**
  * Interactive shell around server-rendered chapters. Every chapter is in the DOM;
@@ -39,24 +60,32 @@ function openChapter(index: number, current: number, method: "tab" | "sidebar" |
   if (index !== current) track("report_chapter_view", { chapter_number: index + 1, nav_method: method });
 }
 
-/** Desktop sidebar chapter list. */
-export function ChapterSidebarNav() {
+/**
+ * Desktop sidebar: the four chapters, then the guide for two set apart below them. The sidebar only
+ * navigates; everything about inviting lives in the guide's own tab.
+ */
+export function ChapterSidebarNav({ guide }: { guide: GuideState }) {
   const chapter = useChapter();
   const locale = useLocale();
   return (
     <nav className="mt-10 flex flex-col" aria-label={reportMessages[locale].nav.label}>
-      {chapterLabelsFor(locale).map((label, i) => (
+      {reportTabLabelsFor(locale).map((label, i) => (
         <button
           key={label}
           type="button"
           onClick={() => openChapter(i, chapter, "sidebar")}
           aria-current={chapter === i ? "true" : undefined}
-          className={cn("chapter-tab-motion relative flex min-h-[52px] items-center gap-4 border-b border-line pl-4 text-left text-sm text-mist hover:text-ink", chapter === i && "font-medium text-ink")}
+          className={cn(
+            "chapter-tab-motion relative flex min-h-[52px] items-center gap-4 border-b border-line pl-4 text-left text-sm text-mist hover:text-ink",
+            chapter === i && "font-medium text-ink",
+            i === GUIDE_TAB && "mt-5 border-t",
+          )}
         >
           {/* The current chapter is marked by a warm bar, not by an arrow that would read as a link out. */}
           <span aria-hidden className="chapter-bar-motion absolute top-3 bottom-3 left-0 w-0.5 bg-warm" />
-          <span className="text-xs text-mist">0{i + 1}</span>
+          {i === GUIDE_TAB ? <PairGlyph className="w-[15px] text-ink" /> : <span className="text-xs text-mist">0{i + 1}</span>}
           {label}
+          {i === GUIDE_TAB && <GuideMarker state={guide} />}
         </button>
       ))}
     </nav>
@@ -82,17 +111,17 @@ export function ChapterJump({ index, className, children }: { index: number; cla
   );
 }
 
-/** Phone chapter tabs above the article. */
-export function ChapterTabs() {
+/** Phone chapter tabs above the article: the four chapters and the guide for two. */
+export function ChapterTabs({ guide }: { guide: GuideState }) {
   const chapter = useChapter();
   const locale = useLocale();
   return (
     <div
       role="tablist"
       aria-label={reportMessages[locale].nav.label}
-      className="-mx-2 grid grid-cols-4 border-b border-night-line md:hidden"
+      className="-mx-2 grid grid-cols-5 border-b border-night-line md:hidden"
     >
-      {chapterLabelsFor(locale).map((label, i) => (
+      {reportTabLabelsFor(locale).map((label, i) => (
         <button
           key={label}
           id={chapterTabId(i)}
@@ -104,6 +133,7 @@ export function ChapterTabs() {
           className={cn("chapter-tab-motion relative min-h-11 py-2.5 text-xs leading-snug text-night-mist", locale === "en" ? "min-w-0 px-1 hyphens-auto break-words whitespace-normal" : "whitespace-nowrap", chapter === i && "text-paper")}
         >
           {label}
+          {i === GUIDE_TAB && guide !== "sample" && <span className="absolute top-2 right-1"><GuideMarker state={guide} /></span>}
           <span aria-hidden className={cn("absolute inset-x-3 -bottom-px h-0.5 bg-warm transition-opacity", chapter === i ? "opacity-100" : "opacity-0")} />
         </button>
       ))}
@@ -116,7 +146,7 @@ export function ChapterFooterNav({ sample = false }: { sample?: boolean }) {
   const chapter = useChapter();
   const locale = useLocale();
   const t = reportMessages[locale].nav;
-  const labels = chapterLabelsFor(locale);
+  const labels = reportTabLabelsFor(locale);
   const last = chapter === labels.length - 1;
   return (
     <div className="mt-6 border-t border-line pt-4 pb-2 text-right">
@@ -127,7 +157,7 @@ export function ChapterFooterNav({ sample = false }: { sample?: boolean }) {
         </Link>
       ) : (
         <button type="button" onClick={() => openChapter(chapter + 1, chapter, "next")} className="text-link font-medium">
-          {t.next(labels[chapter + 1])}
+          {chapter + 1 === GUIDE_TAB ? t.nextGuide(labels[chapter + 1]) : t.next(labels[chapter + 1])}
           <ArrowRight size={17} />
         </button>
       )}

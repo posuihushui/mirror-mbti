@@ -82,6 +82,9 @@ const zh = {
     closingSample: "开始属于你的测试",
     closing: "带着新的理解，回到生活",
     next: (label: string) => `下一章 · ${label}`,
+    /** Chapter 04 leads on to the guide for two, which is a tab of its own rather than a chapter. */
+    nextGuide: (label: string) => `下一步 · ${label}`,
+    openGuide: "打开双人指南",
     switchLabel: "优势与盲点",
     strengths: "你的优势",
     blindspots: "容易忽略的",
@@ -163,6 +166,8 @@ const en: typeof zh = {
     closingSample: "Start your own test",
     closing: "Take this understanding back into life",
     next: (label: string) => `Next chapter · ${label}`,
+    nextGuide: (label: string) => `Next · ${label}`,
+    openGuide: "Open the guide for two",
     switchLabel: "Strengths and blind spots",
     strengths: "Your strengths",
     blindspots: "Easy to miss",

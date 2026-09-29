@@ -61,6 +61,14 @@ export function chapterLabelsFor(locale: Locale): readonly string[] {
   return locale === "en" ? enChapterLabels : chapterLabels;
 }
 
+/** The guide for two's tab index (`?chapter=5`): after the four chapters. */
+export const GUIDE_TAB = 4;
+
+/** The report's tabs: its four chapters, then the guide for two as a tab of its own. */
+export function reportTabLabelsFor(locale: Locale): readonly string[] {
+  return [...chapterLabelsFor(locale), locale === "en" ? "Guide for two" : "双人指南"];
+}
+
 export function unlockBulletsFor(locale: Locale): readonly string[] {
   return locale === "en" ? enUnlockBullets : unlockBullets;
 }

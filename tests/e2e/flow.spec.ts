@@ -107,7 +107,8 @@ test.describe("core flow", () => {
     await page.getByRole("link", { name: "阅读我的报告", exact: true }).click();
     await page.waitForURL(/\/report\//);
     await expect(page.getByText("第一章")).toBeVisible();
-    await expect(page.locator('[role="tabpanel"]')).toHaveCount(4);
+    // Four chapters and the guide for two.
+    await expect(page.locator('[role="tabpanel"]')).toHaveCount(5);
     await expect(page.getByText("示例报告", { exact: true })).toHaveCount(0);
 
     await page.getByRole("button", { name: /下一章/ }).click();
@@ -178,9 +179,12 @@ test.describe("core flow", () => {
     await contents.getByRole("button", { name: /四句开口的话/ }).click();
     await expect(page).toHaveURL(/chapter=3$/);
     await expect(page.getByRole("heading", { name: /好的关系/ })).toBeVisible();
-    // chapter 03 points at the guide for two, by value only
-    const pairing = page.locator("#chapter-panel-3").getByRole("link", { name: "了解双人指南" });
+    // chapter 03 ends by opening the guide for two's tab, which shows it by value only
+    await page.locator("#chapter-panel-3").getByRole("button", { name: "打开双人指南" }).click();
+    await expect(page).toHaveURL(/chapter=5$/);
+    const pairing = page.locator("#chapter-panel-5").getByRole("link", { name: "了解双人指南" });
     await expect(pairing).toHaveAttribute("href", "/zh/pairing");
+    await expect(page.locator("[data-report-invite]")).toHaveCount(0);
     expect(await page.locator("body").innerText()).not.toMatch(/付费|解锁|订阅|续费|[¥$]\s?\d/);
   });
 
@@ -190,10 +194,10 @@ test.describe("core flow", () => {
     await expect(page.getByText(/这是一份示例/).first()).toBeVisible();
     await expect(page.getByText("示例报告", { exact: true }).first()).toBeVisible();
     await expect(page).toHaveTitle(/示例报告/);
-    // same structure as a paid report: four chapter panels behind one chapter switcher
-    await expect(page.locator('[role="tabpanel"]')).toHaveCount(4);
-    await expect(page.locator('[role="tablist"][aria-label="报告章节"] [role="tab"]')).toHaveCount(4);
-    await expect(page.locator('nav[aria-label="报告章节"] button')).toHaveCount(4);
+    // same structure as a paid report: four chapter panels and the guide for two behind one switcher
+    await expect(page.locator('[role="tabpanel"]')).toHaveCount(5);
+    await expect(page.locator('[role="tablist"][aria-label="报告章节"] [role="tab"]')).toHaveCount(5);
+    await expect(page.locator('nav[aria-label="报告章节"] button')).toHaveCount(5);
     // and it guides to the test rather than to a payment
     await expect(page.getByRole("heading", { name: /属于你的故事/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /解锁报告与/ })).toHaveCount(0);
