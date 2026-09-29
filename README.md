@@ -47,7 +47,7 @@
 | `POST /api/orders/[id]/payer` | Ethereum 订单：验证并记录签署订单挑战的钱包，只能设置一次，只认该钱包的转账 |
 | `POST /api/reports/recover` | 完整订单号匹配所属访客，恢复签名 cookie；不改变任何支付权限 |
 | `POST /api/orders/[id]/mock-pay` | 仅当订单所属语言的支付方式为 `mock` 时可用，模拟支付成功 |
-| `POST /api/payments/wechat/notify` | 微信支付回调：验签、解密、幂等、金额校验、解锁 |
+| `POST /api/payments/wechat/notify` | 微信支付回调：验签、解密、记录事件与处理订单；完整交易字段校验及查单应答验签仍属上线门槛 |
 | `POST /api/payments/waffo/webhook` | Waffo Pancake 回调：对原始请求体验证 RSA 签名，按 `<eventType>:<eventId>` 幂等，存储前去掉买家邮箱；`order.completed` 解锁，退款事件只记录、不收回报告 |
 | `GET /api/wechat/oauth` `…/callback` | `snsapi_base` 授权，获取 JSAPI 支付所需 openid |
 | `GET /api/wechat/jsconfig` | JS-SDK 分享签名（需配置公众号；页面仅在 `WECHAT_SHARE_ENABLED=true` 时启用分享） |
@@ -126,11 +126,7 @@ APP_URL=https://your-domain.com docker compose up -d --build
 
 ## 接入微信支付
 
-1. 在商户平台获取 `mchid`、API 证书序列号、商户私钥（PEM）、APIv3 密钥；开通微信支付公钥或使用平台证书（留空 `WECHAT_PAY_PUBLIC_KEY*` 时系统自动拉取并缓存平台证书）。
-2. 关联的公众号 / 服务号 appid 填入 `WECHAT_PAY_APPID`；配置公众号网页授权域名与 JS 接口安全域名为站点域名；`WECHAT_MP_APPID` / `WECHAT_MP_SECRET` 用于 `snsapi_base` 获取 openid 与分享卡片。
-3. 商户平台开通 JSAPI（微信内）、H5（手机浏览器）、Native（PC 扫码）三种支付方式。
-4. 设置 `PAYMENT_PROVIDER=wechat`（只影响中文订单），重启。回调地址为 `${APP_URL}/api/payments/wechat/notify`。
-5. 用小额真实订单验收：微信内 JSAPI、手机浏览器 H5 回跳 `/pay/[orderId]`、PC 扫码轮询。
+按 [微信支付接入与上线执行手册](docs/wechat-pay-integration.md)完成主体和产品权限申请、商户后台域名与密钥配置、本站变量设置、三种入口的真实交易验收。该手册列出当前代码需要先关闭的支付安全与过期订单问题；完成前不要把中文站切到真实收款。`PAYMENT_PROVIDER=wechat` 只影响中文订单。
 
 ## 数据与限制
 
