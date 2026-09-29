@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { MirrorMark, typeMirrorProfile } from "@/components/brand/mirror-mark";
+import { Illustration } from "@/components/illustrations/scene";
+import { typeScenes } from "@/components/illustrations/type-scenes";
 import { DimensionSpectrum, EverydayFlow, LetterBreakdown, MisconceptionList, NeighborTree, SayItBubble, TypeMap } from "@/components/types/type-diagrams";
 import { AppHeader } from "@/components/site/app-header";
 import { Dock } from "@/components/site/dock";
@@ -89,7 +91,9 @@ export default async function TypePage({ params }: Params) {
               </div>
               <MirrorMark profile={typeMirrorProfile(type)} tone="paper" size={120} className="size-22 shrink-0 md:size-30" />
             </div>
-            <p className="mt-8 text-3xl leading-heading font-medium whitespace-pre-line md:text-4xl">{line}</p>
+            {/* The type's still life: a picture of its line, never a person. */}
+            <Illustration scene={typeScenes[type]} tone="night" className="mx-auto mt-6 w-full max-w-72" />
+            <p className="mt-6 text-3xl leading-heading font-medium whitespace-pre-line md:text-4xl">{line}</p>
             <p className="mt-5 max-w-md text-sm text-night-body md:text-base">{summary}</p>
             <div className="mt-8 md:mt-auto md:pt-10"><LetterBreakdown type={type} locale={locale} /></div>
           </div>
@@ -100,9 +104,6 @@ export default async function TypePage({ params }: Params) {
               <span aria-hidden>01 — 04</span>
             </div>
             <div className="mt-6"><DimensionSpectrum type={type} locale={locale} /></div>
-            <p className="mt-6 text-xs text-mist">
-              {t.dimsNote}
-            </p>
           </div>
         </section>
 

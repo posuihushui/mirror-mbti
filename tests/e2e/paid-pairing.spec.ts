@@ -17,7 +17,8 @@ async function pay(request:APIRequestContext,id:string){const r=await request.po
 async function shot(page:Page,name:string){
  await mkdir(evidence,{recursive:true});
  const inDialog=await page.getByRole('dialog').isVisible();
- await expect.poll(()=>page.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running').length)).toBe(0);
+ // Reveals must finish; the illustrations' ambient loops never do.
+ await expect.poll(()=>page.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running'&&a.effect?.getTiming().iterations!==Infinity).length)).toBe(0);
  await page.screenshot({path:`${evidence}/${name}.png`,fullPage:!inDialog});
 }
 for(const en of [false,true])test(`paid invitation → own overview → payment → independent consent ${en?'en':'zh'}`,async({page,browser},info)=>{

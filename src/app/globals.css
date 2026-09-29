@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./illustration-motion.css";
 
 /* Dark mode is opt-in via a `.dark` class that this site never sets; this keeps
    shadcn's `dark:` utilities inert under the OS dark preference. */

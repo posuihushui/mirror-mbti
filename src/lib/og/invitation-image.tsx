@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
-import { BrandLogo, BrandMark, brandLogoWidth } from "@/components/brand/brand-logo";
+import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
+import { Illustration } from "@/components/illustrations/scene";
+import { pairScene } from "@/components/illustrations/moment-scenes";
 import type { Locale } from "@/lib/i18n/locale";
 import { compareMessages } from "@/lib/i18n/messages/compare";
 import { pairingMessages } from "@/lib/i18n/messages/pairing";
@@ -21,7 +23,8 @@ export async function renderInvitationImage(locale: Locale) {
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "#edf2f3", color: "#171b1c", fontFamily: OG_FONT_FAMILY }}>
       <div style={{ display: "flex", flex: 1 }}>
         <div style={{ display: "flex", position: "relative", overflow: "hidden", flexDirection: "column", width: 540, flexShrink: 0, padding: 52, background: "#121718", color: "#edf2f3" }}>
-          <div style={{ display: "flex", position: "absolute", right: -120, bottom: -165, opacity: .09 }}>{BrandMark({ tone: "paper", monochrome: true, size: 430 })}</div>
+          {/* Two chairs under one lamp: a conversation with nobody in it, the same for every invitation. */}
+          <div style={{ display: "flex", position: "absolute", right: 36, top: 30 }}>{Illustration({ scene: pairScene, tone: "night", width: 240 })}</div>
           <div style={{ display: "flex", height: 40 }}>{BrandLogo({ locale, tone: "paper", width: brandLogoWidth(locale, 180) })}</div>
           <div style={{ display: "flex", flexDirection: "column", marginTop: "auto" }}>
             <div style={{ display: "flex", fontSize: en ? 40 : 48, fontWeight: 500, lineHeight: 1.25 }}>{m.invitationHeading}</div>

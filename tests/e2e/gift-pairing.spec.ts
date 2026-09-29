@@ -23,7 +23,8 @@ async function payReport(request: APIRequestContext, id: string) {
   expect((await request.post(`/api/orders/${(await order.json()).data.id}/mock-pay`, { headers: { origin } })).ok()).toBe(true);
 }
 async function settle(page: Page) {
-  await expect.poll(() => page.evaluate(() => document.getAnimations().filter((a) => a.playState === "running").length)).toBe(0);
+  // Reveals must finish; the illustrations' ambient loops never do.
+  await expect.poll(() => page.evaluate(() => document.getAnimations().filter((a) => a.playState === "running" && a.effect?.getTiming().iterations !== Infinity).length)).toBe(0);
 }
 async function shot(page: Page, name: string) {
   await mkdir(evidence, { recursive: true });

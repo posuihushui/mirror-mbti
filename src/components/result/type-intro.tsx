@@ -1,9 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { MirrorMark } from "@/components/brand/mirror-mark";
+import { Illustration } from "@/components/illustrations/scene";
+import { typeScenes } from "@/components/illustrations/type-scenes";
 import { TypeName } from "@/components/result/type-name";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { getLocale } from "@/lib/i18n/server";
-import { polesFor, profileMeta, type Letter, type Profile } from "@/lib/personality";
+import { isPersonalityType, polesFor, profileMeta, type Letter, type Profile } from "@/lib/personality";
 import { preferenceDimensionsFor } from "@/lib/preference-content";
 
 /**
@@ -28,7 +30,9 @@ export async function TypeIntro({ profile, sample }: { profile: Profile; sample:
         <MirrorMark profile={profile} tone="paper" size={120} className="size-22 shrink-0 md:size-30" />
       </div>
       <TypeName name={name} className="mt-3 block text-sm text-night-body md:text-base" />
-      <h1 className="mt-8 max-w-lg text-3xl leading-heading md:text-4xl">{line}</h1>
+      {/* The type's still life: a picture of its line, never a person. */}
+      {isPersonalityType(profile.type) && <Illustration scene={typeScenes[profile.type]} tone="night" className="mx-auto mt-6 w-full max-w-72" />}
+      <h1 className="mt-6 max-w-lg text-3xl leading-heading md:text-4xl">{line}</h1>
       <p className="mt-5 max-w-md text-sm text-night-body md:text-base">{summary}</p>
       {leaning.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-2">

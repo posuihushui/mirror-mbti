@@ -7,6 +7,8 @@ import { PreferenceSummary } from "@/components/compare/preference-summary";
 import { CompareUnavailable } from "@/components/compare/compare-unavailable";
 import { ShareQuizLink, ShareVisit } from "@/components/share/share-visit";
 import { PairingExample } from "@/components/pairing/pairing-example";
+import { Illustration } from "@/components/illustrations/scene";
+import { pairScene, relationshipScenes } from "@/components/illustrations/moment-scenes";
 import { findOwnedComparisonForInvitation, getPublicInvitation, getInvitationState, listComparisonResults } from "@/lib/comparisons";
 import { getVisitorId } from "@/lib/session";
 import { getLocale } from "@/lib/i18n/server";
@@ -67,6 +69,8 @@ export default async function InvitationPage({ params }: Props) {
     <main data-share-static className="mx-auto max-w-[1060px] px-6 pt-8 pb-[120px] md:py-14">
       <div className="grid gap-9 md:grid-cols-2 md:gap-x-14 md:gap-y-10 md:[grid-template-rows:auto_1fr]">
         <section className="md:col-start-1 md:row-start-1">
+          {/* The relationship's own scene (a shared moment, never faces); like the eyebrow, it stays off the metadata and OG card. */}
+          <Illustration scene={invitation.relationship ? relationshipScenes[invitation.relationship] : pairScene} className="mb-6 w-full max-w-56" />
           {/* The relationship the host chose names the invitation; the metadata and OG card never carry it. */}
           <p className="eyebrow text-mist">{invitation.relationship ? m.relationshipBetween[invitation.relationship] : ui.introEyebrow}</p>
           {invitation.hostNote && <figure className="warm-panel mt-5 p-5">

@@ -1,10 +1,11 @@
 import { Radar } from "@/components/result/radar";
+import { InfoTip } from "@/components/site/info-tip";
 import { resultMessages } from "@/lib/i18n/messages/result";
 import { getLocale } from "@/lib/i18n/server";
 import { polesFor, type Letter, type Profile } from "@/lib/personality";
 import { dimensionReading } from "@/lib/preference-content";
 
-/** `.result-chart`: section label, radar, four-up percentages with how clearly each leans, note. */
+/** `.result-chart`: section label with how to read it (ⓘ), radar, four-up percentages with how clearly each leans. */
 export async function ResultChart({ profile }: { profile: Profile }) {
   const locale = await getLocale();
   const t = resultMessages[locale].chart;
@@ -12,8 +13,13 @@ export async function ResultChart({ profile }: { profile: Profile }) {
   const letters = profile.type.split("");
   return (
     <div className="bg-card p-6 md:p-8">
-      <div className="flex justify-between text-xs text-mist">
-        <span>{t.heading}</span>
+      <div className="flex items-center justify-between text-xs text-mist">
+        <span className="flex items-center gap-2">
+          {t.heading}
+          <InfoTip id="percent-info" label={t.infoLabel} close={t.infoClose}>
+            {t.info.map((line) => <p key={line}>{line}</p>)}
+          </InfoTip>
+        </span>
         <span aria-hidden>01 — 04</span>
       </div>
       <Radar profile={profile} height={300} className="mt-6 mb-3" />
@@ -29,7 +35,6 @@ export async function ResultChart({ profile }: { profile: Profile }) {
           </div>
         ))}
       </div>
-      <p className="mt-6 text-center text-xs text-mist">{t.note}</p>
     </div>
   );
 }

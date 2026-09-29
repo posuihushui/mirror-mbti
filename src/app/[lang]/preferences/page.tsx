@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Illustration } from "@/components/illustrations/scene";
+import { poleScenes } from "@/components/illustrations/pole-scenes";
 import { AppHeader } from "@/components/site/app-header";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { TextLink } from "@/components/site/text-link";
@@ -8,6 +10,7 @@ import { appUrl } from "@/lib/env";
 import { href } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
+import { dimensions, polesFor, type Letter } from "@/lib/personality";
 import { preferenceDimensionsFor, preferenceNotesFor } from "@/lib/preference-content";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { siteCopy } from "@/lib/site";
@@ -21,6 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PreferencesPage() {
   const locale = await getLocale();
   const t = pageMessages[locale].preferences;
+  const poles = polesFor(locale);
   return <><AppHeader variant="page" title={t.headerTitle} backHref={href(locale, "/")} path="/preferences" />
     <main className="mx-auto max-w-3xl px-6 pt-8 pb-20 md:px-10 md:pt-14">
       <p className="eyebrow text-mist">{t.eyebrow}</p>
@@ -34,6 +38,14 @@ export default async function PreferencesPage() {
             <p className="mt-1 text-sm text-mist">{d.pair}</p>
           </div>
           <div>
+            {/* Each end as an everyday picture with the need it starts from; the text below explains the pair. */}
+            <ul className="mb-5 grid list-none grid-cols-2 gap-3 p-0">
+              {(dimensions[index].split("") as Letter[]).map((letter) => <li key={letter} className="bg-card p-3 md:p-4">
+                <Illustration scene={poleScenes[letter]} className="mx-auto w-full max-w-44" />
+                <p className="mt-2 text-sm font-medium">{poles[letter].label} {letter}</p>
+                <p className="mt-0.5 text-xs text-mist">{poles[letter].need}</p>
+              </li>)}
+            </ul>
             <p className="text-base text-slate">{d.description}</p>
             <p className="mt-4 border-l-2 border-warm pl-4 text-base">{t.question(d.question)}</p>
           </div>

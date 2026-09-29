@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { MirrorMark, typeMirrorProfile } from "@/components/brand/mirror-mark";
+import { Illustration } from "@/components/illustrations/scene";
+import { typeScenes } from "@/components/illustrations/type-scenes";
 import { temperament, TypeMap } from "@/components/types/type-diagrams";
 import { AppHeader } from "@/components/site/app-header";
 import { Dock } from "@/components/site/dock";
@@ -69,18 +71,18 @@ export default async function TypesPage() {
                 const { name, line } = typeMeta(type, locale);
                 return (
                   <li key={type}>
-                    {/* Phones: one row per type (mark, code and name, line); desktop: a card in a four-column grid. */}
-                    <Link href={href(locale, `/types/${type}`)} className="group flex h-full items-start gap-4 border border-line bg-card p-4 transition-colors hover:border-[#9eacb0] md:flex-col md:gap-0 md:p-5" {...trackAttrs("view_type", "type_grid")}>
-                      <MirrorMark profile={typeMirrorProfile(type)} size={44} className="shrink-0 md:order-2 md:hidden" />
-                      <span className="flex min-w-0 flex-1 flex-col md:w-full">
+                    {/* Phones: one row per type (its still life, code, name and mark, line); desktop: a card in a four-column grid with the picture on top. */}
+                    <Link href={href(locale, `/types/${type}`)} className="group flex h-full items-center gap-4 border border-line bg-card p-3 pr-4 transition-colors hover:border-[#9eacb0] md:flex-col md:items-stretch md:gap-0 md:p-5" {...trackAttrs("view_type", "type_grid")}>
+                      <Illustration scene={typeScenes[type]} className="w-24 shrink-0 md:mx-auto md:w-full md:max-w-52" />
+                      <span className="flex min-w-0 flex-1 flex-col md:mt-4 md:w-full">
                         <span className="flex items-start justify-between gap-2">
                           <span className="min-w-0">
                             <span className="block text-2xl leading-none font-medium tracking-tighter md:text-4xl">{type}</span>
                             <TypeName name={name} className="mt-2 block text-xs text-mist" />
                           </span>
-                          <MirrorMark profile={typeMirrorProfile(type)} size={44} className="hidden shrink-0 md:block" />
+                          <MirrorMark profile={typeMirrorProfile(type)} size={32} className="shrink-0" />
                         </span>
-                        <span className="mt-3 text-sm text-slate whitespace-pre-line md:mt-4">{line}</span>
+                        <span className="mt-2 text-sm text-slate whitespace-pre-line md:mt-4">{line}</span>
                       </span>
                       <span aria-hidden className="flex self-center md:mt-auto md:self-end md:pt-3"><ArrowRight size={16} className="text-mist transition-transform group-hover:translate-x-0.5 group-hover:text-ink" /></span>
                     </Link>

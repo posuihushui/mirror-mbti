@@ -1,6 +1,8 @@
 import { ImageResponse } from "next/og";
 import { connection } from "next/server";
 import { BrandLogo, brandLogoWidth } from "@/components/brand/brand-logo";
+import { Illustration } from "@/components/illustrations/scene";
+import { typeScenes } from "@/components/illustrations/type-scenes";
 import type { Locale } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { OG_FONT_FAMILY, ogFonts } from "@/lib/og/fonts";
@@ -27,17 +29,19 @@ export default async function TypeOgImage({ params }: { params: Promise<{ lang: 
           {BrandLogo({ width: brandLogoWidth(locale, 240), locale })}
           <div style={{ fontSize: 14, letterSpacing: 3, color: "#738087" }}>{pageMessages[locale].type.eyebrow}</div>
         </div>
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 40 }}>
-          <div style={{ fontSize: 220, lineHeight: 1, fontWeight: 500, letterSpacing: -14 }}>{t}</div>
-          <div style={{ display: "flex", flexDirection: "column", paddingBottom: 26 }}>
-            {/* English labels are four words long, so they get a smaller size to fit beside the letters. */}
-            <div style={{ fontSize: en ? 19 : 28, letterSpacing: en ? 1 : 4, color: "#5c6a70" }}>{name}</div>
-            <div style={{ marginTop: 18, fontSize: en ? 30 : 40, lineHeight: 1.4, fontWeight: 500, letterSpacing: -1, display: "flex", flexDirection: "column" }}>
+        {/* The type and its line on the left, its still life on the right. */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 40 }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 170, lineHeight: 1, fontWeight: 500, letterSpacing: -10 }}>{t}</div>
+            {/* English labels are four words long, so they get a smaller size. */}
+            <div style={{ marginTop: 18, fontSize: en ? 19 : 28, letterSpacing: en ? 1 : 4, color: "#5c6a70" }}>{name}</div>
+            <div style={{ marginTop: 14, fontSize: en ? 30 : 38, lineHeight: 1.4, fontWeight: 500, letterSpacing: -1, display: "flex", flexDirection: "column" }}>
               {line.split("\n").map((s) => (
                 <span key={s}>{s}</span>
               ))}
             </div>
           </div>
+          <div style={{ display: "flex", flexShrink: 0 }}>{Illustration({ scene: typeScenes[t], width: 400 })}</div>
         </div>
         <div style={{ display: "flex", gap: 12 }}>
           {letters.map((l) => (

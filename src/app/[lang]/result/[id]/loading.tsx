@@ -19,7 +19,10 @@ export default async function ResultLoading() {
               <Skeleton tone="night" className="h-[72px] w-44 md:h-24 md:w-60" />
               <Skeleton tone="night" className="size-22 rounded-full md:size-30" />
             </div>
-            <Skeleton tone="night" className="mt-8 h-8 w-4/5" />
+            <Skeleton tone="night" className="mt-3 h-4 w-20" />
+            {/* The type's still life (4:3, up to 288px wide). */}
+            <Skeleton tone="night" className="mx-auto mt-6 aspect-[4/3] w-full max-w-72" />
+            <Skeleton tone="night" className="mt-6 h-8 w-4/5" />
             <Skeleton tone="night" className="mt-5 h-4 w-3/5" />
             <Skeleton tone="night" className="mt-2 h-4 w-2/5" />
           </div>

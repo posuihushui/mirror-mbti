@@ -13,7 +13,14 @@ const zh = {
   },
   chart: {
     heading: "四个维度，认识你的偏好",
-    note: "百分比表示本次作答位置，无优劣之分。接近 50% 时，应同时观察两端。",
+    /** How to read the percentages: said once, behind the ⓘ beside the chart's heading. */
+    infoLabel: "怎么读这些百分比",
+    info: [
+      "百分比只是本问卷的作答位置，无优劣之分，不是能力分、准确率或人群百分位。接近 50% 时，应同时观察两端。",
+      "偏向明显，说明这是你较常使用的起点，不代表另一端较弱；偏向不大时，换一个情境也可能用另一种方式。",
+      "复测时先比较具体情境与维度变化；不同版本的分数不直接视为等价。",
+    ],
+    infoClose: "知道了",
   },
   radar: {
     balanced: (label: string, value: number) => `${label}偏好 ${value}%（接近均衡）`,
@@ -22,9 +29,9 @@ const zh = {
   },
   reading: {
     heading: "比四个字母，更值得留意的事。",
-    lede: "偏向明显，说明这是你较常使用的起点，不代表另一端较弱；偏向不大时，换一个情境也可能用另一种方式。",
+    /** Opens a dimension's general description, folded under the reader's own line. */
+    more: "了解这个维度",
     practice: "今天的小练习",
-    note: "百分比只是本问卷的作答位置，不是能力分、准确率或人群百分位。复测时先比较具体情境与维度变化；不同版本的分数不直接视为等价。",
     link: "了解四维偏好与复测",
   },
   unlock: {
@@ -102,7 +109,13 @@ const en: typeof zh = {
   },
   chart: {
     heading: "Four dimensions of your preferences",
-    note: "Percentages show where your answers fell this time — neither side is better. Near 50%, watch both ends.",
+    infoLabel: "How to read these percentages",
+    info: [
+      "Percentages only show where your answers fell on this questionnaire — neither side is better, and they are not ability, accuracy or a population percentile. Near 50%, watch both ends.",
+      "A clear lean is a common starting point for you, not a sign the other side is weaker; a small lean may shift with the situation.",
+      "When you retake, compare situations and dimension changes first; scores from different versions aren’t directly equivalent.",
+    ],
+    infoClose: "Got it",
   },
   radar: {
     balanced: (label: string, value: number) => `${label} ${value}% (close to balanced)`,
@@ -111,9 +124,8 @@ const en: typeof zh = {
   },
   reading: {
     heading: "What matters more than four letters.",
-    lede: "A clear lean is a common starting point for you, not a sign the other side is weaker; a small lean may shift with the situation.",
+    more: "About this dimension",
     practice: "Today’s small practice",
-    note: "Percentages only show where your answers fell on this questionnaire — not ability, accuracy or a population percentile. When you retake, compare situations and dimension changes first; scores from different versions aren’t directly equivalent.",
     link: "The four preferences & retesting",
   },
   unlock: {

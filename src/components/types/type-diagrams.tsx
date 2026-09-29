@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowDown, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { MirrorMark, typeMirrorProfile } from "@/components/brand/mirror-mark";
+import { Illustration } from "@/components/illustrations/scene";
+import { poleScenes } from "@/components/illustrations/pole-scenes";
 import { trackAttrs, type CtaLocation } from "@/lib/analytics/events";
 import { href, type Locale } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
@@ -54,7 +56,7 @@ export function DimensionSpectrum({ type, locale }: { type: string; locale: Loca
   );
 }
 
-/** Energy → information → judgment → planning, one everyday moment at each step. */
+/** Energy → information → judgment → planning, one everyday moment at each step, each led by its pole's picture. */
 export function EverydayFlow({ type, locale, items }: { type: string; locale: Locale; items: string[] }) {
   const poles = polesFor(locale);
   const dims = preferenceDimensionsFor(locale);
@@ -66,10 +68,13 @@ export function EverydayFlow({ type, locale, items }: { type: string; locale: Lo
         return (
           <li key={letter + i} className="relative flex gap-4 pb-6 md:block md:pr-6 md:pb-0">
             {/* The connector to the next step: down the left on phones, across on desktop. */}
-            {!last && <span aria-hidden className="absolute top-11 bottom-1 left-5 w-px bg-line md:top-5 md:right-2 md:bottom-auto md:left-13 md:h-px md:w-auto" />}
-            {!last && <ArrowDown aria-hidden size={14} className="absolute bottom-0 left-[13.5px] text-mist md:hidden" />}
-            {!last && <ArrowRight aria-hidden size={14} className="absolute top-[13.5px] right-0 hidden text-mist md:block" />}
-            <span className="relative flex size-10 shrink-0 items-center justify-center rounded-full border border-warm bg-card text-base font-medium">{letter}</span>
+            {!last && <span aria-hidden className="absolute top-14 bottom-1 left-8 w-px bg-line md:top-9 md:right-2 md:bottom-auto md:left-[104px] md:h-px md:w-auto" />}
+            {!last && <ArrowDown aria-hidden size={14} className="absolute bottom-0 left-[25px] text-mist md:hidden" />}
+            {!last && <ArrowRight aria-hidden size={14} className="absolute top-[29px] right-0 hidden text-mist md:block" />}
+            <span className="relative block w-16 shrink-0 self-start md:w-24">
+              <Illustration scene={poleScenes[letter]} className="block w-full" />
+              <span className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full border border-warm bg-card text-xs font-medium">{letter}</span>
+            </span>
             <div className="min-w-0 md:mt-4">
               <p className="text-xs text-mist">{dims[i].title}</p>
               <p className="mt-1 text-sm font-medium">{poles[letter].label}</p>

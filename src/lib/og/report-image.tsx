@@ -67,6 +67,7 @@ export async function renderReportImage(profile: Profile, locale: Locale, quizUr
         </div>
       </div>
     </div>,
-    { width: 960, height: 1280, fonts, headers: { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" } },
+    // Private but briefly cacheable: the report card's thumbnail and its sheet share one render.
+    { width: 960, height: 1280, fonts, headers: { "Cache-Control": "private, max-age=600", "X-Robots-Tag": "noindex, nofollow" } },
   );
 }

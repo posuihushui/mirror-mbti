@@ -9,12 +9,10 @@ import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { pageMetadata } from "@/lib/seo";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { TextLink } from "@/components/site/text-link";
-import { Briefcase, Heart, HouseLine, Smiley } from "@phosphor-icons/react/dist/ssr";
-import type { Icon } from "@phosphor-icons/react";
-import { COMPARE_RELATIONSHIPS, type CompareRelationship } from "@/lib/compare-types";
+import { Illustration } from "@/components/illustrations/scene";
+import { pairScene, relationshipScenes } from "@/components/illustrations/moment-scenes";
+import { COMPARE_RELATIONSHIPS } from "@/lib/compare-types";
 import { compareMessages } from "@/lib/i18n/messages/compare";
-
-const relationshipIcons: Record<CompareRelationship, Icon> = { partner: Heart, friend: Smiley, family: HouseLine, colleague: Briefcase };
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale(); const m = pairingMessages[locale];
@@ -23,16 +21,20 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PairingPage() {
   const locale = await getLocale(); const m = pairingMessages[locale]; const ui = pairingUiMessages[locale]; const c = compareMessages[locale];
   return <><AppHeader variant="page" title={m.title} backHref={href(locale, "/")} path="/pairing" /><main className="mx-auto max-w-5xl px-6 pt-8 pb-16 md:pt-14">
-    <section><PairingReveal><p className="eyebrow text-warm-ink">{ui.introEyebrow}</p><h1 className="mt-4 max-w-3xl text-3xl leading-heading md:text-5xl">{m.heading}</h1><p className="mt-5 max-w-2xl text-base text-slate">{m.summary}</p></PairingReveal></section>
+    <section className="md:grid md:grid-cols-[minmax(0,1fr)_300px] md:items-center md:gap-12">
+      <PairingReveal><p className="eyebrow text-warm-ink">{ui.introEyebrow}</p><h1 className="mt-4 max-w-3xl text-3xl leading-heading md:text-5xl">{m.heading}</h1><p className="mt-5 max-w-2xl text-base text-slate">{m.summary}</p></PairingReveal>
+      <Illustration scene={pairScene} className="mx-auto mt-8 w-full max-w-64 md:mt-0 md:max-w-none" />
+    </section>
     <div className="my-10 md:my-14"><PairingExample locale={locale} relationship="partner" /></div>
     {/* The feature's point: the same difference, written for each relationship. Scenes and topic titles only, never a reading. */}
     <section data-relationships className="border-t border-line py-8">
       <h2 className="text-2xl leading-heading">{m.relationshipsTitle}</h2>
       <p className="mt-3 max-w-2xl text-base text-slate">{m.relationshipsIntro}</p>
       <ul className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{COMPARE_RELATIONSHIPS.map((relationship) => {
-        const Glyph = relationshipIcons[relationship];
         return <li key={relationship} data-relationship={relationship} className="rounded-[4px] border border-line bg-card p-5">
-          <p className="flex items-center gap-2 text-base font-medium"><Glyph size={22} weight="light" className="text-warm-ink" aria-hidden />{c.relationshipLabels[relationship]}</p>
+          {/* The moment each relationship's example is about: the anniversary, the weekend, the trip home, the deadline. */}
+          <Illustration scene={relationshipScenes[relationship]} className="mx-auto mb-3 w-full max-w-48" />
+          <p className="text-base font-medium">{c.relationshipLabels[relationship]}</p>
           <p className="mt-3 border-l-2 border-warm pl-3 text-sm">{c.byRelationship[relationship].scenes.JP.opposite}</p>
           <p className="mt-4 text-xs text-mist">{c.topicLabels[relationship]}</p>
           <p className="mt-1 text-sm font-medium">{c.byRelationship[relationship].topic.title}</p>

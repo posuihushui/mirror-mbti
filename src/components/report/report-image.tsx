@@ -1,23 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DownloadSimple, ImageSquare } from "@phosphor-icons/react";
+import { ArrowRight, DownloadSimple } from "@phosphor-icons/react";
 import { ResponsiveSheet } from "@/components/site/responsive-sheet";
 import { track } from "@/lib/analytics/track";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { reportMessages } from "@/lib/i18n/messages/report";
 
 /**
- * Saving the report's summary as a picture, as WeChat readers do. The PNG is fetched only when the
- * sheet opens; saving downloads it, and inside WeChat pressing and holding the image saves it.
+ * Saving the report's summary as a picture, as WeChat readers do. The trigger is a card showing the
+ * picture itself (lazy, so it renders once the card is near the screen); the sheet reuses that
+ * response from the browser cache. Saving downloads it, and inside WeChat pressing and holding the image saves it.
  */
 export function ReportImage({ src, className }: { src: string; className?: string }) {
   const t = reportMessages[useLocale()].image;
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" className={`text-link ${className ?? ""}`} onClick={() => { setOpen(true); track("report_image_open"); }}>
-        <ImageSquare size={16} aria-hidden />{t.open}
+      <button type="button" className={`group flex w-full items-center gap-4 border border-line bg-card p-3 text-left transition-colors hover:border-[#9eacb0] ${className ?? ""}`} onClick={() => { setOpen(true); track("report_image_open"); }}>
+        <span className="aspect-[3/4] w-14 shrink-0 overflow-hidden border border-line bg-night">
+          {/* eslint-disable-next-line @next/next/no-img-element -- the private PNG bypasses the image optimizer. */}
+          <img src={src} alt="" loading="lazy" decoding="async" width={960} height={1280} className="h-full w-full object-cover" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-ink">{t.open}</span>
+          <span className="mt-1 block text-xs text-mist">{t.teaser}</span>
+        </span>
+        <ArrowRight size={15} aria-hidden className="shrink-0 text-mist transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
       </button>
       <ResponsiveSheet open={open} onOpenChange={setOpen} title={t.title} description={t.description}>
         {open && <ReportImagePreview src={src} />}
@@ -37,7 +46,8 @@ function ReportImagePreview({ src }: { src: string }) {
     let disposed = false;
     void (async () => {
       try {
-        const response = await fetch(src, { cache: "no-store", signal: controller.signal });
+        // A retry asks the server again; the first open reuses the thumbnail's response.
+        const response = await fetch(src, { cache: attempt ? "reload" : "default", signal: controller.signal });
         if (!response.ok || !response.headers.get("content-type")?.includes("image/png")) throw new Error("IMAGE_UNAVAILABLE");
         objectUrl = URL.createObjectURL(await response.blob());
         if (!disposed) { setImage(objectUrl); setFailed(false); }

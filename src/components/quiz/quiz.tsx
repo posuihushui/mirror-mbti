@@ -4,6 +4,8 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check } from "@phosphor-icons/react";
 import { cn } from "cn";
+import { Illustration } from "@/components/illustrations/scene";
+import { restScene } from "@/components/illustrations/rest-scene";
 import { toast } from "sonner";
 import { Dock } from "@/components/site/dock";
 import { PrimaryButton } from "@/components/site/primary-button";
@@ -266,6 +268,7 @@ function QuizRunner({ progress, onChoose, onReveal, previousCount }: { progress:
                   <li key={i} className={cn("h-1.5 rounded-full", i < pause ? "bg-warm" : "bg-line")} />
                 ))}
               </ol>
+              <Illustration scene={restScene} className="mx-auto mt-8 w-full max-w-56 short:mt-5 short:max-w-40" />
             </div>
           ) : (
           <div className="quiz-question-motion" data-direction={direction} key={index}>

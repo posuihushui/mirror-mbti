@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Check } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { MirrorMark } from "@/components/brand/mirror-mark";
+import { Illustration } from "@/components/illustrations/scene";
+import { poleScenes } from "@/components/illustrations/pole-scenes";
 import { Radar } from "@/components/result/radar";
 import { TypeName } from "@/components/result/type-name";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import type { Locale } from "@/lib/i18n/locale";
 import { reportMessages } from "@/lib/i18n/messages/report";
 import { getLocale } from "@/lib/i18n/server";
-import { type Profile } from "@/lib/personality";
+import { type Letter, type Profile } from "@/lib/personality";
 import type { Insight, Need } from "@/lib/report-content";
 import { ChapterFooterNav, ChapterPanel, ChapterSidebarNav, ChapterTabs, StrengthSwitch } from "./chapter-ui";
 import { PracticeCheck, PracticeProgress } from "./practice-check";
@@ -78,7 +80,7 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
           )}
           <ChapterSidebarNav />
           {aside}
-          <ReportImage src={image} className="mt-8 text-sm text-mist hover:text-ink" />
+          <ReportImage src={image} className="mt-8" />
         </div>
       </aside>
 
@@ -103,7 +105,7 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
           <Reading>
             <ChapterOne data={data} locale={locale} />
             {/* Phones keep the image here; desktop has it under the chapter list. */}
-            <ReportImage src={image} className="mt-6 font-medium md:hidden" />
+            <ReportImage src={image} className="mt-8 md:hidden" />
           </Reading>
         </ChapterPanel>
         <ChapterPanel index={1}>
@@ -161,9 +163,12 @@ function ChapterOne({ data, locale }: ChapterProps) {
       <ol className="mt-4 border-t border-line">
         {needs.map((need) => (
           <li key={need.letter} className="border-b border-line py-6">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-lg font-medium">{need.label} <span className="text-mist">{need.letter}</span></p>
-              <p className={cn("text-sm", need.balanced ? "text-warm-ink" : "text-mist")}>{need.value}% · {need.degree}</p>
+            <div className="flex items-center gap-3">
+              <Illustration scene={poleScenes[need.letter as Letter]} className="w-14 shrink-0 md:w-16" />
+              <div className="flex min-w-0 flex-1 items-baseline justify-between gap-3">
+                <p className="text-lg font-medium">{need.label} <span className="text-mist">{need.letter}</span></p>
+                <p className={cn("text-sm", need.balanced ? "text-warm-ink" : "text-mist")}>{need.value}% · {need.degree}</p>
+              </div>
             </div>
             <Progress value={need.value} max={100} className="mt-3" indicatorClassName="bg-warm" aria-label={`${need.label} ${need.value}%`} />
             {need.balanced ? (
