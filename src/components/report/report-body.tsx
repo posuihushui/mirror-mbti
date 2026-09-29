@@ -5,7 +5,6 @@ import { MirrorMark } from "@/components/brand/mirror-mark";
 import { Illustration, type Scene } from "@/components/illustrations/scene";
 import { poleScenes } from "@/components/illustrations/pole-scenes";
 import { pairScene, relationshipScenes } from "@/components/illustrations/moment-scenes";
-import { typeScenes } from "@/components/illustrations/type-scenes";
 import { Radar } from "@/components/result/radar";
 import { TypeName } from "@/components/result/type-name";
 import { InfoTip } from "@/components/site/info-tip";
@@ -13,8 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/lib/i18n/locale";
 import { reportMessages } from "@/lib/i18n/messages/report";
 import { getLocale } from "@/lib/i18n/server";
-import { isPersonalityType, type Letter, type Profile } from "@/lib/personality";
+import type { Letter, Profile } from "@/lib/personality";
 import type { Insight, Need } from "@/lib/report-content";
+import { chapterScenes } from "./chapter-scenes";
 import { ChapterFooterNav, ChapterJump, ChapterPanel, ChapterSidebarNav, ChapterTabs, StrengthSwitch } from "./chapter-ui";
 import type { GuideState } from "./chapter-ui";
 import { GUIDE_TAB, reportTabLabelsFor } from "@/lib/site";
@@ -61,6 +61,7 @@ export async function ReportBody({ data, reportKey, banner, footer, guide }: { d
   const t = reportMessages[locale].aside;
   const { name, sample, typeLabel, profile } = data;
   const image = href(locale, `/report/${reportKey}/image`);
+  const scenes = chapterScenes(profile);
 
   return (
     <main
@@ -110,7 +111,7 @@ export async function ReportBody({ data, reportKey, banner, footer, guide }: { d
         </div>
 
         <ChapterPanel index={0}>
-          <Cover index={0} type={typeLabel} locale={locale} heading={reportMessages[locale].one.heading} as="h1" lead={reportMessages[locale].one.lead} scene={isPersonalityType(profile.type) ? typeScenes[profile.type] : undefined} />
+          <Cover index={0} type={typeLabel} locale={locale} heading={reportMessages[locale].one.heading} as="h1" lead={reportMessages[locale].one.lead} scene={scenes[0]} />
           <Reading>
             <ChapterOne data={data} locale={locale} />
             {/* Phones keep the image here; desktop has it under the chapter list. */}
@@ -118,15 +119,15 @@ export async function ReportBody({ data, reportKey, banner, footer, guide }: { d
           </Reading>
         </ChapterPanel>
         <ChapterPanel index={1}>
-          <Cover index={1} type={typeLabel} locale={locale} heading={reportMessages[locale].two.heading} scene={poleScenes[clearestLetter(profile)]} />
+          <Cover index={1} type={typeLabel} locale={locale} heading={reportMessages[locale].two.heading} scene={scenes[1]} />
           <Reading><ChapterTwo data={data} locale={locale} /></Reading>
         </ChapterPanel>
         <ChapterPanel index={2} after={<div className="px-6 md:px-0"><GuidePointer state={guide.state} locale={locale} /></div>}>
-          <Cover index={2} type={typeLabel} locale={locale} heading={reportMessages[locale].three.heading} lead={reportMessages[locale].three.lead} scene={pairScene} />
+          <Cover index={2} type={typeLabel} locale={locale} heading={reportMessages[locale].three.heading} lead={reportMessages[locale].three.lead} scene={scenes[2]} />
           <Reading><ChapterThree data={data} locale={locale} /></Reading>
         </ChapterPanel>
         <ChapterPanel index={3}>
-          <Cover index={3} type={typeLabel} locale={locale} heading={reportMessages[locale].four.heading} lead={reportMessages[locale].four.lead} scene={relationshipScenes.colleague} />
+          <Cover index={3} type={typeLabel} locale={locale} heading={reportMessages[locale].four.heading} lead={reportMessages[locale].four.lead} scene={scenes[3]} />
           <Reading><ChapterFour data={data} locale={locale} reportKey={reportKey} /></Reading>
         </ChapterPanel>
         <ChapterPanel index={GUIDE_TAB}>
@@ -144,12 +145,6 @@ export async function ReportBody({ data, reportKey, banner, footer, guide }: { d
 }
 
 type ChapterProps = { data: ReportData; locale: Locale };
-
-/** The letter this result leans on most clearly: chapter 02's cover shows its everyday picture. */
-function clearestLetter(profile: Profile) {
-  const index = profile.values.reduce((best, value, i) => (value > profile.values[best] ? i : best), 0);
-  return profile.type[index] as Letter;
-}
 
 /**
  * Chapter 03's last word: the guide for two, in one line that opens its tab. It names where the

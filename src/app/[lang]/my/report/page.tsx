@@ -2,15 +2,14 @@ import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { PairingTracker } from "@/components/pairing/pairing-tracker";
 import { shareMessages } from "@/lib/i18n/messages/share";
 import type { Metadata } from "next";
-import { MirrorMark } from "@/components/brand/mirror-mark";
 import { TrackView } from "@/components/analytics/track-view";
 import { AppHeader } from "@/components/site/app-header";
 import { PrimaryButton } from "@/components/site/primary-button";
 import { TextLink } from "@/components/site/text-link";
-import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { RecoverReports } from "@/components/report/recover-reports";
+import { PagesCount, ReportPages } from "@/components/report/report-pages";
 import { ElsewhereLink } from "@/components/site/elsewhere-link";
 import { trackAttrs } from "@/lib/analytics/events";
 import { href, otherLocale, type Locale } from "@/lib/i18n/locale";
@@ -118,21 +117,18 @@ function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Lo
   });
   return (
     <article aria-label={t.recordLabel(typeLabel)} className="border border-line bg-card px-6 py-6 md:px-8 md:py-7">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {createdAt && <time dateTime={createdAt.toISOString()} className="text-xs text-mist">{dateFormat.format(createdAt)}</time>}
-        <Badge variant={unlocked ? "unlocked" : "tag"}>{unlocked ? t.unlocked : t.brief}</Badge>
+        <PagesCount unlocked={unlocked} />
       </div>
-      <div className="mt-5 flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 className="text-4xl leading-none font-medium tracking-tighter md:text-5xl">{typeLabel}</h2>
-            <TypeName name={name} className="text-sm text-mist" />
-          </div>
-          <p className="mt-2 text-xs text-mist">{t.version(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>
-        </div>
-        <MirrorMark profile={profile} size={64} className="shrink-0" />
+      <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h2 className="text-4xl leading-none font-medium tracking-tighter md:text-5xl">{typeLabel}</h2>
+        <TypeName name={name} className="text-sm text-mist" />
       </div>
-      <p className="mt-4 max-w-[680px] text-sm text-slate">{summary}</p>
+      <p className="mt-2 text-xs text-mist">{t.version(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>
+      {/* The pages come straight after the type, so a phone's first screen shows how much of the report is open. */}
+      <ReportPages id={result.id} profile={profile} unlocked={unlocked} locale={locale} />
+      <p className="mt-5 max-w-[680px] text-sm text-slate">{summary}</p>
       <dl className="mt-6 grid grid-cols-4 border-y border-line py-4">
         {profile.type.split("").map((letter, i) => (
           <div key={letter} className="flex flex-col items-center gap-1 px-1 text-center not-first:border-l not-first:border-line">

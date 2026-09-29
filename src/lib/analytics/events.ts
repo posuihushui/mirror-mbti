@@ -61,6 +61,7 @@ export type CtaLocation =
   | "result_chapter"
   | "home_sample"
   | "history_item"
+  | "history_pages"
   | "payment_sheet"
   | "payment_success"
   | "pay_status"

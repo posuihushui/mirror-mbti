@@ -87,6 +87,49 @@ test.describe("report history and order recovery", () => {
     await page.screenshot({ path: testInfo.outputPath("report-history.png"), fullPage: true, animations: "disabled" });
   });
 
+  test("each record shows its report as five pages: an unlocked one opens its chapters, a locked one says what unlocking opens", async ({ page }, testInfo) => {
+    await page.goto("/zh");
+    const paid = await saveResult(page.request);
+    await makeOrder(page.request, paid, true);
+    const locked = await saveResult(page.request, true);
+    await page.goto("/zh/my/report");
+
+    const paidPages = page.getByRole("article", { name: `${paid.type} 测试记录`, exact: true }).getByRole("list", { name: "报告的五个部分，已打开 5 个" });
+    await expect(paidPages.getByRole("listitem")).toHaveCount(5);
+    await expect(paidPages.getByRole("link", { name: "测试结果", exact: true })).toHaveAttribute("href", `/zh/result/${paid.id}`);
+    for (const [i, chapter] of ["性格总览", "优势与盲点", "关系与沟通", "工作与成长"].entries()) {
+      await expect(paidPages.getByRole("link", { name: `阅读${chapter}`, exact: true })).toHaveAttribute("href", `/zh/report/${paid.id}?chapter=${i + 1}`);
+    }
+
+    const lockedPages = page.getByRole("article", { name: `${locked.type} 测试记录`, exact: true }).getByRole("list", { name: "报告的五个部分，已打开 1 个" });
+    await expect(lockedPages.getByRole("link", { name: /：解锁完整报告后阅读$/ })).toHaveCount(4);
+    const second = lockedPages.getByRole("link", { name: "优势与盲点：解锁完整报告后阅读", exact: true });
+    await expect(second).toHaveAttribute("href", `/zh/result/${locked.id}?unlock=1`);
+    const note = second.getByText("解锁完整报告后阅读", { exact: true });
+    await expect(note).toBeHidden();
+
+    if (testInfo.project.name === "mobile") {
+      // A touch has no hover. Once hydrated the page drops its click tracking until the note is showing,
+      // so the first tap only shows what the page holds and the second opens the unlock sheet.
+      await expect(second).not.toHaveAttribute("data-track");
+      await second.tap();
+      await expect(note).toBeVisible();
+      await expect(page).toHaveURL(/\/zh\/my\/report$/);
+      await second.tap();
+    } else {
+      await second.hover();
+      await expect(note).toBeVisible();
+      await second.click();
+    }
+    await expect(page).toHaveURL(new RegExp(`/zh/result/${locked.id}\\?unlock=1$`));
+    await expect(page.getByRole("dialog", { name: "更完整地，认识自己。" })).toBeVisible();
+    const clicks = await page.evaluate(() => ((window as unknown as { dataLayer?: unknown[] }).dataLayer ?? []).filter((entry) => {
+      const command = Array.from(entry as ArrayLike<unknown>);
+      return command[0] === "event" && command[1] === "cta_click" && (command[2] as { cta_location?: string })?.cta_location === "history_pages";
+    }).length);
+    expect(clicks).toBe(1);
+  });
+
   test("a visitor without a saved session can start a test or recover with an order number", async ({ page, context }, testInfo) => {
     expect((await context.cookies()).filter((cookie) => cookie.name === "mid")).toHaveLength(0);
     await page.goto("/zh/my/report");
