@@ -78,14 +78,15 @@
     & [data-a="wheel-back"] { transform-box: view-box; transform-origin: 56px 86px; --intro: scene-wheel 1100ms var(--motion-ease-out) 100ms backwards; }
     & [data-a="wheel-front"] { transform-box: view-box; transform-origin: 110px 86px; --intro: scene-wheel 1100ms var(--motion-ease-out) 100ms backwards; }
 
-    /* Loops, after the entrance (1.8s, plus the part's offset). Each is small and rests between moves. */
+    /* Loops, after the entrance (1.8s, plus the part's offset). Each is small and never holds still: it
+       moves through its whole round (owner, 2026-09-29: "动画没有一直loop"), so a scene is always alive. */
     & [data-loop="bob"] { --loop: scene-bob 3.6s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
-    & [data-loop="bob-slow"] { --loop: scene-bob-slow 8s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
+    & [data-loop="bob-slow"] { --loop: scene-bob-slow 5s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="typing"] { --loop: scene-typing 1.4s ease-in-out calc(1800ms + var(--loop-step) / 2.5) infinite; }
     & [data-loop="breathe"] { transform-box: fill-box; transform-origin: center; --loop: scene-breathe 4.5s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="steam"] { --loop: scene-steam-loop 3.2s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
-    & [data-loop="twinkle"] { transform-box: fill-box; transform-origin: center; --loop: scene-twinkle-loop 4s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
-    & [data-loop="beat"] { transform-box: fill-box; transform-origin: center; --loop: scene-beat-loop 2.8s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
+    & [data-loop="twinkle"] { transform-box: fill-box; transform-origin: center; --loop: scene-twinkle-loop 3s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
+    & [data-loop="beat"] { transform-box: fill-box; transform-origin: center; --loop: scene-beat-loop 2.4s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="pulse"] { transform-box: fill-box; transform-origin: center; --loop: scene-pulse 3.2s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="sway"] { transform-box: fill-box; transform-origin: 50% 100%; --loop: scene-sway-loop 5s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="hang"] { transform-box: fill-box; transform-origin: 50% 0%; --loop: scene-hang-loop 5.5s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
@@ -98,7 +99,7 @@
     & [data-loop="flow-6"] { --loop: scene-flow-6 2.4s linear calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="flow-8"] { --loop: scene-flow-8 2.4s linear calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="rain"] { --loop: scene-rain-loop 1.2s linear calc(1800ms + var(--loop-step)) infinite; }
-    & [data-loop="hop"] { --loop: scene-hop-loop 3.2s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
+    & [data-loop="hop"] { --loop: scene-hop-loop 2.6s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="beam"] { --loop: scene-beam-loop 4s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="beam-late"] { --loop: scene-beam-loop 4s ease-in-out calc(3800ms + var(--loop-step)) infinite; }
     & [data-loop="glint"] { --loop: scene-glint 3s ease-in-out calc(1800ms + var(--loop-step)) infinite; }
@@ -116,6 +117,13 @@
     & [data-loop="wheel-back"] { transform-box: view-box; transform-origin: 56px 86px; --loop: scene-turn 2s linear calc(1800ms + var(--loop-step)) infinite; }
     & [data-loop="wheel-front"] { transform-box: view-box; transform-origin: 110px 86px; --loop: scene-turn 2s linear calc(1800ms + var(--loop-step)) infinite; }
   }
+
+  /* A record's pages on `/my/report` draw their covers small, where a scene's own loops move less than a
+     pixel; the whole picture floats a little as well, each page out of step with the next. */
+  [data-page-float] { animation: scene-page-float 3.2s ease-in-out infinite; }
+  [data-page-float="2"] { animation-delay: -0.8s; }
+  [data-page-float="3"] { animation-delay: -1.6s; }
+  [data-page-float="4"] { animation-delay: -2.4s; }
 }
 
 /* Entrance keyframes: each ends at the drawing's own state. */
@@ -208,30 +216,22 @@
 /* Loop keyframes: each starts and ends at rest, so a loop can begin, pause or stop on any frame. */
 @keyframes scene-bob { 50% { transform: translateY(-2.5px); } }
 @keyframes scene-bob-slow { 50% { transform: translateY(3px); } }
-@keyframes scene-typing {
-  20% { transform: translateY(-2px); opacity: 0.45; }
-  40% { transform: none; opacity: 1; }
-}
+@keyframes scene-page-float { 50% { transform: translateY(-2px); } }
+@keyframes scene-typing { 50% { transform: translateY(-2px); opacity: 0.45; } }
 @keyframes scene-breathe { 50% { transform: scale(1.08); opacity: 0.75; } }
 /* A wisp rises and fades, then wells up again from below. */
 @keyframes scene-steam-loop {
   45% { opacity: 0; transform: translateY(-5px); }
   46% { opacity: 0; transform: translateY(5px); }
 }
-@keyframes scene-twinkle-loop {
-  15% { transform: scale(1.3) rotate(20deg); }
-  30% { transform: none; }
-}
+@keyframes scene-twinkle-loop { 50% { transform: scale(1.25) rotate(15deg); } }
 @keyframes scene-beat-loop {
-  8% { transform: scale(1.14); }
-  16% { transform: scale(0.97); }
-  24% { transform: scale(1.08); }
-  32% { transform: none; }
+  20% { transform: scale(1.12); }
+  40% { transform: scale(0.98); }
+  60% { transform: scale(1.07); }
+  80% { transform: scale(1.01); }
 }
-@keyframes scene-pulse {
-  15% { transform: scale(1.18); }
-  30% { transform: none; }
-}
+@keyframes scene-pulse { 50% { transform: scale(1.15); } }
 @keyframes scene-sway-loop {
   25% { transform: rotate(4deg); }
   75% { transform: rotate(-3deg); }
@@ -241,9 +241,8 @@
   75% { transform: rotate(-2deg); }
 }
 @keyframes scene-swing-loop {
-  12% { transform: rotate(-6deg); }
-  28% { transform: rotate(3deg); }
-  45% { transform: none; }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(3deg); }
 }
 @keyframes scene-wave-loop {
   25% { transform: scaleX(0.86) skewY(3deg); }
@@ -265,10 +264,9 @@
   50% { opacity: 0; transform: translate(-1px, -7px); }
 }
 @keyframes scene-hop-loop {
-  12% { transform: translateY(-6px); }
-  22% { transform: none; }
-  30% { transform: translateY(-2.5px); }
-  37% { transform: none; }
+  25% { transform: translateY(-6px); }
+  50% { transform: none; }
+  75% { transform: translateY(-3px); }
 }
 /* T: the balance never quite stops weighing; INTJ: the telescope sweeps a little of the sky. */
 @keyframes scene-tip-loop {
@@ -287,9 +285,8 @@
 @keyframes scene-wander { 50% { transform: translate(-6px, -4px); } }
 @keyframes scene-bars { 50% { transform: scaleY(0.8); } }
 @keyframes scene-dab {
-  20% { transform: rotate(-5deg); }
-  35% { transform: rotate(2deg); }
-  50% { transform: none; }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(2deg); }
 }
 @keyframes scene-speed { 50% { transform: translateX(-3px); opacity: 0.45; } }
 /* Wheels, the clock hand: whole turns. The big gear turns back, the small one forward at 10:8. */

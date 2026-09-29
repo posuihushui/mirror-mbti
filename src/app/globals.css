@@ -197,6 +197,23 @@
   }
 }
 
+/* Keep touch scrolling on phones without drawing a desktop-style scrollbar beside the reading or sheets. */
+@media (max-width: 720px) {
+  html,
+  body,
+  [data-slot="drawer-body"],
+  [data-slot="dialog-content"] {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  [data-slot="drawer-body"]::-webkit-scrollbar,
+  [data-slot="dialog-content"]::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Repeated prototype patterns. Exact values from `prototype.css`. */
 /* Nothing on the site is set below 12px. Letter-spaced labels read as labels only in capitals, so English ones are set in capitals. */
 @utility eyebrow {

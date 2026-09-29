@@ -167,6 +167,8 @@ const zh = {
     headingHas: "每一次探索，都在这里。",
     headingEmpty: "还没有找到\n你的测试记录。",
     summary: (count: number) => `共 ${count} 份测试记录。测试结果免费查看，已解锁的完整报告可继续阅读。`,
+    /** The phone's shorter intro: the count alone. */
+    count: (count: number) => `共 ${count} 份测试记录`,
     empty: "完成测试后，可以在这里查看记录。如果换了设备或清除了浏览器数据，也可以通过订单号找回。",
     continue: "继续探索自己",
     start: "开始测试",
@@ -182,11 +184,9 @@ const zh = {
     readDetailed: "阅读完整报告",
     viewBrief: "查看测试结果",
     unlock: "解锁完整报告",
-    /** A record's report as five pages: the test result, then the four chapters' covers. */
+    /** A record's report as its four chapters' covers. */
     pages: {
-      label: (open: number) => `报告的五个部分，已打开 ${open} 个`,
-      result: "测试结果",
-      resultShort: "结果",
+      label: (unlocked: boolean): string => (unlocked ? "完整报告的四章，已解锁" : "完整报告的四章，未解锁"),
       short: ["总览", "优势", "关系", "成长"],
       read: (chapter: string) => `阅读${chapter}`,
       locked: "解锁完整报告后阅读",
@@ -367,6 +367,7 @@ const en: typeof zh = {
     headingHas: "Every exploration, all in one place.",
     headingEmpty: "We haven’t found any tests yet.",
     summary: (count: number) => `${count} ${count === 1 ? "test" : "tests"}. Test results are free; unlocked full reports can be read in full.`,
+    count: (count: number) => `${count} ${count === 1 ? "test" : "tests"}`,
     empty: "Finished tests appear here. If you switched devices or cleared browser data, you can recover them with an order number.",
     continue: "Keep exploring",
     start: "Start the test",
@@ -383,10 +384,8 @@ const en: typeof zh = {
     viewBrief: "View test result",
     unlock: "Unlock the full report",
     pages: {
-      label: (open: number) => `The report’s five parts, ${open} open`,
-      result: "Test result",
-      resultShort: "Result",
-      // Five columns on a 360px phone leave under 48px a label.
+      label: (unlocked: boolean) => (unlocked ? "The full report’s four chapters, unlocked" : "The full report’s four chapters, locked"),
+      // Short enough for four columns on a 320px phone.
       short: ["Type", "Gifts", "People", "Growth"],
       read: (chapter: string) => `Read ${chapter}`,
       locked: "Unlock the full report to read",

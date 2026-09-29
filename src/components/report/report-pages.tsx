@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { LockSimple } from "@phosphor-icons/react/dist/ssr";
-import { MirrorMark } from "@/components/brand/mirror-mark";
+import { cn } from "cn";
 import { Illustration } from "@/components/illustrations/scene";
 import { trackAttrs } from "@/lib/analytics/events";
 import { href, type Locale } from "@/lib/i18n/locale";
@@ -11,41 +11,21 @@ import { chapterLabelsFor } from "@/lib/site";
 import { chapterScenes } from "./chapter-scenes";
 import { LockedPage } from "./locked-page";
 
-/** The test result, then the report's four chapters. */
-const PAGE_COUNT = 5;
-
-/** How many of a record's pages are open, beside its date: 1 / 5 or 5 / 5. The list itself names it for screen readers. */
-export function PagesCount({ unlocked }: { unlocked: boolean }) {
-  return (
-    <span aria-hidden className="ml-auto text-xs text-mist">
-      <span className="text-sm font-medium text-ink">{unlocked ? PAGE_COUNT : 1}</span> / {PAGE_COUNT}
-    </span>
-  );
-}
-
 /**
- * A record on `/my/report` shows its report as five pages (owner request, 2026-09-29: unlocked and locked
- * records looked alike, and a locked one should feel unfinished without saying "pay"). The first page is
- * the test result, with the record's mark. An unlocked report's four pages are the dark covers its chapters
- * open with, each opening its chapter. A locked report's are the same covers, looping as they do
- * everywhere, under frosted glass with a lock: enough shows through to see there is a picture, not enough
- * to see it whole. Hovering one (a first tap on phones) says what it holds and that unlocking opens it.
- * Only pictures are shown, never a passage, and nothing here names a price.
+ * A record on `/my/report` shows its report as the four chapter covers (owner requests, 2026-09-29:
+ * unlocked and locked records looked alike, and a locked one should feel unfinished without saying
+ * "pay"). An unlocked report's covers are the dark ones its chapters open with, each opening its chapter.
+ * A locked report's are the same covers, looping as they do everywhere, under frosted glass with a lock:
+ * enough shows through to see there is a picture, not enough to see it whole. Hovering one (a first tap on
+ * phones) says what it holds and that unlocking opens it. Only pictures are shown, never a passage, and
+ * nothing here names a price.
  */
-export function ReportPages({ id, profile, unlocked, locale }: { id: string; profile: Profile; unlocked: boolean; locale: Locale }) {
+export function ReportPages({ id, profile, unlocked, locale, className }: { id: string; profile: Profile; unlocked: boolean; locale: Locale; className?: string }) {
   const t = pageMessages[locale].history.pages;
   const labels = chapterLabelsFor(locale);
   const scenes = chapterScenes(profile);
   return (
-    <ol aria-label={t.label(unlocked ? PAGE_COUNT : 1)} className="mt-5 grid grid-cols-5 gap-1.5 md:mt-6 md:grid-cols-[repeat(5,7.75rem)] md:gap-3">
-      <li>
-        <Link href={href(locale, `/result/${id}`)} prefetch={false} aria-label={t.result} className="block" {...trackAttrs("view_result", "history_pages")}>
-          <span className="flex aspect-[3/4] items-center justify-center border border-line bg-white/50">
-            <MirrorMark profile={profile} size={64} className="h-auto w-1/2" />
-          </span>
-          <PageLabel short={t.resultShort} full={t.result} open />
-        </Link>
-      </li>
+    <ol aria-label={t.label(unlocked)} className={cn("grid grid-cols-4 gap-2 md:gap-3 xl:grid-cols-[repeat(4,7.5rem)] xl:gap-3.5", className)}>
       {labels.map((label, i) => {
         const scene = scenes[i];
         const number = <span className="absolute top-1.5 left-1.5 z-10 text-xs leading-none text-night-mist md:top-2 md:left-2">{String(i + 1).padStart(2, "0")}</span>;
@@ -55,7 +35,7 @@ export function ReportPages({ id, profile, unlocked, locale }: { id: string; pro
               <Link href={href(locale, `/report/${id}?chapter=${i + 1}`)} prefetch={false} aria-label={t.read(label)} className="block" {...trackAttrs("read_report", "history_pages")}>
                 <Page>
                   {number}
-                  {scene && <Illustration scene={scene} tone="night" className="w-[84%]" />}
+                  {scene && <Float page={i + 1}><Illustration scene={scene} tone="night" /></Float>}
                 </Page>
                 <PageLabel short={t.short[i]} full={label} open />
               </Link>
@@ -65,14 +45,14 @@ export function ReportPages({ id, profile, unlocked, locale }: { id: string; pro
                 label={t.lockedLabel(label)}
                 chapter={`${String(i + 1).padStart(2, "0")} · ${label}`}
                 note={t.locked}
-                align={i === labels.length - 1 ? "end" : "center"}
+                align={i === 0 ? "start" : i === labels.length - 1 ? "end" : "center"}
                 track={trackAttrs("unlock_report", "history_pages")}
               >
                 <Page frosted>
                   {number}
-                  {scene && <Illustration scene={scene} tone="night" className="w-[84%] blur-[0.6px] md:blur-[1.5px]" />}
-                  {/* In the corner, so the picture shows through the glass. */}
-                  <span className="absolute top-1 right-1 z-10 flex size-5 items-center justify-center rounded-full bg-card/95 text-xs text-slate md:top-1.5 md:right-1.5 md:size-7 md:text-sm">
+                  {scene && <Float page={i + 1}><Illustration scene={scene} tone="night" className="blur-[0.6px] md:blur-[1.5px]" /></Float>}
+                  {/* In a corner, so the picture shows through the glass: the bottom one on phones, where a narrow page has no room beside its number. */}
+                  <span className="absolute right-1 bottom-1 z-10 flex size-5 items-center justify-center rounded-full bg-card/95 text-xs text-slate md:top-1.5 md:right-1.5 md:bottom-auto md:size-7 md:text-sm">
                     <LockSimple size="1em" aria-hidden />
                   </span>
                 </Page>
@@ -101,10 +81,15 @@ function Page({ frosted = false, children }: { frosted?: boolean; children: Reac
   );
 }
 
-/** Two-character chapter names on phones, where five columns leave no room; the full names from 721px. */
+/** A cover's picture, floating a little (`app/illustration-motion.css`): at this size a scene's own loops move less than a pixel. */
+function Float({ page, children }: { page: number; children: ReactNode }) {
+  return <span data-page-float={page} className="block w-[84%] [&>svg]:w-full">{children}</span>;
+}
+
+/** Two-character chapter names on phones, where four columns leave little room; the full names from 721px. */
 function PageLabel({ short, full, open = false }: { short: string; full: string; open?: boolean }) {
   return (
-    <span className={open ? "mt-1.5 block text-center text-xs text-ink" : "mt-1.5 block text-center text-xs text-mist"}>
+    <span className={open ? "mt-2 block text-center text-xs text-ink" : "mt-2 block text-center text-xs text-mist"}>
       <span className="whitespace-nowrap md:hidden">{short}</span>
       <span className="hidden md:inline">{full}</span>
     </span>

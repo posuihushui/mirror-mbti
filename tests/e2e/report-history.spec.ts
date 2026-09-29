@@ -87,21 +87,20 @@ test.describe("report history and order recovery", () => {
     await page.screenshot({ path: testInfo.outputPath("report-history.png"), fullPage: true, animations: "disabled" });
   });
 
-  test("each record shows its report as five pages: an unlocked one opens its chapters, a locked one says what unlocking opens", async ({ page }, testInfo) => {
+  test("each record shows the report's four chapter covers: an unlocked one opens its chapters, a locked one says what unlocking opens", async ({ page }, testInfo) => {
     await page.goto("/zh");
     const paid = await saveResult(page.request);
     await makeOrder(page.request, paid, true);
     const locked = await saveResult(page.request, true);
     await page.goto("/zh/my/report");
 
-    const paidPages = page.getByRole("article", { name: `${paid.type} 测试记录`, exact: true }).getByRole("list", { name: "报告的五个部分，已打开 5 个" });
-    await expect(paidPages.getByRole("listitem")).toHaveCount(5);
-    await expect(paidPages.getByRole("link", { name: "测试结果", exact: true })).toHaveAttribute("href", `/zh/result/${paid.id}`);
+    const paidPages = page.getByRole("article", { name: `${paid.type} 测试记录`, exact: true }).getByRole("list", { name: "完整报告的四章，已解锁" });
+    await expect(paidPages.getByRole("listitem")).toHaveCount(4);
     for (const [i, chapter] of ["性格总览", "优势与盲点", "关系与沟通", "工作与成长"].entries()) {
       await expect(paidPages.getByRole("link", { name: `阅读${chapter}`, exact: true })).toHaveAttribute("href", `/zh/report/${paid.id}?chapter=${i + 1}`);
     }
 
-    const lockedPages = page.getByRole("article", { name: `${locked.type} 测试记录`, exact: true }).getByRole("list", { name: "报告的五个部分，已打开 1 个" });
+    const lockedPages = page.getByRole("article", { name: `${locked.type} 测试记录`, exact: true }).getByRole("list", { name: "完整报告的四章，未解锁" });
     await expect(lockedPages.getByRole("link", { name: /：解锁完整报告后阅读$/ })).toHaveCount(4);
     const second = lockedPages.getByRole("link", { name: "优势与盲点：解锁完整报告后阅读", exact: true });
     await expect(second).toHaveAttribute("href", `/zh/result/${locked.id}?unlock=1`);

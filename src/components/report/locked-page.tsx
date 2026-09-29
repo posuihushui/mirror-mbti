@@ -21,8 +21,8 @@ type Props = {
   /** The note shown above the page; it repeats the label, so it is hidden from assistive technology. */
   chapter: string;
   note: string;
-  /** The last page's note ends at its right edge so it never runs off a phone screen. */
-  align?: "center" | "end";
+  /** On phones the first page's note starts at its left edge and the last page's ends at its right, so neither runs off the screen. */
+  align?: "start" | "center" | "end";
   track: TrackAttrs;
   children: ReactNode;
 };
@@ -68,7 +68,7 @@ export function LockedPage({ href, label, chapter, note, align = "center", track
         aria-hidden
         className={cn(
           "absolute bottom-[calc(100%+8px)] z-20 w-max max-w-52 rounded-md bg-ink px-3 py-2 text-xs text-paper shadow-[0_6px_18px_rgb(18_23_24/0.18)]",
-          align === "end" ? "right-0 md:right-auto md:left-1/2 md:-translate-x-1/2" : "left-1/2 -translate-x-1/2",
+          align === "start" ? "left-0 md:left-1/2 md:-translate-x-1/2" : align === "end" ? "right-0 md:right-auto md:left-1/2 md:-translate-x-1/2" : "left-1/2 -translate-x-1/2",
           shown,
         )}
       >

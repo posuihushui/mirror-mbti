@@ -2,6 +2,7 @@ import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { PairingTracker } from "@/components/pairing/pairing-tracker";
 import { shareMessages } from "@/lib/i18n/messages/share";
 import type { Metadata } from "next";
+import { cn } from "cn";
 import { TrackView } from "@/components/analytics/track-view";
 import { AppHeader } from "@/components/site/app-header";
 import { PrimaryButton } from "@/components/site/primary-button";
@@ -9,14 +10,13 @@ import { TextLink } from "@/components/site/text-link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { OrderReceipt } from "@/components/payment/order-receipt";
 import { RecoverReports } from "@/components/report/recover-reports";
-import { PagesCount, ReportPages } from "@/components/report/report-pages";
+import { ReportPages } from "@/components/report/report-pages";
 import { ElsewhereLink } from "@/components/site/elsewhere-link";
 import { trackAttrs } from "@/lib/analytics/events";
 import { href, otherLocale, type Locale } from "@/lib/i18n/locale";
 import { pageMessages } from "@/lib/i18n/messages/pages";
 import { getLocale } from "@/lib/i18n/server";
 import { polesFor, profileMeta, type Letter } from "@/lib/personality";
-import { dimensionReading } from "@/lib/preference-content";
 import { questionnaireLocale, questionnaireName } from "@/lib/questionnaires";
 import { resultsForVisitor, type ResultHistoryItem } from "@/lib/results";
 import { getVisitorId } from "@/lib/session";
@@ -47,14 +47,20 @@ export default async function MyReportPage({ searchParams }: { searchParams: Pro
     <>
       <AppHeader variant="page" title={t.title} backHref={href(locale, "/")} path="/my/report" />
       <main className="mx-auto max-w-5xl px-6 pt-8 pb-20 md:px-10 md:pt-14">
-        <section className="flex flex-col gap-6 border-b border-line pb-8 md:flex-row md:items-end md:justify-between">
+        {/* Phones keep the intro to a few lines, so the first record starts on the first screen. */}
+        <section className={cn("flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:border-b md:border-line md:pb-8", !hasHistory && "border-b border-line pb-8")}>
           <div>
-            <p className="eyebrow text-warm-ink">{t.eyebrow}</p>
-            <h1 className="mt-4 text-3xl leading-heading md:text-4xl">
+            <p className={cn("eyebrow mb-4 text-warm-ink", hasHistory && "max-md:hidden")}>{t.eyebrow}</p>
+            <h1 className="text-3xl leading-heading md:text-4xl">
               {hasHistory ? t.headingHas : t.headingEmpty}
             </h1>
             <p className="mt-3 max-w-xl text-sm text-mist">
-              {hasHistory ? t.summary(results.length) : t.empty}
+              {hasHistory ? (
+                <>
+                  <span className="md:hidden">{t.count(results.length)}</span>
+                  <span className="max-md:hidden">{t.summary(results.length)}</span>
+                </>
+              ) : t.empty}
             </p>
             {hasHistory && (
               <div className="mt-3 flex flex-wrap gap-x-6">
@@ -63,13 +69,15 @@ export default async function MyReportPage({ searchParams }: { searchParams: Pro
               </div>
             )}
           </div>
-          <PrimaryButton href={href(locale, "/quiz")} className="md:w-56 md:shrink-0" {...trackAttrs("start_quiz", "page_cta")}>{hasHistory ? t.continue : t.start}</PrimaryButton>
+          {/* With records, phones move the retest to the end of the list: the reports come first. */}
+          <PrimaryButton href={href(locale, "/quiz")} className={cn("md:w-56 md:shrink-0", hasHistory && "max-md:hidden")} {...trackAttrs("start_quiz", "page_cta")}>{hasHistory ? t.continue : t.start}</PrimaryButton>
         </section>
         {hasHistory ? (
           <>
-            <section className="mt-8 flex flex-col gap-6 md:mt-10" aria-label={t.listLabel}>
+            <section className="mt-6 flex flex-col md:mt-10 md:gap-6" aria-label={t.listLabel}>
               {results.map((result) => <HistoryItem key={result.id} result={result} locale={locale} />)}
             </section>
+            <PrimaryButton href={href(locale, "/quiz")} className="mt-8 max-w-xl md:hidden" {...trackAttrs("start_quiz", "page_cta")}>{t.continue}</PrimaryButton>
             {elsewhereLink && <p className="mt-6">{elsewhereLink}</p>}
             <p className="mt-7 max-w-2xl text-xs text-mist">
               {t.keepOrders}
@@ -106,49 +114,60 @@ export default async function MyReportPage({ searchParams }: { searchParams: Pro
   );
 }
 
-/** A record taken in this page's language; the page lists no other. */
+/**
+ * A record taken in this page's language; the page lists no other. Its type, the report's four chapter
+ * covers and the four scores, then its actions as the card's foot (owner, 2026-09-29: "美观大气", with no
+ * summary, no mark and nothing that repeats the result page). Phones and tablets stack them; from 1101px
+ * the covers stand to the right, with the type above the scores on the left.
+ */
 function HistoryItem({ result, locale }: { result: ResultHistoryItem; locale: Locale }) {
   const t = pageMessages[locale].history;
   const { profile, order, unlocked, createdAt } = result;
-  const { name, summary, typeLabel } = profileMeta(profile, locale);
+  const { name, typeLabel } = profileMeta(profile, locale);
   const poles = polesFor(locale);
   const dateFormat = new Intl.DateTimeFormat(t.dateLocale, {
     timeZone: t.timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
   });
   return (
-    <article aria-label={t.recordLabel(typeLabel)} className="border border-line bg-card px-6 py-6 md:px-8 md:py-7">
-      <div className="flex flex-wrap items-center gap-3">
-        {createdAt && <time dateTime={createdAt.toISOString()} className="text-xs text-mist">{dateFormat.format(createdAt)}</time>}
-        <PagesCount unlocked={unlocked} />
-      </div>
-      <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="text-4xl leading-none font-medium tracking-tighter md:text-5xl">{typeLabel}</h2>
-        <TypeName name={name} className="text-sm text-mist" />
-      </div>
-      <p className="mt-2 text-xs text-mist">{t.version(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}</p>
-      {/* The pages come straight after the type, so a phone's first screen shows how much of the report is open. */}
-      <ReportPages id={result.id} profile={profile} unlocked={unlocked} locale={locale} />
-      <p className="mt-5 max-w-[680px] text-sm text-slate">{summary}</p>
-      <dl className="mt-6 grid grid-cols-4 border-y border-line py-4">
-        {profile.type.split("").map((letter, i) => (
-          <div key={letter} className="flex flex-col items-center gap-1 px-1 text-center not-first:border-l not-first:border-line">
-            <dt className="text-xs text-mist">{poles[letter as Letter].label} {letter}</dt>
-            <dd className="text-xl">{profile.values[i]}<span className="text-xs">%</span></dd>
-            <dd className={profile.balanced[i] ? "text-xs text-warm-ink" : "text-xs text-mist"}>{dimensionReading(profile, i, locale).degree}</dd>
+    // Phones list the records flat between rules, so the covers take the full width; boxed cards from 721px.
+    <article aria-label={t.recordLabel(typeLabel)} className="border-t border-line pt-7 last:border-b md:border md:bg-card md:px-10 md:pt-9">
+      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:grid-rows-[auto_1fr] xl:gap-x-12">
+        <div className="xl:col-start-1 xl:row-start-1">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="text-5xl leading-none font-medium tracking-tighter md:text-6xl">{typeLabel}</h2>
+            <TypeName name={name} className="text-sm text-mist" />
           </div>
-        ))}
-      </dl>
-      <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
-        <PrimaryButton href={href(locale, unlocked ? `/report/${result.id}` : `/result/${result.id}`)} prefetch={false} className="md:w-[240px]" {...trackAttrs(unlocked ? "read_report" : "view_result", "history_item")}>
+          <p className="mt-3 text-xs text-mist">
+            {createdAt && <><time dateTime={createdAt.toISOString()}>{dateFormat.format(createdAt)}</time> · </>}
+            {t.version(questionnaireName(result.questionnaireId, locale) ?? pageMessages[locale].result.legacyVersion, result.questionCount)}
+          </p>
+        </div>
+        <ReportPages id={result.id} profile={profile} unlocked={unlocked} locale={locale} className="mt-7 max-w-xl xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:mt-0 xl:max-w-none" />
+        {/* Phones give each score a line, the trait on the left and the score on the right; from 721px the four share one row. */}
+        <dl className="mt-6 max-w-xl md:mt-7 md:grid md:max-w-md md:grid-cols-4 xl:col-start-1 xl:row-start-2 xl:mt-8 xl:self-end">
+          {profile.type.split("").map((letter, i) => (
+            <div key={letter} className="flex items-baseline justify-between gap-3 border-b border-line py-2.5 first:border-t md:flex-col md:items-center md:justify-start md:gap-1 md:border-b-0 md:py-0 md:first:border-t-0 md:not-first:border-l">
+              <dt className="text-sm text-mist md:text-xs">{poles[letter as Letter].label}</dt>
+              {/* A near-even score in the warm ink the result page gives it. */}
+              <dd className={profile.balanced[i] ? "text-xl text-warm-ink" : "text-xl"}>{profile.values[i]}<span className="text-xs">%</span></dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      {/* Phones: a compact pill (a full-width bar per record stacked up), its links on the line below at every width. From 721px one row, the card's foot. */}
+      <div className="mt-6 flex flex-col items-start gap-2 pb-6 md:mt-9 md:flex-row md:items-center md:gap-8 md:border-t md:border-line md:py-6">
+        <PrimaryButton href={href(locale, unlocked ? `/report/${result.id}` : `/result/${result.id}`)} prefetch={false} className="max-md:min-h-11 max-md:w-auto max-md:gap-5 max-md:px-5 md:w-[240px]" {...trackAttrs(unlocked ? "read_report" : "view_result", "history_item")}>
           {unlocked ? t.readDetailed : t.viewBrief}
         </PrimaryButton>
-        <TextLink href={href(locale, unlocked ? `/result/${result.id}` : `/result/${result.id}?unlock=1`)} prefetch={false} {...trackAttrs(unlocked ? "view_result" : "unlock_report", "history_item")}>
-          {unlocked ? t.viewBrief : t.unlock}
-        </TextLink>
-        {unlocked && <PairingTracker resultId={result.id} surface="my_pairing"><TextLink href={href(locale, `/my/pairing?result=${result.id}`)} prefetch={false}>{pairingUiMessages[locale].invite}</TextLink></PairingTracker>}
+        <div className="flex flex-wrap items-center gap-x-6 md:contents">
+          <TextLink href={href(locale, unlocked ? `/result/${result.id}` : `/result/${result.id}?unlock=1`)} prefetch={false} {...trackAttrs(unlocked ? "view_result" : "unlock_report", "history_item")}>
+            {unlocked ? t.viewBrief : t.unlock}
+          </TextLink>
+          {unlocked && <PairingTracker resultId={result.id} surface="my_pairing"><TextLink href={href(locale, `/my/pairing?result=${result.id}`)} prefetch={false}>{pairingUiMessages[locale].invite}</TextLink></PairingTracker>}
+        </div>
       </div>
       {order && (
-        <Accordion type="single" collapsible className="mt-5">
+        <Accordion type="single" collapsible className="pb-2">
           <AccordionItem value="order">
             <AccordionTrigger {...trackAttrs("order_receipt", "history_item")}>{t.orderAccordion}</AccordionTrigger>
             <AccordionContent><OrderReceipt orderId={order.id} /></AccordionContent>
