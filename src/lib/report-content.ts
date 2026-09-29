@@ -2,15 +2,25 @@ import { enReportCopy, enScenes } from "@/lib/i18n/content/en/report";
 import type { CompareRelationship } from "@/lib/compare-types";
 import type { Locale } from "@/lib/i18n/locale";
 import { compareMessages } from "@/lib/i18n/messages/compare";
-import { dimensions, polesFor, profileMeta, type Letter, type Profile } from "@/lib/personality";
+import { clarityOf, dimensions, polesFor, profileMeta, type Clarity, type Letter, type Profile } from "@/lib/personality";
 import { dimensionReading } from "@/lib/preference-content";
 import { blindspotTitles, chapterLabelsFor } from "@/lib/site";
 
 /**
  * `say` is a sentence to try out loud; the report sets it apart as speech. `pair` (chapter 03 only)
- * is the same moment between two people, taken from the guide for two's own scenes.
+ * is the same moment between two people, taken from the guide for two's own scenes. `dim` is the
+ * dimension a passage reads from and how clearly this result leans there: the report draws it as a
+ * small meter instead of opening every passage with the same "this lean is clear / slight" sentence.
  */
-export type Insight = { title: string; body: string; say?: string; pair?: { label: string; scene: string } };
+export type InsightDimension = { dimension: string; letter: string; value: number; clarity: Clarity; degree: string };
+export type Insight = {
+  title: string;
+  /** Empty when the passage is carried by its `say` and `pair` alone. */
+  body: string;
+  say?: string;
+  dim?: InsightDimension;
+  pair?: { label: string; scene: string; relationship: CompareRelationship; balanced: boolean };
+};
 
 /** Chapter 03 shows each dimension between a different pair, so the four cards cover all four relationships. */
 const PAIR_RELATIONSHIPS: CompareRelationship[] = ["partner", "friend", "family", "colleague"];
@@ -92,16 +102,11 @@ const scenes: Record<Letter, { scene: string; watch: string; phrase: string; wor
 
 /** The Chinese report copy, shaped like `enReportCopy` so both locales share one builder. */
 const zhReportCopy = {
-  qualifierClear: "这次偏向较明显，可以优先观察以下情境。",
-  qualifierSlight: "这次只有轻微偏向，以下情境只是可对照的一种可能。",
   strengthBalancedTitle: (pair: string) => `观察${pair}两种需要`,
   strengthBalancedBody: (balanced: string) => `${balanced}这不是“两边都擅长”的能力结论；请用不同情境的实际经历检验。`,
   blindspotTitles,
   blindspotBalancedBody: (pair: string, question: string) => `当${pair}接近均衡时，不必为自己选定一个固定标签。${question}分别写出两种答案对应的场景，看看改变的是任务、角色还是精力。`,
   relationshipTitles: ["让精力的需要变得可见", "把彼此理解的起点说清楚", "一起说明决定背后的取舍", "约定稳定部分与可变部分"],
-  relationshipBalancedBody: (balanced: string) => `${balanced}可以这样开始：`,
-  relationshipBalancedSay: "我在不同情境下会有不同需要，这一次我更希望……你呢？",
-  relationshipBody: (qualifier: string) => `${qualifier}可以试着这样开口，然后邀请对方用自己的话回应，避免用类型猜测对方：`,
   relationshipPair: (between: string, balanced: boolean) => (balanced ? `这一维会随情境变 · ${between}` : `如果 TA 和你相反 · ${between}`),
   workTitles: ["适合你的工作节奏", "让理解变成可见的成果", "给选择设定可讨论的条件", "兼顾推进与调整"],
   workBalancedBody: (balanced: string) => `${balanced}在学习或工作中各试用一次，记录哪种安排更适合当前任务，而非为自己选择固定职业标签。`,
@@ -117,38 +122,44 @@ export function buildReportData(profile: Profile, options: { sample: boolean; lo
   const en = locale === "en";
   const copy = en ? enReportCopy : zhReportCopy;
   const sceneSet = en ? enScenes : scenes;
-  // Chinese sentences run together; English sentences need a space.
-  const join = (a: string, b: string) => (en ? `${a} ${b}` : `${a}${b}`);
   const { name, line, summary, typeLabel } = profileMeta(profile, locale);
-  const contexts = dimensions.map((_, i) => ({
-    reading: dimensionReading(profile, i, locale),
-    scene: sceneSet[profile.type[i] as Letter],
-    qualifier: !profile.balanced[i] && profile.values[i] >= 75 ? copy.qualifierClear : copy.qualifierSlight,
-  }));
-  const strengths = contexts.map(({ reading, scene, qualifier }, i) => ({
+  // How clearly each dimension leans is drawn as a meter beside every passage, so no passage repeats it in words.
+  const contexts = dimensions.map((dimension, i) => {
+    const reading = dimensionReading(profile, i, locale);
+    const dim: InsightDimension = { dimension, letter: profile.type[i], value: profile.values[i], clarity: clarityOf(profile.values[i]), degree: reading.degree };
+    return { reading, dim, scene: sceneSet[profile.type[i] as Letter] };
+  });
+  const strengths: Insight[] = contexts.map(({ reading, scene, dim }, i) => ({
     title: profile.balanced[i] ? copy.strengthBalancedTitle(reading.pair) : polesFor(locale)[profile.type[i] as Letter].need,
-    body: profile.balanced[i] ? copy.strengthBalancedBody(reading.balanced) : join(qualifier, scene.scene),
+    body: profile.balanced[i] ? copy.strengthBalancedBody(reading.balanced) : scene.scene,
+    dim,
   }));
-  const blindspots = contexts.map(({ reading, scene, qualifier }, i) => ({
-    title: copy.blindspotTitles[i], body: profile.balanced[i] ? copy.blindspotBalancedBody(reading.pair, reading.question) : join(qualifier, scene.watch),
+  const blindspots: Insight[] = contexts.map(({ reading, scene, dim }, i) => ({
+    title: copy.blindspotTitles[i], body: profile.balanced[i] ? copy.blindspotBalancedBody(reading.pair, reading.question) : scene.watch, dim,
   }));
   const pairCopy = compareMessages[locale];
-  const relationships = contexts.map(({ reading, scene, qualifier }, i) => {
+  // A clear lean speaks through its sentence and the moment between two people; a near-even one also says
+  // why, and opens with the guide's own line for that relationship, so the four cards never repeat one sentence.
+  const relationships: Insight[] = contexts.map(({ reading, scene, dim }, i) => {
     const relationship = PAIR_RELATIONSHIPS[i];
     const scenes = pairCopy.byRelationship[relationship].scenes[dimensions[i]];
     return {
       title: copy.relationshipTitles[i],
-      body: profile.balanced[i] ? copy.relationshipBalancedBody(reading.balanced) : copy.relationshipBody(qualifier),
-      say: profile.balanced[i] ? copy.relationshipBalancedSay : scene.phrase,
+      body: profile.balanced[i] ? reading.balanced : "",
+      say: profile.balanced[i] ? pairCopy.byRelationship[relationship].openingLines[dimensions[i]] : scene.phrase,
+      dim,
       pair: {
         label: copy.relationshipPair(pairCopy.relationshipBetween[relationship], profile.balanced[i]),
         scene: profile.balanced[i] ? scenes["includes-balanced"] : scenes.opposite,
+        relationship,
+        balanced: profile.balanced[i],
       },
     };
   });
-  const work = contexts.map(({ reading, scene, qualifier }, i) => ({
+  const work: Insight[] = contexts.map(({ reading, scene, dim }, i) => ({
     title: copy.workTitles[i],
-    body: profile.balanced[i] ? copy.workBalancedBody(reading.balanced) : join(qualifier, scene.work),
+    body: profile.balanced[i] ? copy.workBalancedBody(reading.balanced) : scene.work,
+    dim,
   }));
   const poles = polesFor(locale);
   const needs: Need[] = contexts.map(({ reading }, i) => {

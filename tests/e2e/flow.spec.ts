@@ -114,7 +114,8 @@ test.describe("core flow", () => {
     await expect(page.getByText("第二章")).toBeVisible();
     // Phones switch to the blind spots; desktop already shows them beside the strengths.
     if (testInfo.project.name === "mobile") await page.getByRole("tab", { name: "容易忽略的" }).click();
-    await expect(page.getByText("精力的边界").filter({ visible: true })).toBeVisible();
+    // The blind spot's own heading (the chapter's opening chart names it too).
+    await expect(page.locator("#chapter-panel-2").getByRole("heading", { name: "精力的边界" }).filter({ visible: true })).toBeVisible();
 
     const reportPath = new URL(page.url()).pathname;
     await page.goto("/zh/my/report");

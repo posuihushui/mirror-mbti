@@ -16,16 +16,29 @@ const zh = {
     strengthLabel: "常用的长处",
     growthLabel: "可以试试",
     bothLabel: "两端都可能出现",
+    /** The ⓘ beside the needs heading carries `body`, the caveat this chapter used to close on. */
+    noteLabel: "这些倾向从哪里来",
+    /** The shaded scale under each need, lightest to deepest. */
+    bandsLabel: "偏向程度",
     quote: "你不需要符合一个类型，\n你只需要更了解自己。",
     body: "这些倾向来自你本次的回答。环境、角色和最近的经历，都可能影响你的表达方式。把它当作观察自己的起点，看看哪些描述与你的生活相呼应。",
   },
   two: {
     heading: "理解你的优势，\n也温柔地看见盲点。",
     quote: "优势不需要时时在线。\n适合自己的节奏，同样重要。",
+    /** The chapter's opening chart: each strength beside the blind spot of the same lean. */
+    chartTitle: "同一种偏好的两面",
+    chartCaption: "条越长，这次的偏向越明显：长处用得越顺手，另一端也越容易被忽略。",
+    strengthSide: "长处",
+    blindSide: "留意",
   },
   three: {
     heading: "好的关系，\n从被理解开始。",
     lead: "把“你应该懂我”，换成一次更具体的表达。你的偏好值得被看见，对方的也一样。",
+    /** Said once above the cards, instead of inside each of them. */
+    howTo: "每张卡片是一句可以直接说出口的话。说完，请对方用自己的话回应，别用类型猜测对方。",
+    you: "你",
+    them: "TA",
     quote: "“这件事让我感到……\n我希望我们可以……”",
     body: "试着在一次小分歧中使用这句话。描述具体情境和自己的需要，避免用人格标签解释对方的一切。",
   },
@@ -35,6 +48,10 @@ const zh = {
     stepEyebrow: "本周的一小步",
     weekHeading: "把理解放进一周生活里。",
     weekIntro: "每天只做一个小尝试。以下安排根据本次四维作答选择，不是效果保证；不符合你的部分可以跳过或调整。",
+    weekNoteLabel: "关于这份安排",
+    /** Folds each day's instructions under its title. */
+    how: "怎么做",
+    dayShort: (day: number) => `第 ${day} 天`,
     stepHeading: "记录一次让你感到\n“这很像我”的时刻。",
     stepQuestions: "当时你在做什么？和谁在一起？\n哪一个需要被满足了？",
     dayDone: (day: string) => `标记“${day}”为已完成`,
@@ -57,6 +74,8 @@ const zh = {
     note: "本次探索，不定义我。",
   },
   resume: (label: string) => `继续上次阅读：${label}`,
+  /** Closes the report's ⓘ notes. */
+  tip: "知道了",
   nav: {
     label: "报告章节",
     chapter: (index: number) => `第${"一二三四"[index]}章`,
@@ -84,16 +103,25 @@ const en: typeof zh = {
     strengthLabel: "A strength you use",
     growthLabel: "Something to try",
     bothLabel: "Either end may show up",
+    noteLabel: "Where these leanings come from",
+    bandsLabel: "How far you lean",
     quote: "You don’t need to fit a type.\nYou only need to know yourself better.",
     body: "These leanings come from your answers this time. Your environment, roles and recent experiences can all shape how you show up. Treat this as a starting point for observing yourself, and notice which descriptions echo your life.",
   },
   two: {
     heading: "Understand your strengths,\nand gently see your blind spots.",
     quote: "Strengths don’t have to be on all the time.\nA pace that suits you matters just as much.",
+    chartTitle: "Two sides of the same lean",
+    chartCaption: "The longer the bar, the clearer this lean: the strength comes more easily, and the other end is easier to miss.",
+    strengthSide: "Strength",
+    blindSide: "Watch for",
   },
   three: {
     heading: "Good relationships\nbegin with being understood.",
     lead: "Swap “you should understand me” for one more specific way of saying it. Your preferences deserve to be seen — and so do theirs.",
+    howTo: "Each card is a sentence you can say as it is. Then ask the other person to answer in their own words, rather than guessing them from a type.",
+    you: "You",
+    them: "Them",
     quote: "“This made me feel…\nI’d like us to…”",
     body: "Try this sentence in a small disagreement. Describe the situation and your own need, rather than explaining everything about the other person with a personality label.",
   },
@@ -103,6 +131,9 @@ const en: typeof zh = {
     stepEyebrow: "A SMALL STEP THIS WEEK",
     weekHeading: "Bring this understanding into one week.",
     weekIntro: "Try just one small thing each day. These were chosen from your answers on the four dimensions and are not a guarantee of results; skip or adjust anything that doesn’t fit.",
+    weekNoteLabel: "About this plan",
+    how: "How",
+    dayShort: (day: number) => `Day ${day}`,
     stepHeading: "Note one moment that made you think,\n“That’s so me.”",
     stepQuestions: "What were you doing? Who were you with?\nWhich need was being met?",
     dayDone: (day: string) => `Mark “${day}” as done`,
@@ -125,6 +156,7 @@ const en: typeof zh = {
     note: "This exploration doesn’t define me.",
   },
   resume: (label: string) => `Continue where you left off: ${label}`,
+  tip: "Got it",
   nav: {
     label: "Report chapters",
     chapter: (index: number) => `CHAPTER 0${index + 1}`,

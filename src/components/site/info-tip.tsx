@@ -3,8 +3,9 @@ import { Info } from "@phosphor-icons/react/dist/ssr";
 
 /**
  * An ⓘ that opens a short explanation over the page, for the caveats a page must keep but need not
- * print in its flow. It uses the native popover: no script, the text stays in the server HTML, a tap
- * outside or Escape closes it, and a browser without popover support simply shows the text in place.
+ * print in its flow. Place it beside a heading, never inside one: the popover is a block, and its text
+ * would join the heading's name. It uses the native popover: no script, the text stays in the server
+ * HTML, a tap outside or Escape closes it, and a browser without popover support shows the text in place.
  */
 export function InfoTip({ id, label, close, children }: { id: string; label: string; close: string; children: ReactNode }) {
   return (

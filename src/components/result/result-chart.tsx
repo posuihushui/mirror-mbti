@@ -14,12 +14,12 @@ export async function ResultChart({ profile }: { profile: Profile }) {
   return (
     <div className="bg-card p-6 md:p-8">
       <div className="flex items-center justify-between text-xs text-mist">
-        <span className="flex items-center gap-2">
-          {t.heading}
+        <div className="flex items-center gap-2">
+          <span>{t.heading}</span>
           <InfoTip id="percent-info" label={t.infoLabel} close={t.infoClose}>
             {t.info.map((line) => <p key={line}>{line}</p>)}
           </InfoTip>
-        </span>
+        </div>
         <span aria-hidden>01 — 04</span>
       </div>
       <Radar profile={profile} height={300} className="mt-6 mb-3" />

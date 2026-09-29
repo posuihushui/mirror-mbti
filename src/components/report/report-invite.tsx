@@ -1,4 +1,4 @@
-import { Check, Gift, LockSimple, Scales, Timer } from "@phosphor-icons/react/dist/ssr";
+import { CaretDown, Check, Gift, LockSimple, Scales, Timer } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { categoryMirrorProfile, MirrorMark, type MirrorProfile } from "@/components/brand/mirror-mark";
 import { PairingTracker } from "@/components/pairing/pairing-tracker";
@@ -164,7 +164,10 @@ function Gains({ locale, profile, variant }: { locale: Locale; profile: Profile;
   );
 }
 
-/** What inviting asks of the other person, answered before the reader has to wonder. */
+/**
+ * What inviting asks of the other person, answered before the reader has to wonder: four icon tiles
+ * whose titles carry the answer, each unfolding to its detail (the text stays in the HTML).
+ */
 function Assurances({ locale, price, invitePrice }: { locale: Locale; price: string; invitePrice: string }) {
   const t = pairingUiMessages[locale].reportInvite;
   const icons = [Timer, LockSimple, Scales];
@@ -172,14 +175,19 @@ function Assurances({ locale, price, invitePrice }: { locale: Locale; price: str
   return (
     <div>
       <h3 className="text-xl">{t.assureTitle}</h3>
-      <ul className="mt-5 grid gap-x-8 gap-y-5 md:grid-cols-2">
+      <ul className="mt-5 grid grid-cols-2 gap-2 md:gap-3">
         {items.map(({ title, body, Icon }) => (
-          <li key={title} className="flex gap-3">
-            <Icon size={22} weight="light" aria-hidden className="mt-0.5 shrink-0 text-warm-ink" />
-            <div className="min-w-0">
-              <p className="text-base font-medium">{title}</p>
-              <p className="mt-1 text-sm text-slate">{body}</p>
-            </div>
+          <li key={title} className="min-w-0 rounded-[4px] border border-line bg-paper">
+            <details className="group">
+              <summary className="flex min-h-11 cursor-pointer list-none flex-col gap-2 p-3 md:p-4 [&::-webkit-details-marker]:hidden">
+                <span className="flex items-start justify-between gap-2">
+                  <Icon size={22} weight="light" aria-hidden className="shrink-0 text-warm-ink" />
+                  <CaretDown size={12} aria-hidden className="mt-1 shrink-0 text-mist transition-transform group-open:rotate-180" />
+                </span>
+                <span className="text-sm leading-snug font-medium">{title}</span>
+              </summary>
+              <p className="px-3 pb-3 text-sm text-slate md:px-4 md:pb-4">{body}</p>
+            </details>
           </li>
         ))}
       </ul>

@@ -63,16 +63,11 @@ export const enScenes: Record<Letter, Scene> = {
 };
 
 export const enReportCopy = {
-  qualifierClear: "This lean is fairly clear this time, so start by watching for the situations below.",
-  qualifierSlight: "This time the lean is slight, so the situations below are just one possibility to compare against.",
   strengthBalancedTitle: (pair: string) => `Notice both needs in ${pair}`,
   strengthBalancedBody: (balanced: string) => `${balanced} This is not a conclusion that you are “good at both”; test it against real experiences in different situations.`,
   blindspotTitles: ["Limits of energy", "Limits of perspective", "Limits of decisions", "Limits of pace"],
   blindspotBalancedBody: (pair: string, question: string) => `When ${pair} is close to balanced, there is no need to pick a fixed label. ${question} Write down the situations behind each answer and see whether what changes is the task, the role or your energy.`,
   relationshipTitles: ["Make your energy needs visible", "Say where each of you starts from", "Explain the trade-offs behind decisions together", "Agree on what is fixed and what can change"],
-  relationshipBalancedBody: (balanced: string) => `${balanced} You could start with:`,
-  relationshipBalancedSay: "I have different needs in different situations — this time I’d like… What about you?",
-  relationshipBody: (qualifier: string) => `${qualifier} You could try opening with this, then invite the other person to respond in their own words, rather than guessing them from a type:`,
   relationshipPair: (between: string, balanced: boolean) => (balanced ? `When this shifts with the moment · ${between}` : `If they lean the other way · ${between}`),
   workTitles: ["A work rhythm that suits you", "Turn understanding into visible results", "Set discussable conditions for choices", "Balance moving forward with adjusting"],
   workBalancedBody: (balanced: string) => `${balanced} Try each approach once in study or work, and note which suits the task at hand, rather than choosing a fixed career label.`,

@@ -1,20 +1,23 @@
 import type { ReactNode } from "react";
-import { Check } from "@phosphor-icons/react/dist/ssr";
+import { CaretDown, Check } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
 import { MirrorMark } from "@/components/brand/mirror-mark";
-import { Illustration } from "@/components/illustrations/scene";
+import { Illustration, type Scene } from "@/components/illustrations/scene";
 import { poleScenes } from "@/components/illustrations/pole-scenes";
+import { pairScene, relationshipScenes } from "@/components/illustrations/moment-scenes";
+import { typeScenes } from "@/components/illustrations/type-scenes";
 import { Radar } from "@/components/result/radar";
 import { TypeName } from "@/components/result/type-name";
+import { InfoTip } from "@/components/site/info-tip";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import type { Locale } from "@/lib/i18n/locale";
 import { reportMessages } from "@/lib/i18n/messages/report";
 import { getLocale } from "@/lib/i18n/server";
-import { type Letter, type Profile } from "@/lib/personality";
+import { isPersonalityType, type Letter, type Profile } from "@/lib/personality";
 import type { Insight, Need } from "@/lib/report-content";
 import { ChapterFooterNav, ChapterPanel, ChapterSidebarNav, ChapterTabs, StrengthSwitch } from "./chapter-ui";
-import { PracticeCheck, PracticeProgress } from "./practice-check";
+import { PracticeCheck, PracticeProgress, WeekStrip } from "./practice-check";
+import { ClarityMeter, LeanBands, LeanBandsLegend, PairDots, StrengthBlindspotChart } from "./report-charts";
 import { ContinueReading } from "./continue-reading";
 import { ReportImage } from "./report-image";
 import { href } from "@/lib/i18n/locale";
@@ -101,7 +104,7 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
         </div>
 
         <ChapterPanel index={0}>
-          <Cover index={0} type={typeLabel} locale={locale} heading={reportMessages[locale].one.heading} as="h1" lead={reportMessages[locale].one.lead} />
+          <Cover index={0} type={typeLabel} locale={locale} heading={reportMessages[locale].one.heading} as="h1" lead={reportMessages[locale].one.lead} scene={isPersonalityType(profile.type) ? typeScenes[profile.type] : undefined} />
           <Reading>
             <ChapterOne data={data} locale={locale} />
             {/* Phones keep the image here; desktop has it under the chapter list. */}
@@ -109,15 +112,15 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
           </Reading>
         </ChapterPanel>
         <ChapterPanel index={1}>
-          <Cover index={1} type={typeLabel} locale={locale} heading={reportMessages[locale].two.heading} />
+          <Cover index={1} type={typeLabel} locale={locale} heading={reportMessages[locale].two.heading} scene={poleScenes[clearestLetter(profile)]} />
           <Reading><ChapterTwo data={data} locale={locale} /></Reading>
         </ChapterPanel>
         <ChapterPanel index={2} after={relationshipAction ? <div className="px-6 md:px-0">{relationshipAction}</div> : undefined}>
-          <Cover index={2} type={typeLabel} locale={locale} heading={reportMessages[locale].three.heading} lead={reportMessages[locale].three.lead} />
+          <Cover index={2} type={typeLabel} locale={locale} heading={reportMessages[locale].three.heading} lead={reportMessages[locale].three.lead} scene={pairScene} />
           <Reading><ChapterThree data={data} locale={locale} /></Reading>
         </ChapterPanel>
         <ChapterPanel index={3} after={closingAction ? <div className="px-6 md:px-0">{closingAction}</div> : undefined}>
-          <Cover index={3} type={typeLabel} locale={locale} heading={reportMessages[locale].four.heading} lead={reportMessages[locale].four.lead} />
+          <Cover index={3} type={typeLabel} locale={locale} heading={reportMessages[locale].four.heading} lead={reportMessages[locale].four.lead} scene={relationshipScenes.colleague} />
           <Reading><ChapterFour data={data} locale={locale} reportKey={reportKey} /></Reading>
         </ChapterPanel>
 
@@ -132,8 +135,14 @@ export async function ReportBody({ data, reportKey, banner, footer, aside, relat
 
 type ChapterProps = { data: ReportData; locale: Locale };
 
-/** The chapter's dark cover: label, heading and an optional lead. Chapter 01 owns the page's `h1`. */
-function Cover({ index, type, locale, heading, lead, as = "h2" }: { index: number; type: string; locale: Locale; heading: string; lead?: string; as?: "h1" | "h2" }) {
+/** The letter this result leans on most clearly: chapter 02's cover shows its everyday picture. */
+function clearestLetter(profile: Profile) {
+  const index = profile.values.reduce((best, value, i) => (value > profile.values[best] ? i : best), 0);
+  return profile.type[index] as Letter;
+}
+
+/** The chapter's dark cover: label, heading beside the chapter's picture, and an optional lead. Chapter 01 owns the page's `h1`. */
+function Cover({ index, type, locale, heading, lead, scene, as = "h2" }: { index: number; type: string; locale: Locale; heading: string; lead?: string; scene?: Scene; as?: "h1" | "h2" }) {
   const Tag = as;
   return (
     <header className="bg-night px-6 pt-2 pb-9 text-paper md:px-10 md:pt-9 md:pb-11 xl:px-12">
@@ -141,7 +150,10 @@ function Cover({ index, type, locale, heading, lead, as = "h2" }: { index: numbe
         <span>{reportMessages[locale].nav.chapter(index)}</span>
         <span>{type}</span>
       </div>
-      <Tag className="text-3xl leading-heading md:text-4xl">{heading}</Tag>
+      <div className="flex items-end justify-between gap-4">
+        <Tag className="min-w-0 text-3xl leading-heading md:text-4xl">{heading}</Tag>
+        {scene && <Illustration scene={scene} tone="night" className="w-24 shrink-0 md:w-40" />}
+      </div>
       {lead && <p className="mt-5 max-w-xl text-base text-night-body">{lead}</p>}
     </header>
   );
@@ -149,6 +161,19 @@ function Cover({ index, type, locale, heading, lead, as = "h2" }: { index: numbe
 
 function Reading({ children }: { children: ReactNode }) {
   return <div className="px-6 pt-8 pb-4 md:px-0 md:pt-10">{children}</div>;
+}
+
+/** A passage's heading with the lean it reads from, drawn as a meter instead of an opening sentence. */
+function InsightHead({ item, index, as: Tag = "h3" }: { item: Insight; index?: number; as?: "h3" | "h4" }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+      <Tag className="flex gap-3 text-base font-medium">
+        {index !== undefined && <span aria-hidden className="pt-0.5 text-xs text-warm-ink">0{index + 1}</span>}
+        {item.title}
+      </Tag>
+      {item.dim && <ClarityMeter dim={item.dim} />}
+    </div>
+  );
 }
 
 function ChapterOne({ data, locale }: ChapterProps) {
@@ -159,7 +184,13 @@ function ChapterOne({ data, locale }: ChapterProps) {
       <div className="bg-card p-5 md:p-6">
         <Radar profile={profile} height={260} />
       </div>
-      <h2 className="mt-10 text-xl leading-heading">{t.needsHeading}</h2>
+      <div className="mt-10 flex items-center gap-2">
+        <h2 className="text-xl leading-heading">{t.needsHeading}</h2>
+        <InfoTip id="report-one-note" label={t.noteLabel} close={reportMessages[locale].tip}>
+          <p>{t.body}</p>
+        </InfoTip>
+      </div>
+      <div className="mt-3"><LeanBandsLegend locale={locale} /></div>
       <ol className="mt-4 border-t border-line">
         {needs.map((need) => (
           <li key={need.letter} className="border-b border-line py-6">
@@ -170,7 +201,7 @@ function ChapterOne({ data, locale }: ChapterProps) {
                 <p className={cn("text-sm", need.balanced ? "text-warm-ink" : "text-mist")}>{need.value}% · {need.degree}</p>
               </div>
             </div>
-            <Progress value={need.value} max={100} className="mt-3" indicatorClassName="bg-warm" aria-label={`${need.label} ${need.value}%`} />
+            <LeanBands value={need.value} label={`${need.label} ${need.value}% · ${need.degree}`} className="mt-3" />
             {need.balanced ? (
               <div className="mt-4">
                 <p className="eyebrow text-warm-ink">{t.bothLabel}</p>
@@ -190,7 +221,6 @@ function ChapterOne({ data, locale }: ChapterProps) {
         ))}
       </ol>
       <Quote>{t.quote}</Quote>
-      <Body>{t.body}</Body>
     </>
   );
 }
@@ -200,17 +230,18 @@ function ChapterTwo({ data, locale }: ChapterProps) {
   const nav = reportMessages[locale].nav;
   return (
     <>
+      <StrengthBlindspotChart strengths={data.strengths} blindspots={data.blindspots} locale={locale} />
       {/* Phones switch between the two lists; from 721px they sit side by side, each strength next to its blind spot. */}
-      <div className="md:hidden">
+      <div className="mt-8 md:hidden">
         <StrengthSwitch strengths={<InsightList items={data.strengths} />} blindspots={<InsightList items={data.blindspots} />} />
       </div>
-      <div className="hidden md:grid md:grid-cols-2 md:gap-x-8" data-strength-columns>
+      <div className="mt-10 hidden md:grid md:grid-cols-2 md:gap-x-8" data-strength-columns>
         <h3 className="border-b border-ink pb-2 text-sm font-medium">{nav.strengths}</h3>
         <h3 className="border-b border-ink pb-2 text-sm font-medium">{nav.blindspots}</h3>
         {data.strengths.map((strength, i) => (
           <div key={strength.title} className="contents">
-            <Insight item={strength} index={i} />
-            <Insight item={data.blindspots[i]} index={i} />
+            <InsightRow item={strength} index={i} />
+            <InsightRow item={data.blindspots[i]} index={i} />
           </div>
         ))}
       </div>
@@ -219,23 +250,47 @@ function ChapterTwo({ data, locale }: ChapterProps) {
   );
 }
 
-function Insight({ item, index }: { item: Insight; index: number }) {
+function InsightRow({ item, index }: { item: Insight; index: number }) {
   return (
-    <section className="flex gap-4 border-b border-line py-6">
-      <span aria-hidden className="pt-1 text-xs text-warm-ink">0{index + 1}</span>
-      <div className="min-w-0">
-        <h4 className="text-base font-medium">{item.title}</h4>
-        <p className="mt-2 text-base text-slate">{item.body}</p>
-      </div>
+    <section className="border-b border-line py-6">
+      <InsightHead item={item} index={index} as="h4" />
+      <p className="mt-2 pl-7 text-base text-slate">{item.body}</p>
     </section>
   );
 }
 
+/**
+ * Chapter 03: each card is a sentence to say, then the same moment between two people, drawn on the
+ * dimension's line and pictured by its relationship. How to use the sentences is said once, above.
+ */
 function ChapterThree({ data, locale }: ChapterProps) {
   const t = reportMessages[locale].three;
   return (
     <>
-      <InsightList items={data.relationships} variant="cards" />
+      <p className="mb-5 border-l-2 border-warm pl-4 text-sm text-slate">{t.howTo}</p>
+      <div className="space-y-3">
+        {data.relationships.map((item, i) => (
+          <section key={item.title} className="bg-card p-5 md:p-6">
+            <InsightHead item={item} index={i} />
+            {item.body && <p className="mt-2 pl-7 text-sm text-slate">{item.body}</p>}
+            {item.say && <p className="mt-4 rounded-[16px] rounded-bl-[4px] border border-line bg-paper px-4 py-3 text-lg leading-heading text-ink">“{item.say}”</p>}
+            {item.pair && (
+              <div data-pair-scene className="mt-5 flex gap-4 border-t border-line pt-4">
+                <Illustration scene={relationshipScenes[item.pair.relationship]} className="w-20 shrink-0 self-start md:w-24" />
+                <div className="min-w-0 flex-1">
+                  {/* The guide for two's legend: you a filled dot, the other a warm ring. */}
+                  <p className="flex items-center gap-2 text-xs text-warm-ink">
+                    <span aria-hidden className="flex shrink-0 gap-1"><span className="size-2 rounded-full bg-ink" /><span className="size-2 rounded-full border border-warm-ink" /></span>
+                    {item.pair.label}
+                  </p>
+                  {item.dim && <PairDots dim={item.dim} balanced={item.pair.balanced} locale={locale} />}
+                  <p className="mt-1 text-base text-ink">{item.pair.scene}</p>
+                </div>
+              </div>
+            )}
+          </section>
+        ))}
+      </div>
       <Quote>{t.quote}</Quote>
       <Body>{t.body}</Body>
     </>
@@ -246,21 +301,32 @@ function ChapterFour({ data, locale, reportKey }: ChapterProps & { reportKey: st
   const t = reportMessages[locale].four;
   return (
     <>
-      <InsightList items={data.work} />
-      <h3 className="mt-12 text-2xl leading-heading">{t.weekHeading}</h3>
-      <p className="mt-3 text-base text-slate">{t.weekIntro}</p>
-      <ol className="mt-6 border-t border-line">
+      <InsightList items={data.work} pictured />
+      <div className="mt-12 flex items-center gap-2">
+        <h3 className="text-2xl leading-heading">{t.weekHeading}</h3>
+        <InfoTip id="report-week-note" label={t.weekNoteLabel} close={reportMessages[locale].tip}>
+          <p>{t.weekIntro}</p>
+        </InfoTip>
+      </div>
+      <div className="mt-6"><WeekStrip reportKey={reportKey} total={data.actionPlan.length} /></div>
+      <div className="mt-3"><PracticeProgress reportKey={reportKey} total={data.actionPlan.length} /></div>
+      {/* Each day shows what it is; how to do it folds under the title (the first day opens). */}
+      <ol className="mt-5 border-t border-line">
         {data.actionPlan.map((item, i) => (
-          <li key={item.title} className="flex gap-4 border-b border-line py-5">
+          <li key={item.title} className="flex gap-4 border-b border-line py-4">
             <PracticeCheck reportKey={reportKey} day={i + 1} label={t.dayDone(item.title)} />
-            <div className="min-w-0">
-              <h4 className="text-base font-medium">{item.title}</h4>
-              <p className="mt-2 text-base text-slate">{item.body}</p>
+            <div className="min-w-0 flex-1">
+              <h4 className="pt-0.5 text-base font-medium">{item.title}</h4>
+              <details className="group" open={i === 0}>
+                <summary className="flex min-h-9 cursor-pointer list-none items-center gap-1.5 text-xs text-mist [&::-webkit-details-marker]:hidden">
+                  {t.how}<CaretDown size={12} aria-hidden className="transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="pb-1 text-base text-slate">{item.body}</p>
+              </details>
             </div>
           </li>
         ))}
       </ol>
-      <div className="mt-3"><PracticeProgress reportKey={reportKey} total={data.actionPlan.length} /></div>
       <div className="warm-panel my-10 p-6 md:p-8">
         <p className="eyebrow">{t.stepEyebrow}</p>
         <p className="mt-4 text-2xl leading-heading whitespace-pre-line">{t.stepHeading}</p>
@@ -271,30 +337,16 @@ function ChapterFour({ data, locale, reportKey }: ChapterProps & { reportKey: st
   );
 }
 
-function InsightList({ items, variant = "lines" }: { items: Insight[]; variant?: "lines" | "cards" }) {
+/** A list of passages, each headed by its lean; `pictured` leads each with its pole's everyday picture instead of a number. */
+function InsightList({ items, pictured = false }: { items: Insight[]; pictured?: boolean }) {
   return (
-    <div className={cn(variant === "cards" ? "space-y-3" : "border-t border-line")}>
+    <div className="border-t border-line">
       {items.map((item, i) => (
-        <section key={item.title} className={cn(
-          "flex gap-4",
-          variant === "lines" && "border-b border-line py-6 md:gap-5",
-          variant === "cards" && "bg-card p-5 md:p-6",
-        )}>
-          <span aria-hidden className="pt-1 text-xs text-warm-ink">0{i + 1}</span>
-          <div className="min-w-0">
-            <h3 className="text-base font-medium">{item.title}</h3>
-            <p className="mt-2 text-base text-slate">{item.body}</p>
-            {item.say && <p className="mt-3 rounded-[16px] rounded-bl-[4px] border border-line bg-paper px-4 py-3 text-base text-ink">“{item.say}”</p>}
-            {item.pair && (
-              <div data-pair-scene className="mt-5 border-t border-line pt-4">
-                {/* The guide for two's legend: you a filled dot, the other a warm ring. */}
-                <p className="flex items-center gap-2 text-xs text-warm-ink">
-                  <span aria-hidden className="flex shrink-0 gap-1"><span className="size-2 rounded-full bg-ink" /><span className="size-2 rounded-full border border-warm-ink" /></span>
-                  {item.pair.label}
-                </p>
-                <p className="mt-2 text-base text-ink">{item.pair.scene}</p>
-              </div>
-            )}
+        <section key={item.title} className="flex gap-4 border-b border-line py-6 md:gap-5">
+          {pictured && item.dim && <Illustration scene={poleScenes[item.dim.letter as Letter]} className="w-14 shrink-0 self-start md:w-16" />}
+          <div className="min-w-0 flex-1">
+            <InsightHead item={item} index={pictured ? undefined : i} />
+            {item.body && <p className={cn("mt-2 text-base text-slate", !pictured && "pl-7")}>{item.body}</p>}
           </div>
         </section>
       ))}

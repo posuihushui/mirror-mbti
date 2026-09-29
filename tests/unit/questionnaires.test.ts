@@ -78,8 +78,12 @@ it("changes paid guidance for strength and balance without recycling the public 
   const strong = buildReportData({ type: "INFJ", values: [90, 85, 80, 95], balanced: [false, false, false, false] }, options);
   const mild = buildReportData({ type: "INFJ", values: [65, 66, 67, 68], balanced: [false, false, false, false] }, options);
   const balanced = buildReportData({ type: "INFJ", values: [55, 55, 55, 55], balanced: [true, true, true, true] }, options);
-  expect(strong.strengths[0].body).not.toEqual(mild.strengths[0].body);
-  expect(strong.relationships[0].body).not.toEqual(mild.relationships[0].body);
+  // How clearly a dimension leans is carried by each passage's meter, not by a repeated opening sentence.
+  expect(strong.strengths[0].dim).toMatchObject({ letter: "I", clarity: "marked" });
+  expect(mild.strengths[0].dim).toMatchObject({ letter: "I", clarity: "slight" });
+  expect(strong.relationships[0].dim?.degree).not.toEqual(mild.relationships[0].dim?.degree);
+  expect(strong.strengths[0].body).not.toMatch(/^这次/);
+  expect(balanced.relationships.map((item) => item.say)).toHaveLength(new Set(balanced.relationships.map((item) => item.say)).size);
   expect(balanced.typeLabel).toBe("INFJ");
   expect(balanced.strengths[0].body).toContain("不是“两边都擅长”");
   expect(strong.actionPlan).toHaveLength(7);

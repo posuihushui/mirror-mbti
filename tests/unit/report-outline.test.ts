@@ -37,7 +37,8 @@ describe("reportOutline", () => {
         ...data.actionPlan.flatMap((item) => [item.title, item.body]),
         ...data.needs.map((need) => need.growth),
       ];
-      for (const text of paid) expect(shipped).not.toContain(text);
+      // A clear lean's chapter-03 card has no body of its own (its sentence and scene carry it).
+      for (const text of paid.filter(Boolean)) expect(shipped).not.toContain(text);
       if (locale === "en") expect(shipped).not.toMatch(CJK);
     }
   });

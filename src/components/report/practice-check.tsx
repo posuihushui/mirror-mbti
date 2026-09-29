@@ -82,6 +82,27 @@ export function PracticeCheck({ reportKey, day, label }: { reportKey: string; da
   );
 }
 
+/**
+ * The week at a glance above the days: seven stops on one line, filled as this browser ticks them.
+ * Decorative; the count below it is the accessible progress.
+ */
+export function WeekStrip({ reportKey, total }: { reportKey: string; total: number }) {
+  const days = useDays(reportKey);
+  return (
+    <ol aria-hidden className="relative flex justify-between">
+      <span className="absolute inset-x-3 top-1/2 h-px -translate-y-1/2 bg-line" />
+      {Array.from({ length: total }, (_, i) => {
+        const done = days.includes(i + 1);
+        return (
+          <li key={i} className={cn("quiz-choice-motion relative flex size-7 items-center justify-center rounded-full border text-xs", done ? "border-warm bg-warm text-paper" : "border-line bg-paper text-mist")}>
+            {done ? <Check size={13} weight="bold" /> : i + 1}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 export function PracticeProgress({ reportKey, total }: { reportKey: string; total: number }) {
   const locale = useLocale();
   const done = useDays(reportKey).length;

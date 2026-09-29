@@ -26,6 +26,11 @@ export function preferenceNotesFor(locale: Locale) {
 /** Four clarity bands, so a near-midpoint dimension reads as a degree rather than an absence. */
 const zhDegrees: Record<Clarity, string> = { even: "几乎均衡", balanced: "接近均衡", slight: "有轻微偏向", marked: "偏向较明显" };
 
+/** The four clarity bands' names, lightest lean first. */
+export function degreeLabelsFor(locale: Locale): Record<Clarity, string> {
+  return locale === "en" ? enDegrees : zhDegrees;
+}
+
 export function dimensionReading(profile: Profile, index: number, locale: Locale = "zh") {
   const dimension = dimensions[index];
   const letter = profile.type[index];
