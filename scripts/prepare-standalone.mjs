@@ -1,14 +1,14 @@
-/* Copies static assets next to the standalone server so `npm start` works like the Docker image. */
+/* Called from either app by npm; package assets beside its traced standalone server. */
 import { cpSync, existsSync, rmSync } from "node:fs";
-
-const root = new URL("..", import.meta.url).pathname;
-const standalone = `${root}.next/standalone`;
-if (!existsSync(standalone)) {
-  console.log("no standalone output; skipping");
-  process.exit(0);
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const app = process.cwd();
+const destination = path.join(app, ".next/standalone", path.relative(root, app));
+if (!existsSync(path.join(destination, "server.js"))) throw new Error("Standalone server is missing; build the app first.");
+for (const asset of [".next/static", "public"]) {
+  if (!existsSync(path.join(app, asset))) continue;
+  rmSync(path.join(destination, asset), { recursive: true, force: true });
+  cpSync(path.join(app, asset), path.join(destination, asset), { recursive: true });
 }
-rmSync(`${standalone}/.next/static`, { recursive: true, force: true });
-cpSync(`${root}.next/static`, `${standalone}/.next/static`, { recursive: true });
-rmSync(`${standalone}/public`, { recursive: true, force: true });
-cpSync(`${root}public`, `${standalone}/public`, { recursive: true });
-console.log("standalone ready: .next/standalone (static + public copied)");
+console.log("Standalone server and assets ready.");

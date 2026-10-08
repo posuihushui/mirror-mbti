@@ -14,8 +14,8 @@ next-env.d.ts
 coverage/
 test-results/
 playwright-report/
-tests/e2e/__screenshots__/**/*-actual.png
-tests/e2e/__screenshots__/**/*-diff.png
+apps/*/tests/e2e/__screenshots__/**/*-actual.png
+apps/*/tests/e2e/__screenshots__/**/*-diff.png
 
 # misc
 .DS_Store

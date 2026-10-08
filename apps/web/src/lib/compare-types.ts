@@ -1,0 +1,2 @@
+export { COMPARE_CONTENT_VERSION, COMPARE_V3_CONTENT_VERSION, HOST_NOTE_MAX, COMPARE_HOST_CONSENT_VERSION, COMPARE_GUEST_CONSENT_VERSION, COMPARE_DIMENSION_ORDER, COMPARE_RELATIONSHIPS } from "@mirror/db/contracts";
+export type { CompareDimension, CompareRelationship, CompareCategories, CompareSnapshot, CompareRelation, CompareSection, CompareOutputSnapshotV1, CompareOutputSnapshotV2, CompareDimensionCard, CompareHighlight, CompareOutputSnapshotV3, CompareTopic, CompareOutputSnapshotV4, CompareCardReading, CompareOutputSnapshot, CompareContent } from "@mirror/db/contracts";

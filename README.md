@@ -12,7 +12,7 @@
 
 ## 页面与接口
 
-英文页面使用不带前缀的地址（`/quiz`），中文页面加 `/zh` 前缀（`/zh/quiz`），下表只列不带前缀的路径。页面都在 `src/app/[lang]` 下：`src/proxy.ts` 把不带前缀的地址重写到内部的 `/en/…`，旧的 `/en/…` 地址由 `next.config.ts` 308 跳转到不带前缀的地址。结果、报告、订单、分享与双人指南页面会跳转到内容所属的语言（结果的语言即其问卷的语言）。
+英文页面使用不带前缀的地址（`/quiz`），中文页面加 `/zh` 前缀（`/zh/quiz`），下表只列不带前缀的路径。页面都在 `apps/web/src/app/[lang]` 下：`apps/web/src/proxy.ts` 把不带前缀的地址重写到内部的 `/en/…`，旧的 `/en/…` 地址由 `apps/web/next.config.ts` 308 跳转到不带前缀的地址。结果、报告、订单、分享与双人指南页面会跳转到内容所属的语言（结果的语言即其问卷的语言）。
 
 | 路径 | 说明 | 渲染 |
 | --- | --- | --- |
@@ -62,18 +62,28 @@
 
 所有接口统一返回 `{ ok: true, data }` 或 `{ ok: false, error: { code, message } }`。
 
+## Monorepo 结构
+
+使用 npm workspaces，根目录只保留统一命令和工具配置，一个 `package-lock.json` 管理全部依赖。`apps/web` 与 `apps/admin` 分别声明自己的依赖，共享数据库代码来自 `@mirror/db`；应用间不直接导入代码。数据库包不依赖任何应用，连接和凭据仍由各应用分别管理。
+
+所有常用命令从仓库根目录执行。`npm run dev` 启动主站，`npm run admin:dev` 启动后台；`npm run build` 构建两个应用，`npm run build:web` 只构建主站。`npm run typecheck` 检查全部工作区，`npm test` 运行两个应用的单元测试。主站配置位于 `apps/web/.env`，后台与机器人配置位于 `apps/admin/.env.local`。
+
+## 本地管理后台与 Telegram
+
+独立后台位于 `apps/admin`，在 localhost:3001 查看订单、访问趋势和匿名浏览记录。Telegram 机器人支持授权查询与订单状态推送，无需域名。配置和启动步骤见 [后台说明](apps/admin/README.md)。
+
 ## 本地开发
 
 需要 Node.js ≥ 20.9 与一个 Postgres 实例。
 
 ```bash
-cp .env.example .env          # 至少填写 DATABASE_URL 与 SESSION_SECRET
+cp apps/web/.env.example apps/web/.env          # 至少填写 DATABASE_URL 与 SESSION_SECRET
 npm ci
-npm run db:migrate            # 应用 ./drizzle 中的迁移
+npm run db:migrate            # 应用 packages/db/drizzle 中的迁移
 npm run dev                   # http://localhost:3000（英文），中文在 /zh
 ```
 
-更新代码后若有新的 `drizzle/*.sql`，启动前再次运行 `npm run db:migrate`。迁移脚本自动按 Next.js 规则读取 `.env*`（默认开发环境，生产环境设置 `NODE_ENV=production`）；显式传入的环境变量优先，已应用的迁移不会重复执行。
+更新代码后若有新的 `packages/db/drizzle/*.sql`，启动前再次运行 `npm run db:migrate`。迁移脚本自动按 Next.js 规则读取 `apps/web/.env*`（默认开发环境，生产环境设置 `NODE_ENV=production`）；显式传入的环境变量优先，已应用的迁移不会重复执行。
 
 分享功能需要 `0004_flippant_brother_voodoo.sql` 创建的表。若结果页正常、生成相处说明书却返回 `503 SHARE_UNAVAILABLE`，先确认应用实际连接的数据库已执行该迁移。
 
@@ -81,19 +91,19 @@ npm run dev                   # http://localhost:3000（英文），中文在 /z
 
 | 命令 | 作用 |
 | --- | --- |
-| `npm run typecheck` | `next typegen` + `tsc` |
+| `npm run typecheck` | 检查主站、后台、数据库包和根目录工具 |
 | `npm run lint` | ESLint（含 React Compiler 规则） |
 | `npm test` | Vitest 单测：计分与问卷、访客 cookie、订单号与找回、微信 / Waffo / 链上支付、分享与双人指南、i18n、SEO |
 | `npm run test:e2e` | Playwright：手机 393×852 与桌面 1363×936 两套视口的完整流程；需要 `DATABASE_URL` 与已构建的应用 |
-| `npm run build` / `npm start` | 生产构建与启动 |
+| `npm run build` / `npm start` | 构建两个应用 / 本地启动主站 |
 | `npm run analyze` | Turbopack 包体分析 |
-| `npm run db:generate` | 修改 `src/db/schema.ts` 后生成新迁移 |
-| `npm run brand:build` | 品牌图形改动后刷新 `public/assets/brand/`、`src/app/favicon.ico` 与 `docs/brand/logo-preview.png` |
-| `node scripts/build-og-fonts.mjs` | 重建 OG 图的中文字体子集（改动 OG 图中的中文文案后运行） |
+| `npm run db:generate` | 修改 `packages/db/src/schema.ts` 后生成新迁移 |
+| `npm run brand:build` | 品牌图形改动后刷新 `apps/web/public/assets/brand/`、`apps/web/src/app/favicon.ico` 与 `docs/brand/logo-preview.png` |
+| `npm run fonts:build` | 重建 OG 图的中文字体子集（改动 OG 图中的中文文案后运行） |
 
 ## 环境变量
 
-见 `.env.example`。要点：
+见 `apps/web/.env.example`。要点：
 
 - `APP_URL`：站点公网地址。它会写进预渲染页面的 canonical / OG / sitemap，因此 **构建时也要提供**（Docker 通过 `--build-arg APP_URL=`）。运行时也必须与浏览器访问的来源一致，订单找回接口以此校验 Origin。
 - `SESSION_SECRET`：访客 cookie 与 OAuth state 的 HMAC 密钥，生产环境必填。
@@ -106,15 +116,15 @@ npm run dev                   # http://localhost:3000（英文），中文在 /z
 - `CRYPTO_EVM_RECEIVER` + `ETHEREUM_RPC_URL`、`CRYPTO_SOLANA_RECEIVER` + `SOLANA_RPC_URL`：`EN_PAYMENT_PROVIDER=crypto` 时，收款地址与 RPC 都已配置的网络才会出现在结账中。付款直接进入收款地址，从链上读取确认；Ethereum 订单只认签署了订单挑战的钱包，Solana 订单各带独立的 Solana Pay reference。订单有效期 30 分钟，过期后 24 小时内仍会查询。
 - `NEXT_PUBLIC_GA_MEASUREMENT_ID`：GA4 衡量 ID（`G-` 开头）。它在 **构建时** 写入客户端代码（Docker 通过 `--build-arg`），留空则不加载 GA。埋点清单、GA 后台配置与验证方法见 [`docs/analytics.md`](docs/analytics.md)。
 - `WECHAT_SHARE_ENABLED`：默认 `false`；公众号渠道验证通过后才设为 `true`，开启微信 JS-SDK 分享。
-- 公开客服邮箱在 `src/lib/site.ts` 的 `site.supportEmail` 配置，当前为 `lakehu0x@gmail.com`；帮助、协议和隐私页共用此值。
+- 公开客服邮箱在 `apps/web/src/lib/site.ts` 的 `site.supportEmail` 配置，当前为 `lakehu0x@gmail.com`；帮助、协议和隐私页共用此值。
 
 ## 部署（自托管 Docker + Postgres）
 
 ```bash
-APP_URL=https://your-domain.com docker compose up -d --build
+APP_URL=https://your-domain.com docker compose --env-file apps/web/.env up -d --build
 ```
 
-`docker-compose.yml` 会启动 Postgres、执行一次迁移（`migrate` 服务），再以 Next.js standalone 模式启动应用；`/api/health` 用作健康检查。应用容器还会读取 `.env`（可选），英文站支付等其余变量写在其中即可。反向代理需转发 `X-Forwarded-For`（H5 支付需要真实客户端 IP）并启用 HTTPS。
+`docker-compose.yml` 会启动 Postgres、执行一次迁移（`migrate` 服务），再以 Next.js standalone 模式启动应用；`/api/health` 用作健康检查。应用容器还会读取 `apps/web/.env`（可选），英文站支付等其余变量写在其中即可。反向代理需转发 `X-Forwarded-For`（H5 支付需要真实客户端 IP）并启用 HTTPS。
 
 订单找回每个来源在 15 分钟内最多尝试 10 次，计数保存在 Postgres，重启应用不会重置。入口代理必须覆盖 `X-Forwarded-For` 或在末尾追加可信来源地址，并阻止绕过代理直连应用；找回接口使用该头的最后一项，缺失时使用 `X-Real-IP`，无法识别的来源共用限流。迁移 `0001_concerned_lucky_pierre.sql` 创建此限流表，需在启用找回功能前应用。
 
@@ -139,18 +149,16 @@ APP_URL=https://your-domain.com docker compose up -d --build
 - 每份完成的问卷都给出四个字母：没有 `UNCLEAR_RESULT`，也不会因为接近均衡而扣下类型或拒绝订单。某一维度恰好 50% 时归入 I / N / F / P（MBTI 公开惯例），计分版本因此为 `preference-v2`。倾向强弱由 `clarityOf` 按维度分数分四档展示：`even`（50–55）、`balanced`（56–60）、`slight`（61–74）、`marked`（75+），前两档合起来正是数据库中的 `balanced` 标记。四维都接近均衡时，类型只作参考对照，换用全均衡的说明；部分维度接近均衡时保留该类型自己的文案，每个维度的解读、雷达轴与数值都标注清晰度。近均衡维度同时解释两端。这些区间是产品解释规则，并非统计置信区间。连续大量选择同一选项时，结果页只邀请复查答案，不影响结果、类型或解锁。历史已购报告始终可以阅读。`preference-v1` 旧记录保留当时存储的四个字母（旧规则下恰好 50% 归入 E / S / T / J），不重新计分。
 - 测试结果（免费）包含四维解释和一条练习；完整报告按偏好强弱、近均衡状态提供场景解读、沟通例句、工作安排及七天实践。四章与两组洞察继续在服务端 HTML 中输出。
 - 单人的相处说明书免费分享，公开页只读取不可变的公开快照，不含结果 ID、分数或订单。双人指南（`paid-pair-v2`）要求双方都已解锁各自所用的结果；付款不能代替任何一方的同意，任一方撤回后指南失效。指南只给沟通提示，不给关系评分。
-- `src/lib/questionnaires.ts` 定义冻结的 `legacy32-v1` 和 `standard64-v1`，每维分别 8/16 题、正反向各半；英文问卷 `en32-v1` / `en64-v1` 与二者逐题对应（维度与反向计分相同，只有文字不同）。新增或换题需新版本，不能原地改题 ID 或题序。计分版本为 `preference-v2`，报告内容版本为 `context-v2`。
+- `apps/web/src/lib/questionnaires.ts` 定义冻结的 `legacy32-v1` 和 `standard64-v1`，每维分别 8/16 题、正反向各半；英文问卷 `en32-v1` / `en64-v1` 与二者逐题对应（维度与反向计分相同，只有文字不同）。新增或换题需新版本，不能原地改题 ID 或题序。计分版本为 `preference-v2`，报告内容版本为 `context-v2`。
 - 题目为独立原创的体验问卷，并非官方 MBTI 量表，两个版本均未经过心理测量学验证。64 题覆盖更多场景，不保证更准确；预计时间需用真实试测校正。96 题和同题数 A/B 版本按审查建议暂缓，等待理解访谈与试测。
 
 ## 目录
 
 ```
-src/app          页面路由（[lang] 下）、API、SEO 文件（robots/sitemap/manifest/OG/llms）
-src/proxy.ts     签发访客 cookie；把不带前缀的地址重写到英文页面
-src/components   site（页头/更多菜单/手机底栏/弹层）、brand、quiz、result、report、payment、share、pairing、compare、types、ui（shadcn）
-src/lib          i18n（语言与文案）、questionnaires（版本/题目）、personality（计分）、preference-content、report-content、compare-content、quiz-progress、site、seo、llms、session、results、orders、shares、comparisons、payments/*（mock / wechat / waffo / crypto）、og/*
-src/db           Drizzle schema、连接、迁移脚本
-drizzle          SQL 迁移
-docs             设计证据截图、品牌说明、埋点文档、方案与验收记录
-tests            unit（Vitest）、e2e（Playwright）
+apps/web/        主站：页面、API、业务逻辑、组件、素材与环境配置
+apps/admin/      中文管理后台与 Telegram 机器人，各自的配置和本地启动入口
+packages/db/     共享表结构、存储类型、连接工厂、SQL 迁移与维护脚本
+scripts/         两个应用共用的 standalone 打包、启动脚本
+apps/*/tests/    测试按应用归属存放
+*.config.*       根目录统一管理测试、代码检查等工具
 ```

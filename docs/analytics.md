@@ -224,8 +224,8 @@
 ### 聚合脚本与窗口
 
 ```bash
-SHARE_GROWTH_DATABASE_URL=postgres://... npx tsx scripts/report-share-growth.ts --start 2026-09-01 --end 2026-09-17
-SHARE_GROWTH_DATABASE_URL=postgres://... npx tsx scripts/report-share-growth.ts --start 2026-09-01 --end 2026-09-17 --format csv
+SHARE_GROWTH_DATABASE_URL=postgres://... npx tsx packages/db/scripts/report-share-growth.ts --start 2026-09-01 --end 2026-09-17
+SHARE_GROWTH_DATABASE_URL=postgres://... npx tsx packages/db/scripts/report-share-growth.ts --start 2026-09-01 --end 2026-09-17 --format csv
 ```
 
 连接地址必须显式提供，脚本不加载 `.env` 或默认 `DATABASE_URL`；使用只读、可重复读事务。输出只有聚合值，不输出 visitor/result/token/order。UTC `[start,end)` 的 **end 同时是观察截止时间**，未来数据不回填该报告。
@@ -245,4 +245,11 @@ SHARE_GROWTH_DATABASE_URL=postgres://... npx tsx scripts/report-share-growth.ts 
 
 ### 清理
 
-`SHARE_GROWTH_DATABASE_URL=... npx tsx scripts/cleanup-share-growth.ts` 默认只读预演，显式 `--apply` 才清理：事件90日、归因窗口结束后180日、续接到期或完成后30日、限流2日。不会删除报告、订单、邀请、指南或恢复记录，不自动计划执行。统计失败不改变付费权益，复制／下载／SDK 配置成功不称为真实分享成功。
+`SHARE_GROWTH_DATABASE_URL=... npx tsx packages/db/scripts/cleanup-share-growth.ts` 默认只读预演，显式 `--apply` 才清理：事件90日、归因窗口结束后180日、续接到期或完成后30日、限流2日。不会删除报告、订单、邀请、指南或恢复记录，不自动计划执行。统计失败不改变付费权益，复制／下载／SDK 配置成功不称为真实分享成功。
+
+
+## 自有浏览数据与本地后台（2026-10-08）
+
+既有 `trackPageView()` 同时向 `/api/browser-events` 发送站内页面浏览，不新增重复 GA 事件。客户端与服务器均将私人链接编号替换为路径模板、删除所有查询参数；类型详情折叠为 `/types/[type]`，未知路径折叠为 `/[other]`，来源只保留域名，设备只分手机/平板/电脑。签名浏览器在数据库关联，限流与 UUID 去重限制重复写入；不保存作答、分数、人格类型或原始 IP，已知预览/爬虫不计。统计失败不阻塞交互。
+
+`apps/admin` 独立认证并以只读事务查询。浏览数据不从 GA 回填；浏览器数不等于人数，客户端测量可能丢失或伪造。浏览记录 90 日维护清理见后台 README。Telegram 只发送授权汇总查询及脱敏订单摘要，订单通知由数据库事务队列产生，不发送访客/结果标识、完整订单号或私人链接。中文与英文隐私政策已同步说明。

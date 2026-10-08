@@ -15,7 +15,7 @@ services:
     ports:
       - "5432:5432"
 
-  # Applies ./drizzle migrations once; uses the builder image because it still has dev dependencies.
+  # Applies packages/db/drizzle migrations once; uses the builder image because it still has dev dependencies.
   migrate:
     build:
       context: .
@@ -37,7 +37,7 @@ services:
         APP_URL: ${APP_URL:-http://localhost:3000}
         NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID:-}
     env_file:
-      - path: .env
+      - path: apps/web/.env
         required: false
     environment:
       DATABASE_URL: postgres://mirror:mirror@db:5432/mirror

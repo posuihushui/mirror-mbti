@@ -5,15 +5,16 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  { settings: { next: { rootDir: ["apps/web", "apps/admin"] } } },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
-    ".next/**",
-    ".cache/**",
+    "**/.next/**",
+    "**/.cache/**",
     ".claude/worktrees/**",
     "out/**",
     "build/**",
-    "next-env.d.ts",
+    "**/next-env.d.ts",
   ]),
 ]);
 

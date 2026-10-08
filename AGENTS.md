@@ -10,6 +10,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # mirror / 观己 — Agent Guide
 
+## Repository layout
+
+- npm workspaces: `apps/web` is the public Next.js app, `apps/admin` is the local admin app and Telegram worker, and `packages/db` owns schema, persisted contracts, migrations and maintenance scripts. Each workspace declares its own dependencies; use the one root lockfile and run `npm install` at the root.
+- Product paths below such as `src/`, `public/` and `next.config.ts` are relative to `apps/web`; shared schema and SQL migrations live in `packages/db`. Reference evidence stays in root `docs/`. Do not import between apps or from an app into a shared package.
+- Root commands delegate to workspaces: `dev` / `start` run web, `admin:dev` / `admin:start` run admin, `build` builds both, `typecheck` checks all workspaces, `test` runs both apps' unit tests. Environment files belong to their app: `apps/web/.env*`, `apps/admin/.env.local`.
+
+
+
 ## Product direction
 
 - Chinese MBTI-style self-exploration site, designed for WeChat mobile first and adapted to PC. English is the default at unprefixed URLs, while Chinese uses `/zh`; both languages share every layout. English orders use `PRICE_USD_CENTS` (default $6.9) and the configured English payment provider.
@@ -105,3 +113,10 @@ Compare new screenshots against `docs/design-evidence/` at 393×852 and 1363×93
 - A pair guide places both people on each dimension's two-ended line (`PairScale` in `comparison-reading.tsx`: 你 a filled dot, the other a warm ring, qualitative positions only, with an sr-only sentence), and the emphasis card shows both marks from `categoryMirrorProfile`. The guide PNG still excludes every category.
 - `/t/[token]` reads intro → action → example → scope. Its primary action (use an existing result, or start the free test) sits in the phone dock and inline from 721px; the other is a text link.
 - `/my/pairing` reads intro → guides → invitations → a new invitation from an unlocked result. Each invitation says where it stands (waiting, how many joined, expired) and offers `InvitationActions`: the editable invitation text first (written for its relationship, with a line saying the report is covered when it is), copying it as the primary action, then copy link and preview, plus a ··· hint inside WeChat. An open paid invitation then offers `GiftOffer` (请 TA, with its price — this page is post-test and owner-only), or says it is covered; unused gifts are announced above the list.
+
+
+## Local administration (2026-10-08)
+
+- `apps/admin` is an independent Chinese local admin app on localhost:3001. It has its own layout and config. Each app declares its dependencies, and npm workspaces use one root lockfile. Use `npm run admin:typecheck` and `npm run admin:build`; root `typecheck` and ESLint check all workspaces. Admin business queries authorize before reading and execute in read-only transactions; do not expose answers, scores, raw provider callbacks, full recovery order numbers or customer session secrets.
+- First-party browsing uses `browser_events`; both client and server redact route templates and drop queries, unknown routes and personality values. Keep GA behavior unchanged, source hostnames only, signed-browser ownership, bounded bodies, UUID deduplication and per-browser throttling. Synchronize bilingual privacy copy when data categories change.
+- Telegram management is local long polling (`npm run admin:telegram`), with a fixed chat and sender allowlist, no inbound URL. Transactional SQL triggers enqueue every newly created order and status transition, and worker failures never invoke payment mutation. Mock pushes default off. Keep order numbers masked and exclude visitor/result IDs and private links from every message. At-least-once delivery and retention maintenance are documented in `apps/admin/README.md`. Trigger definitions are hand-authored in migration 0012; preserve them when changing notification schema.
