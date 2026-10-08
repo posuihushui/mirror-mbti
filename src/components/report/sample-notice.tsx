@@ -9,7 +9,8 @@ import type { Profile } from "@/lib/personality";
 import { chapterLabelsFor } from "@/lib/site";
 import { RelationshipCards } from "@/components/pairing/relationship-cards";
 import { ChapterJump } from "./chapter-ui";
-import { categoriesOf, GuideSteps, PairLines, PairMarks } from "./report-invite";
+import { PairLines, PairMarks } from "@/components/pairing/pair-figures";
+import { categoriesOf, GuideSteps } from "./report-invite";
 
 /**
  * Marks the sample report as a sample, right above the reading: it says the report is written from

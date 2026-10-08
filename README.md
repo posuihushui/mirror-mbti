@@ -126,7 +126,7 @@ APP_URL=https://your-domain.com docker compose up -d --build
 
 ## 接入微信支付
 
-按 [微信支付接入与上线执行手册](docs/wechat-pay-integration.md)完成主体和产品权限申请、商户后台域名与密钥配置、本站变量设置、三种入口的真实交易验收。该手册列出当前代码需要先关闭的支付安全与过期订单问题；完成前不要把中文站切到真实收款。`PAYMENT_PROVIDER=wechat` 只影响中文订单。
+按 [微信支付个体工商户接入手册](docs/wechat-pay-integration.md)申请普通商户、同主体认证服务号以及 JSAPI / Native，完成结算账户、网站备案与授权、域名和密钥配置。**个体不支持 H5**；当前代码仍自动将微信外手机浏览器选为 H5，须先调整该入口，再验收微信内付款和电脑扫码。手册也列出尚需修复的应答验签、交易字段核对与过期订单问题；完成前不要把中文站切到真实收款。`PAYMENT_PROVIDER=wechat` 只影响中文人民币订单。
 
 ## 数据与限制
 

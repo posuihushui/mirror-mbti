@@ -1,5 +1,5 @@
 "use client";
-import { ArrowRight, CheckCircle } from "@phosphor-icons/react";
+import { ArrowRight, CheckCircle, Gift } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { PaymentSheet } from "@/components/payment/payment-sheet";
@@ -74,7 +74,9 @@ export function GiftOffer({ invitationId, resultId, locale, covered: initiallyCo
   }
 
   if (covered) return <p data-gift="covered" className="flex items-center gap-2 text-sm text-slate"><CheckCircle size={18} weight="fill" className="shrink-0 text-warm-ink" aria-hidden />{g.covered}</p>;
-  return <div data-gift="offer" className="border-l-2 border-warm pl-4">
+  return <div data-gift="offer" className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3">
+    <span aria-hidden className="flex size-9 items-center justify-center rounded-full bg-warm/15 text-warm-ink"><Gift size={18} weight="light" /></span>
+    <div className="min-w-0">
     <p className="text-base font-medium">{g.title}</p>
     <p className="mt-1 text-sm text-mist">{g.description}</p>
     {checkout.available > 0 ? <>
@@ -83,6 +85,7 @@ export function GiftOffer({ invitationId, resultId, locale, covered: initiallyCo
     </> : checkoutHref ? <a href={checkoutHref} className="text-link font-medium">{`${g.cta} · ${currency}${checkout.priceLabel}`}<ArrowRight size={15} aria-hidden /></a>
       : <button type="button" className="text-link font-medium" onClick={onCheckout ?? (() => change(true))}>{`${g.cta} · ${currency}${checkout.priceLabel}`}<ArrowRight size={15} aria-hidden /></button>}
     <p role="status" className="text-sm">{error}</p>
+    </div>
     {checkout.available === 0 && !checkoutHref && !onCheckout && <PaymentSheet open={open} onOpenChange={change} gift={{ invitationId }} resultId={resultId} type="" name=""
       priceLabel={checkout.priceLabel} listPriceLabel={checkout.listPriceLabel} mode={checkout.mode} networks={checkout.networks ? [...checkout.networks] : undefined}
       onUnlocked={() => { paid.current = true; }} />}

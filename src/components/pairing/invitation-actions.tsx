@@ -1,10 +1,11 @@
 "use client";
-import { Copy } from "@phosphor-icons/react";
-import { TextLink } from "@/components/site/text-link";
-import { useState, useSyncExternalStore } from "react";
+import { ArrowRight, Copy } from "@phosphor-icons/react";
+import { useSyncExternalStore } from "react";
+import { Illustration } from "@/components/illustrations/scene";
+import { pairScene, relationshipScenes } from "@/components/illustrations/moment-scenes";
 import type { Locale } from "@/lib/i18n/locale";
 import type { CompareRelationship } from "@/lib/compare-types";
-import { pairingMessages } from "@/lib/i18n/messages/pairing";
+import { compareMessages } from "@/lib/i18n/messages/compare";
 import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { shareMessages } from "@/lib/i18n/messages/share";
 import { isWeChat } from "@/lib/ua";
@@ -12,38 +13,33 @@ import { useCopy } from "@/hooks/use-copy";
 
 const noopSubscribe = () => () => {};
 
-/** The invitation message: opened for the relationship, and saying so when the host covered the report. */
-export function invitationMessage(locale: Locale, url: string, relationship: CompareRelationship | null, covered = false) {
-  const m = pairingMessages[locale];
-  const text = relationship ? m.invitationTexts[relationship](url) : m.invitationText(url);
-  return covered ? `${m.coveredLine}${locale === "en" ? " " : ""}${text}` : text;
-}
-
 /**
- * Sending an invitation. In a chat app people paste a message, so copying the (editable) invitation
- * text with its link is the main action; the bare link and a preview come second. Inside WeChat a
- * hint also points at the ··· menu, which shares the invitation page itself once it is open.
+ * Sending an invitation: the link itself, pictured as what the other person will open (the
+ * relationship's scene and the invitation's heading; tapping it previews the page), and one button
+ * that copies it. No message is written for the host (owner request, 2026-09-29: a prepared script
+ * read as too formal); they say it in their own words. Inside WeChat a hint also points at the ···
+ * menu, which shares the invitation page itself once it is open.
  */
-export function InvitationActions({ url, locale, relationship = null, covered = false }: { url: string; locale: Locale; relationship?: CompareRelationship | null; covered?: boolean }) {
-  const [text, setText] = useState(invitationMessage(locale, url, relationship, covered));
-  // Covering the report after the text was shown adds its line, unless the host already edited it.
-  const [lastCovered, setLastCovered] = useState(covered);
-  if (lastCovered !== covered) {
-    setLastCovered(covered);
-    if (text === invitationMessage(locale, url, relationship, lastCovered)) setText(invitationMessage(locale, url, relationship, covered));
-  }
+export function InvitationActions({ url, locale, relationship = null }: { url: string; locale: Locale; relationship?: CompareRelationship | null }) {
   const inWeChat = useSyncExternalStore(noopSubscribe, () => isWeChat(navigator.userAgent), () => false);
-  const m = pairingUiMessages[locale]; const s = shareMessages[locale];
+  const m = pairingUiMessages[locale]; const t = m.inviteSheet; const s = shareMessages[locale];
   const { status, manual, copy } = useCopy(s.manualCopy);
-  return <div className="space-y-4 print:hidden">
-    <label className="block text-xs text-mist">{m.invitationText}<textarea value={text} onChange={e => setText(e.target.value)} className="mt-2 min-h-32 w-full border border-line bg-transparent p-3 text-sm text-ink" /></label>
-    <button type="button" className="pill min-h-[52px] md:w-auto md:min-w-60" onClick={() => copy(text, m.copiedText)}>{m.copyText}<Copy size={18} weight="light" aria-hidden /></button>
-    <div className="flex flex-wrap items-center gap-x-6">
-      <button type="button" className="text-link" onClick={() => copy(url, s.copied)}>{s.copy}<Copy size={15} aria-hidden /></button>
-      <TextLink href={url} prefetch={false}>{s.preview}</TextLink>
+  return <div className="space-y-3 print:hidden" data-invitation-actions>
+    <a href={url} className="grid grid-cols-[4rem_minmax(0,1fr)_auto] items-center gap-3 rounded-[4px] border border-line bg-card p-3 transition-colors duration-150 hover:border-ink motion-reduce:transition-none">
+      <span aria-hidden className="flex size-16 items-center justify-center overflow-hidden rounded-[4px] bg-paper">
+        <Illustration scene={relationship ? relationshipScenes[relationship] : pairScene} className="w-[3.75rem]" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-medium break-keep text-balance">{compareMessages[locale].invitationHeading}</span>
+        <span className="mt-1 block truncate text-xs text-mist">{url.replace(/^https?:\/\//, "")}</span>
+      </span>
+      <span className="flex items-center gap-1 text-xs text-mist">{t.preview}<ArrowRight size={14} aria-hidden /></span>
+    </a>
+    <div>
+      <button type="button" className="pill min-h-[52px] md:w-auto md:min-w-60" onClick={() => copy(url, t.copied)}>{t.copy}<Copy size={18} weight="light" aria-hidden /></button>
+      <p role="status" className="mt-2 text-sm">{status}</p>
     </div>
     {inWeChat && <p className="text-xs text-mist">{m.wechatHint}</p>}
-    <p role="status" className="text-sm">{status}</p>
     {manual && <input aria-label={s.manualCopy} readOnly value={url} onFocus={e => e.currentTarget.select()} className="min-h-11 w-full border border-line p-2 text-sm" />}
   </div>;
 }

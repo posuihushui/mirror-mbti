@@ -61,7 +61,7 @@ export function ComparisonManager({ items, invitations, locale, checkouts, avail
             </div>
             {open && <div className="mt-5 space-y-5">
               <PreferenceSummary snapshot={item.snapshot} locale={locale} title={ui.scope} />
-              <InvitationActions url={item.url} locale={locale} relationship={item.relationship} covered={item.covered} />
+              <InvitationActions url={item.url} locale={locale} relationship={item.relationship} />
               {live && checkouts && <GiftOffer invitationId={item.id} resultId={item.resultId} locale={locale} covered={item.covered} autoOpen={openGift === item.id}
                 checkout={{ ...checkouts[item.locale], available: availableGifts?.[item.locale] ?? 0 }} />}
               <div className="border-t border-line pt-3"><CompareRevoke kind="invitation" id={item.id} locale={locale} onRevoked={() => { setClosed((list) => [...list, item.id]); setRefreshing(true); }} /></div>

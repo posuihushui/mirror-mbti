@@ -15,13 +15,15 @@ type Props = {
   description: string;
   children: ReactNode;
   closeLabel?: string;
+  /** Keeps the description for assistive tech only, when the sheet shows its own steps instead. */
+  hideDescription?: boolean;
 };
 
 /**
  * Desktop (>720px): centered `.web-modal` dialog. Phone: `.bottom-sheet` drawer with a drag handle.
  * The server snapshot is "phone", so the first client render never flashes the wrong surface.
  */
-export function ResponsiveSheet({ open, onOpenChange, title, description, children, closeLabel }: Props) {
+export function ResponsiveSheet({ open, onOpenChange, title, description, children, closeLabel, hideDescription = false }: Props) {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const locale = useLocale();
   const label = closeLabel ?? siteMessages[locale].sheet.close;
@@ -32,7 +34,7 @@ export function ResponsiveSheet({ open, onOpenChange, title, description, childr
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
+            <DialogDescription className={hideDescription ? "sr-only" : undefined}>{description}</DialogDescription>
           </DialogHeader>
           <button
             type="button"
@@ -53,7 +55,7 @@ export function ResponsiveSheet({ open, onOpenChange, title, description, childr
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerDescription>{description}</DrawerDescription>
+          <DrawerDescription className={hideDescription ? "sr-only" : undefined}>{description}</DrawerDescription>
         </DrawerHeader>
         <button
           type="button"

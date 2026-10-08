@@ -1,6 +1,7 @@
 import { BookOpenText, CaretDown, Check, Gift, LockSimple, PaperPlaneTilt, Scales, Timer, UserCircleCheck } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "cn";
-import { categoryMirrorProfile, MirrorMark, type MirrorProfile } from "@/components/brand/mirror-mark";
+import { categoryMirrorProfile } from "@/components/brand/mirror-mark";
+import { PairLines, PairMarks } from "@/components/pairing/pair-figures";
 import { PairingTracker } from "@/components/pairing/pairing-tracker";
 import type { GiftCheckout } from "@/components/pairing/gift-offer";
 import { PrimaryButton } from "@/components/site/primary-button";
@@ -37,90 +38,9 @@ type Props = {
   invite?: { code: string; url: string } | null;
 };
 
-type Dimension = keyof CompareCategories;
-
-/** The midpoint mark: the brand's own mirror, standing in for someone not yet here. */
-const unknown: MirrorProfile = { type: "ESTJ", values: [50, 50, 50, 50] };
-
-/** Two mirrors facing each other: the reader's, and theirs once a guide exists (a faint stand-in until then). */
-export function PairMarks({ you, partner, labels, size, className }: { you: MirrorProfile; partner: MirrorProfile | null; labels: [string, string]; size: number; className?: string }) {
-  return (
-    <div aria-hidden className={cn("flex items-center gap-3", className)}>
-      <span className="flex flex-col items-center gap-1.5">
-        <MirrorMark profile={you} size={size} />
-        <span className="text-xs text-mist">{labels[0]}</span>
-      </span>
-      <span className="relative -mt-5 h-px w-10 border-t border-dashed border-warm md:w-14">
-        <span className="absolute top-1/2 left-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-warm" />
-      </span>
-      <span className="flex flex-col items-center gap-1.5">
-        <MirrorMark profile={partner ?? unknown} size={size} className={partner ? undefined : "opacity-25"} />
-        <span className="text-xs text-mist">{labels[1]}</span>
-      </span>
-    </div>
-  );
-}
-
 /** The reader's category on each dimension, in the guide's terms: a side, or near-even. */
 export function categoriesOf(profile: Profile) {
   return Object.fromEntries(dimensions.map((dimension, i) => [dimension, profile.balanced[i] ? "balanced" : profile.type[i]])) as CompareCategories;
-}
-
-/** Where a category sits on its pair's line, as the guide places it: a side's end, or the middle. */
-function position(category: string, dimension: string) {
-  return category === dimension[0] ? 6 : category === dimension[1] ? 94 : 50;
-}
-
-/**
- * The guide's four lines with the reader already on them: one row for you, one for them. Their row
- * stays dashed with a question mark until a guide exists, so the card shows what the other person's
- * answers would add. Sides only, never strength, the same as the guide itself.
- */
-export function PairLines({ locale, you, them }: { locale: Locale; you: CompareCategories; them: CompareCategories | null }) {
-  const c = compareMessages[locale];
-  const t = pairingUiMessages[locale].reportInvite;
-  const names = (categories: CompareCategories) => dimensions.map((dimension) => c.categoryLabels[categories[dimension]]).join(locale === "en" ? ", " : "、");
-  const row = (who: "you" | "them", category: string | null, dimension: Dimension) => (
-    <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] items-center">
-      <span className="text-xs text-mist">{who === "you" ? t.you : t.them}</span>
-      <span className="relative h-5">
-        {category
-          ? <>
-              <span className="absolute inset-x-0 top-1/2 h-px bg-line" />
-              <span className="absolute top-1/2 left-1/2 h-2 w-px -translate-y-1/2 bg-line" />
-              <span
-                className={cn("absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full", who === "them" ? "border-2 border-warm bg-card" : "bg-ink ring-2 ring-card")}
-                style={{ left: `${position(category, dimension)}%` }}
-              />
-            </>
-          : <>
-              <span className="absolute inset-x-0 top-1/2 border-t border-dashed border-mist/50" />
-              <span className="absolute top-1/2 left-1/2 flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-dashed border-warm-ink bg-card text-xs text-warm-ink">?</span>
-            </>}
-      </span>
-    </div>
-  );
-  return (
-    <figure data-pair-lines>
-      <p className="sr-only">{them ? t.lines.srKnown(names(you), names(them)) : t.lines.sr(names(you))}</p>
-      <div aria-hidden className="grid grid-cols-2 gap-x-5 gap-y-6 md:gap-x-10">
-        {dimensions.map((dimension) => (
-          <div key={dimension} className="min-w-0">
-            <p className="text-sm font-medium">{c.themes[dimension]}</p>
-            <div className="mt-2 flex justify-between gap-2 pl-[2.75rem] text-xs text-mist">
-              <span><span className="hidden md:inline">{c.categoryLabels[dimension[0] as keyof typeof c.categoryLabels]} </span>{dimension[0]}</span>
-              <span><span className="hidden md:inline">{c.categoryLabels[dimension[1] as keyof typeof c.categoryLabels]} </span>{dimension[1]}</span>
-            </div>
-            <div className="mt-1 space-y-1">
-              {row("you", you[dimension], dimension)}
-              {row("them", them ? them[dimension] : null, dimension)}
-            </div>
-          </div>
-        ))}
-      </div>
-      <figcaption className="mt-5 text-sm text-mist">{them ? t.lines.legendKnown : t.lines.legend}</figcaption>
-    </figure>
-  );
 }
 
 /**
@@ -195,10 +115,11 @@ function Assurances({ locale, price, invitePrice }: { locale: Locale; price: str
  * opens. `reached` stops are ticked and the next one is ringed warm. The sample shows the path
  * with nothing reached.
  */
-export function GuideSteps({ steps, reached, locale, kind = "report" }: { steps: readonly string[]; reached: number; locale: Locale; kind?: "report" | "public" }) {
+export function GuideSteps({ steps, reached, locale, kind = "report" }: { steps: readonly string[]; reached: number; locale: Locale; kind?: "report" | "public" | "invitee" }) {
   const t = pairingUiMessages[locale].reportInvite;
-  // The report's way starts by inviting; the public way (the sample's) starts by knowing yourself.
-  const icons = kind === "report" ? [PaperPlaneTilt, UserCircleCheck, BookOpenText] : [UserCircleCheck, PaperPlaneTilt, BookOpenText];
+  // The report's way starts by inviting; the public way (the sample's) starts by knowing yourself;
+  // an invited reader's way starts with the free test.
+  const icons = kind === "report" ? [PaperPlaneTilt, UserCircleCheck, BookOpenText] : kind === "invitee" ? [Timer, UserCircleCheck, BookOpenText] : [UserCircleCheck, PaperPlaneTilt, BookOpenText];
   return (
     <ol className="relative grid grid-cols-3 gap-2">
       <span aria-hidden className="absolute top-5 right-[16.7%] left-[16.7%] h-px bg-line" />

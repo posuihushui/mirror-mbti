@@ -29,16 +29,6 @@ const zh = {
     firstLine: "先把时间定下来，我才放心。",
     secondLine: "先留一点余地，临时再看看。",
   },
-  invitationText: (url: string) => `想和你一起看看，我们哪些地方容易理解彼此，哪些话可以换个方式说。这里能生成一份只给我们双方看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
-  /** The same promise, opened for the relationship the host chose. */
-  invitationTexts: {
-    partner: (url: string) => `想和你一起看看，我们俩哪些地方很像、哪些地方容易想岔，哪些话可以换个方式说。这里能生成一份只给我们两个人看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
-    friend: (url: string) => `想和你一起看看，我们做朋友时哪些地方很合拍、哪些地方容易误会。这里能生成一份只给我们双方看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
-    family: (url: string) => `想和你一起看看，我们在家里哪些地方容易理解彼此，哪些话可以换个方式说。这里能生成一份只给我们双方看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
-    colleague: (url: string) => `想和你一起看看，我们一起做事时哪些地方配合顺手，哪些地方可以提前说清楚。这里能生成一份只给我们双方看的双人指南，需要各自完成测试并确认。你确认后才会加入：${url}`,
-  },
-  /** Appended to the invitation text when the host has covered the other person's report. */
-  coveredLine: "你的完整报告我已经为你备好了。",
   /** Fictional examples, one per relationship. Friend keeps the original example. */
   examples: {
     partner: { title: "纪念日怎么过，为什么总聊不到一起？", firstLine: "先把餐厅订好，我才放心。", secondLine: "到时候看心情，别排得那么满。" },
@@ -79,14 +69,6 @@ const en: typeof zh = {
     firstLine: "I feel more at ease once we have set a time.",
     secondLine: "I'd rather leave some room and decide closer to the day.",
   },
-  invitationText: (url: string) => `I'd like to explore where we may understand each other easily and what we could explain differently. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
-  invitationTexts: {
-    partner: (url: string) => `I'd like to explore where the two of us are alike, where we tend to misread each other, and what we could say differently. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
-    friend: (url: string) => `I'd like to explore where we click as friends and where we tend to misunderstand each other. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
-    family: (url: string) => `I'd like to explore where we understand each other easily at home, and what we could say differently. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
-    colleague: (url: string) => `I'd like to explore where we work well together and what we could agree on up front. We can create a private guide that only the two of us can read. We each need to complete a test and confirm. You will only join after agreeing: ${url}`,
-  },
-  coveredLine: "I've covered your full report.",
   examples: {
     partner: { title: "Why is planning an anniversary such a different conversation?", firstLine: "I'll feel better once the restaurant is booked.", secondLine: "Let's see how we feel on the day and not plan too much." },
     friend: { title: "Why is planning the same weekend such a different conversation?", firstLine: "I feel more at ease once we have set a time.", secondLine: "I'd rather leave some room and decide closer to the day." },

@@ -55,8 +55,10 @@ for (const en of [false, true]) test(`relationship invitation, 请 TA and a cove
   const invitation = (await (await created).json()).data;
   expect(invitation.relationship).toBe("partner");
   await expect(sheet.getByText(m.created, { exact: true })).toBeVisible();
-  // The copied message is written for the relationship.
-  await expect(sheet.getByRole("textbox")).toHaveValue(p.invitationTexts.partner(invitation.url));
+  // Sending is the link itself, pictured by the relationship's scene; no prepared message.
+  await expect(sheet.locator("[data-invitation-actions] a")).toHaveAttribute("href", invitation.url);
+  await expect(sheet.getByRole("textbox")).toHaveCount(0);
+  await expect(sheet.locator('[data-invite-steps="2"]')).toContainText(partner);
   // Inside the invitation sheet, 请 TA leads to the pairing center rather than stacking a second sheet.
   const cover = sheet.getByRole("link", { name: new RegExp(`^${g.cta}`) });
   await expect(cover).toContainText(`${pay.currency}4.9`);

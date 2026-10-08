@@ -176,13 +176,14 @@ test('the paid report invites someone, covers their report and follows the guide
  // Choosing a relationship opens the invitation with it chosen, on the report itself.
  await closing.getByRole('button',{name:new RegExp(c.relationshipLabels.partner)}).click();
  const sheet=page.getByRole('dialog');
- await expect(sheet.getByRole('radio',{name:c.relationshipLabels.partner})).toBeChecked();
+ // The sheet opens past the picker, at what the other person will see, with the relationship named in its steps.
+ await expect(sheet.locator('[data-invite-steps="1"]')).toContainText(c.relationshipLabels.partner);
  const consent=sheet.locator('[data-compare-consent="host"]');
  await consent.getByRole('checkbox').check();
  const created=page.waitForResponse(r=>r.url().endsWith('/api/comparison-invitations')&&r.request().method()==='POST');
  await consent.getByRole('button',{name:p.hostAgree,exact:true}).click();
  const invitation=(await (await created).json()).data;
- await expect(sheet.getByRole('textbox')).toHaveValue(p.invitationTexts.partner(invitation.url));
+ await expect(sheet.locator('[data-invitation-actions] a')).toHaveAttribute('href',invitation.url);await expect(sheet.getByRole('textbox')).toHaveCount(0);
  // 请 TA without leaving the report: the invitation sheet gives way to one payment sheet.
  await sheet.getByRole('button',{name:new RegExp(`^${g.cta}`)}).click();
  await expect(page.getByRole('dialog')).toContainText(g.product);

@@ -71,6 +71,10 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   const invite = (await (await inviteResponse).json()).data;
   expect(invite.url).toMatch(/\/t\/[A-Za-z0-9_-]{32}$/);
   await expect(page.getByText(m.created, { exact: true })).toBeVisible();
+  // Sending is the link itself: no prepared message to edit or copy.
+  await expect(page.getByRole("dialog").locator("[data-invitation-actions] a")).toHaveAttribute("href", invite.url);
+  await expect(page.getByRole("dialog").getByRole("textbox")).toHaveCount(0);
+  await expect(page.getByRole("dialog").getByRole("button", { name: ui.inviteSheet.copy })).toBeVisible();
   const shareAgain = await page.request.get(new URL(host.share.url).pathname);
   expect(await shareAgain.text()).not.toContain('"dimensions":');
   expect(await shareAgain.text()).not.toContain('"typeLabel":');
@@ -80,7 +84,11 @@ for (const en of [false, true]) test(`comparison explicit consent, cross-locale 
   const guestPage = await guest.newPage();
   await recordMotion(guestPage);
   await guestPage.goto(new URL(invite.url).pathname);
-  await expect(guestPage.locator("[data-share-card]")).toContainText(ui.hostScope);
+  // The invitation reads as two parts: the host's side (what they published) and the two of them (not yet written).
+  await expect(guestPage.locator('[data-invitation-part="side"][data-share-card]')).toContainText(ui.landing.sideTitle);
+  await expect(guestPage.locator('[data-invitation-part="side"] [data-pair-lines]')).toBeVisible();
+  await expect(guestPage.locator('[data-invitation-part="pair"]')).toContainText(ui.landing.pairTitle);
+  await expect(guestPage.locator("[data-invitation-steps] li")).toHaveCount(3);
   await expect(guestPage.getByText(hostNote, { exact: true })).toBeVisible();
   await expect(guestPage.getByText(m.relationshipBetween.partner, { exact: true })).toBeVisible();
   await expect(guestPage.locator('[data-pairing-example="partner"]')).toBeVisible();

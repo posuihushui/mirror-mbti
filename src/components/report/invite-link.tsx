@@ -8,16 +8,16 @@ import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { shareMessages } from "@/lib/i18n/messages/share";
 
 /**
- * The reader's invite code and its link, for inviting someone to the test without pairing. The
- * copied message never names a price: the invite price shows after the test. Analytics records the
- * copy, never the code (a code ties the orders it priced to one reader).
+ * The reader's invite code and its link, for inviting someone to the test without pairing. Copying
+ * takes the link alone, for the reader to send in their own words (no prepared message, and so never
+ * a price: the invite price shows after the test). Analytics records the copy, never the code (a code
+ * ties the orders it priced to one reader).
  */
 export function InviteLink({ locale, code, url, invitePrice }: { locale: Locale; code: string; url: string; invitePrice: string }) {
   const t = pairingUiMessages[locale].reportInvite;
   const { status, manual, copy } = useCopy(shareMessages[locale].manualCopy);
-  const text = t.inviteText(url);
   async function copyInvite() {
-    await copy(text, t.copiedInvite);
+    await copy(url, t.copiedInvite);
     track("invite_link_copy", { surface: "report" });
   }
   return (
@@ -33,7 +33,7 @@ export function InviteLink({ locale, code, url, invitePrice }: { locale: Locale;
           <Copy size={15} aria-hidden />
         </button>
       </div>
-      {manual && <p className="mt-3 text-sm break-all text-ink select-all">{text}</p>}
+      {manual && <p className="mt-3 text-sm break-all text-ink select-all">{url}</p>}
       <p role="status" className="mt-2 text-xs text-mist">{status}</p>
     </div>
   );

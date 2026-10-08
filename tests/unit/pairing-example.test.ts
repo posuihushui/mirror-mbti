@@ -11,7 +11,7 @@ import {
   type CompareOutputSnapshotV2,
 } from "@/lib/compare-types";
 import { compareMessages } from "@/lib/i18n/messages/compare";
-import { pairingMessages } from "@/lib/i18n/messages/pairing";
+import { pairingUiMessages } from "@/lib/i18n/messages/pairing-ui";
 import { getPairingExample } from "@/lib/pairing-example";
 
 describe("paid pairing content and shared example", () => {
@@ -126,31 +126,14 @@ describe("paid pairing content and shared example", () => {
     expect(html).toContain("存档的练习。");
   });
 
-  it.each(["zh", "en"] as const)("introduces the invitation before testing and keeps consent explicit (%s)", (locale) => {
-    const tokenUrl = "https://example.test/t/fictional-public-token";
-    const message = pairingMessages[locale].invitationText(tokenUrl);
-    expect(message).toContain(tokenUrl);
-    expect(message).not.toMatch(/付费|解锁|订阅|续费|\bpaid\b|\bunlock|\bsubscription\b/iu);
-    if (locale === "zh") {
-      expect(message).toContain("各自完成测试并确认");
-      expect(message).toContain("你确认后才会加入");
-    } else {
-      expect(message).toContain("each need to complete a test and confirm");
-      expect(message).toContain("only join after agreeing");
-      expect(message).not.toMatch(/[\u3400-\u9fff]/u);
-    }
+  it.each(["zh", "en"] as const)("introduces the invitation before testing without purchase words and keeps consent explicit (%s)", (locale) => {
+    const l = pairingUiMessages[locale].landing;
+    const copy = [l.lead, ...l.steps, l.consent, l.sideTitle, l.sideTag, l.sideCaption, l.sideSr("E"), l.pairTitle, l.pairTag, ...l.pairItems, l.pairAny,
+      ...COMPARE_RELATIONSHIPS.map((relationship) => l.pairRelationship(compareMessages[locale].relationshipLabels[relationship]))].join("\n");
+    expect(copy).not.toMatch(/付费|解锁|订阅|续费|配对|\bpaid\b|\bunlock|\bsubscription\b|[¥$]\s?\d/iu);
+    expect(l.consent).toContain(locale === "zh" ? "同意" : "agree");
+    if (locale === "en") expect(copy).not.toMatch(/[\u3400-\u9fff]/u);
   });
-  it.each(COMPARE_RELATIONSHIPS)("opens the invitation text for the chosen relationship without purchase words (%s)", (relationship) => {
-    for (const locale of ["zh", "en"] as const) {
-      const tokenUrl = "https://example.test/t/fictional-public-token";
-      const message = `${pairingMessages[locale].invitationTexts[relationship](tokenUrl)} ${pairingMessages[locale].coveredLine}`;
-      expect(message).toContain(tokenUrl);
-      expect(message).not.toMatch(/付费|解锁|订阅|续费|配对|\bpaid\b|\bunlock|\bsubscription\b|[¥$]\s?\d/iu);
-      expect(message).toContain(locale === "zh" ? "你确认后才会加入" : "only join after agreeing");
-      if (locale === "en") expect(message).not.toMatch(/[\u3400-\u9fff]/u);
-    }
-  });
-
   it.each(["zh", "en"] as const)("previews a relationship example with its topic named but not written out (%s)", (locale) => {
     const { host, guest, content } = getPairingExample(locale, "partner");
     expect(content).toEqual(generateRelationshipContent(host, guest, "partner", locale));
